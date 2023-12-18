@@ -53,8 +53,8 @@ devDependencies:
     specifier: ^3.1.1
     version: 3.1.1
   release-plan:
-    specifier: ^0.5.0
-    version: 0.5.1
+    specifier: ^0.6.0
+    version: 0.6.0
 
 packages:
 
@@ -1058,7 +1058,7 @@ packages:
   /@types/fs-extra@9.0.13:
     resolution: {integrity: sha512-nEnwB++1u5lVDM2UI4c1+5R+FYaKfaAzS4OococimjVm3nQw3TuzH5UNsocrcTBbhnerblyHj4A49qXbIiZdpA==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 20.10.5
     dev: true
 
   /@types/graceful-fs@4.1.9:
@@ -1094,7 +1094,7 @@ packages:
   /@types/keyv@3.1.4:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 20.10.5
     dev: true
 
   /@types/node@20.10.4:
@@ -1103,10 +1103,16 @@ packages:
       undici-types: 5.26.5
     dev: true
 
+  /@types/node@20.10.5:
+    resolution: {integrity: sha512-nNPsNE65wjMxEKI93yOP+NPGGBJz/PoN3kZsVLee0XMiJolxSekEVD8wRwBUBqkwc7UWop0edW50yrCQW4CyRw==}
+    dependencies:
+      undici-types: 5.26.5
+    dev: true
+
   /@types/responselike@1.0.3:
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
     dependencies:
-      '@types/node': 20.10.4
+      '@types/node': 20.10.5
     dev: true
 
   /@types/semver@7.5.6:
@@ -4158,8 +4164,8 @@ packages:
       rc: 1.2.8
     dev: true
 
-  /release-plan@0.5.1:
-    resolution: {integrity: sha512-3GebglBmiCXjkUYETOvWhKttpyufDn+khkW/DAuCRA3dUwbRA/f7Yd5r37kluOgeJ+FSSWM0lYyoYCqV+UKB8Q==}
+  /release-plan@0.6.0:
+    resolution: {integrity: sha512-5c4JdHXPtVDEbC/aNCaTAr+NrVm1NST3rCFSVkdGInXfJ8KLPFWBZ9/AtIniTRb+E6vjJwy33N9DTnuW76iRpQ==}
     hasBin: true
     dependencies:
       '@ef4/lerna-changelog': 2.0.0
