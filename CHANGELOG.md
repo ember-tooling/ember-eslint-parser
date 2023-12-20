@@ -1,6 +1,16 @@
 # Changelog
 ## Release (2023-12-20)
 
+ember-eslint-parser 0.1.1 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#7](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/7) Fix requires of the transforms module ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 1
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+## Release (2023-12-20)
+
 ember-eslint-parser 0.1.0 (minor)
 
 #### :rocket: Enhancement
