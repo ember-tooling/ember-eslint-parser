@@ -6,7 +6,7 @@ const {
   syncMtsGtsSourceFiles,
   typescriptParser,
 } = require('./ts-patch');
-const { transformForLint, preprocessGlimmerTemplates, convertAst } = require('./transform');
+const { transformForLint, preprocessGlimmerTemplates, convertAst } = require('./transforms');
 
 patchTs();
 

@@ -1,7 +1,7 @@
 const fs = require('node:fs');
-const { transformForLint } = require('./transform');
+const { transformForLint } = require('./transforms');
 const babel = require('@babel/core');
-const { replaceRange } = require('./transform');
+const { replaceRange } = require('./transforms');
 
 let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser;
 
