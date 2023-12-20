@@ -1,0 +1,21 @@
+{
+  "solution": {
+    "ember-eslint-parser": {
+      "impact": "minor",
+      "oldVersion": "0.0.1",
+      "newVersion": "0.1.0",
+      "constraints": [
+        {
+          "impact": "minor",
+          "reason": "Appears in changelog section :rocket: Enhancement"
+        },
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :house: Internal"
+        }
+      ],
+      "pkgJSONPath": "./package.json"
+    }
+  },
+  "description": "## Release (2023-12-20)\n\nember-eslint-parser 0.1.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#1](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/1) Move parser and add boilerplate ([@vstefanovic97](https://github.com/vstefanovic97))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#4](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/4) add publint ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#3](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/3) Deps: Upgrade release-plan ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#2](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/2) add --singlePackage for CI ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Vuk ([@vstefanovic97](https://github.com/vstefanovic97))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+}
