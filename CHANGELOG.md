@@ -1,4 +1,19 @@
 # Changelog
+## Release (2023-12-21)
+
+ember-eslint-parser 0.2.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#10](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/10) Add the noop preprocessor-to-exports ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#6](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/6) always notify if not correctly setup ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 2
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
 ## Release (2023-12-20)
 
 ember-eslint-parser 0.1.1 (patch)
