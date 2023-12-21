@@ -10,7 +10,8 @@
   "license": "ISC",
   "author": "",
   "exports": {
-    ".": "./src/parser/gjs-gts-parser.js"
+    ".": "./src/parser/gjs-gts-parser.js",
+    "./noop": "./src/preprocessor/noop.js"
   },
   "main": "src/parser/gjs-gts-parser.js",
   "files": [

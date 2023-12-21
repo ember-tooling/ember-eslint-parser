@@ -21,7 +21,7 @@ module.exports = {
         message: '',
       };
       msgs[0].message += '\n';
-      msgs[0].message += 
+      msgs[0].message +=
         'To lint Gjs/Gts files please follow the setup guide at https://github.com/ember-cli/eslint-plugin-ember#gtsgjs';
     }
     parsedFiles.delete(fileName); // required for tests
