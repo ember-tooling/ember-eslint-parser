@@ -37,10 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: wyvox/action-setup-pnpm@v3
-      - run: ./scripts/eslint-plugin-ember-test.mjs
-
-
-
+      - run: node ./scripts/eslint-plugin-ember-test.mjs
 
   lint:
     name: "Lint"
