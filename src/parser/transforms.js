@@ -260,30 +260,34 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
       }
       // split up element node into sub nodes to be able to reference tag name
       // parts <Foo.Bar /> -> nodes for `Foo` and `Bar`
-      // if (n.type === 'ElementNode') {
-      //   n.name = n.tag;
-      //   n.parts = [];
-      //   let start = n.range[0];
-      //   let codeSlice = code.slice(...n.range);
-      //   for (const part of n.tag.split('.')) {
-      //     const regex = new RegExp(`\\b${part}\\b`);
-      //     const match = codeSlice.match(regex);
-      //     const range = [start + match.index, 0];
-      //     range[1] = range[0] + part.length;
-      //     codeSlice = code.slice(range[1], n.range[1]);
-      //     start = range[1];
-      //     n.parts.push({
-      //       type: 'GlimmerElementNodePart',
-      //       name: part,
-      //       range,
-      //       parent: n,
-      //       loc: {
-      //         start: codeLines.offsetToPosition(range[0]),
-      //         end: codeLines.offsetToPosition(range[1]),
-      //       },
-      //     });
-      //   }
-      // }
+      if (n.type === 'ElementNode') {
+        n.name = n.tag;
+        n.parts = [];
+        let start = n.range[0];
+        let codeSlice = code.slice(...n.range);
+        for (const part of n.tag.split('.')) {
+          const regex = new RegExp(`\\b${part}\\b`);
+          const match = codeSlice.match(regex);
+
+          // named-blocks are not ElementNodes
+          if (!match && part.startsWith(':')) continue;
+
+          const range = [start + match.index, 0];
+          range[1] = range[0] + part.length;
+          codeSlice = code.slice(range[1], n.range[1]);
+          start = range[1];
+          n.parts.push({
+            type: 'GlimmerElementNodePart',
+            name: part,
+            range,
+            parent: n,
+            loc: {
+              start: codeLines.offsetToPosition(range[0]),
+              end: codeLines.offsetToPosition(range[1]),
+            },
+          });
+        }
+      }
       // block params do not have location information
       // add our own nodes so we can reference them
       if ('blockParams' in n) {
@@ -444,19 +448,19 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       }
     }
 
-    // if ('blockParams' in node) {
-    //   const upperScope = findParentScope(result.scopeManager, path);
-    //   const scope = result.isTypescript
-    //     ? new TypescriptScope.BlockScope(result.scopeManager, upperScope, node)
-    //     : new Scope(result.scopeManager, 'block', upperScope, node);
-    //   for (const [i, b] of node.params.entries()) {
-    //     const v = new Variable(b.name, scope);
-    //     v.identifiers.push(b);
-    //     v.defs.push(new Definition('Parameter', b, node, node, i, 'Block Param'));
-    //     scope.variables.push(v);
-    //     scope.set.set(b.name, v);
-    //   }
-    // }
+    if ('blockParams' in node) {
+      const upperScope = findParentScope(result.scopeManager, path);
+      const scope = result.isTypescript
+        ? new TypescriptScope.BlockScope(result.scopeManager, upperScope, node)
+        : new Scope(result.scopeManager, 'block', upperScope, node);
+      for (const [i, b] of node.params.entries()) {
+        const v = new Variable(b.name, scope);
+        v.identifiers.push(b);
+        v.defs.push(new Definition('Parameter', b, node, node, i, 'Block Param'));
+        scope.variables.push(v);
+        scope.set.set(b.name, v);
+      }
+    }
     return null;
   });
 
