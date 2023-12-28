@@ -18,7 +18,6 @@
     "src"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "concurrently \"npm:lint:*(!fix)\" --names \"lint:\"",
     "lint:js": "eslint .",
     "lint:package": "pnpm publint",
@@ -54,6 +53,11 @@
   },
   "engines": {
     "node": ">=16.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "ember-eslint-parser": "workspace:*"
+    }
   },
   "peerDependencies": {
     "@babel/core": "^7.23.6",
