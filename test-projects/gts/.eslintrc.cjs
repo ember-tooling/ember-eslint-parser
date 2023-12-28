@@ -1,6 +1,7 @@
 'use strict';
 
 module.exports = {
+  root: true,
   overrides: [
     {
       files: ['**/*.{js,ts}'],
