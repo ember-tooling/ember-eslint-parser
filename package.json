@@ -55,6 +55,11 @@
   "engines": {
     "node": ">=16.0.0"
   },
+  "pnpm": {
+    "overrides": {
+      "ember-eslint-parser": "workspace:*"
+    }
+  },
   "peerDependencies": {
     "@babel/core": "^7.23.6",
     "@typescript-eslint/parser": "^6.15.0",
