@@ -1,4 +1,22 @@
 # Changelog
+## Release (2023-12-28)
+
+ember-eslint-parser 0.2.1 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#14](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/14) Resolve "Parsing error: Cannot read properties of null" ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### :memo: Documentation
+* `ember-eslint-parser`
+  * [#11](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/11) Add light README ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#13](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/13) Run eslint-plugin-ember's tests with every change ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 1
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
 ## Release (2023-12-21)
 
 ember-eslint-parser 0.2.0 (minor)
