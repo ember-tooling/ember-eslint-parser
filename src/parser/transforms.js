@@ -429,20 +429,16 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       // However, with plain <footer> type nodes, there will be no "parts"
       const n = node.parts?.[0] ?? node;
 
-      const name = n.name ?? n.tag;
+      const name = n?.name ?? n.tag;
 
       if (htmlTags.includes(name)) {
         return null;
       }
 
-      const { scope, variable } =
-        findVarInParentScopes(result.scopeManager, path, n.name ?? n.tag) || {};
+      const { scope, variable } = findVarInParentScopes(result.scopeManager, path, n.name) || {};
       if (
         scope &&
-        (variable ||
-          isUpperCase(n.name?.[0] ?? n.tag) ||
-          name.includes('.') ||
-          !htmlTags.includes(name))
+        (variable || isUpperCase(n.name[0]) || name.includes('.') || !htmlTags.includes(name))
       ) {
         registerNodeInScope(n, scope, variable);
       }
