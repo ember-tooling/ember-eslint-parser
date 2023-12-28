@@ -48,6 +48,7 @@ function findVarInParentScopes(scopeManager, nodePath, name) {
   if (!scope) {
     return { scope: currentScope };
   }
+
   return { scope: currentScope, variable: scope.set.get(name) };
 }
 
@@ -438,6 +439,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       const { scope, variable } = findVarInParentScopes(result.scopeManager, path, n.name) || {};
       if (
         scope &&
+        !name.startsWith(':') &&
         (variable || isUpperCase(n.name[0]) || name.includes('.') || !htmlTags.includes(name))
       ) {
         registerNodeInScope(n, scope, variable);
