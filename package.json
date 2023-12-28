@@ -18,7 +18,6 @@
     "src"
   ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "concurrently \"npm:lint:*(!fix)\" --names \"lint:\"",
     "lint:js": "eslint .",
     "lint:package": "pnpm publint",
