@@ -1,4 +1,14 @@
 # Changelog
+## Release (2023-12-29)
+
+ember-eslint-parser 0.2.2 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#15](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/15) fix named block ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
 ## Release (2023-12-28)
 
 ember-eslint-parser 0.2.1 (patch)

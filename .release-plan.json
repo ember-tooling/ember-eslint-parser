@@ -2,24 +2,16 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.2.0",
-      "newVersion": "0.2.1",
+      "oldVersion": "0.2.1",
+      "newVersion": "0.2.2",
       "constraints": [
         {
           "impact": "patch",
           "reason": "Appears in changelog section :bug: Bug Fix"
-        },
-        {
-          "impact": "patch",
-          "reason": "Appears in changelog section :memo: Documentation"
-        },
-        {
-          "impact": "patch",
-          "reason": "Appears in changelog section :house: Internal"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2023-12-28)\n\nember-eslint-parser 0.2.1 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#14](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/14) Resolve \"Parsing error: Cannot read properties of null\" ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### :memo: Documentation\n* `ember-eslint-parser`\n  * [#11](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/11) Add light README ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#13](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/13) Run eslint-plugin-ember's tests with every change ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 1\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2023-12-29)\n\nember-eslint-parser 0.2.2 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#15](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/15) fix named block ([@patricklx](https://github.com/patricklx))\n\n#### Committers: 1\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n"
 }
