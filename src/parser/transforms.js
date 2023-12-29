@@ -437,6 +437,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
         * it's NOT a standard html tag, it should have a referenced variable
       */
       if (
+        n.name !== 'this' &&
         !n.name.startsWith(':') &&
         scope &&
         (variable ||
