@@ -326,7 +326,9 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
     for (const comment of comments) {
       const parentBody = comment.parent.body || comment.parent.children;
       const idx = parentBody.indexOf(comment);
-      parentBody.splice(idx, 1);
+      if (idx >= 0) {
+        parentBody.splice(idx, 1);
+      }
       // comment type can be a block comment or a line comment
       // mark comments as always block comment, this works for eslint in all cases
       comment.type = 'Block';
