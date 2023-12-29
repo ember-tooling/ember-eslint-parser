@@ -267,12 +267,12 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         let start = n.range[0];
         let codeSlice = code.slice(...n.range);
         for (const part of n.tag.split('.')) {
-          const regex = new RegExp(`\\b${part}\\b`);
+          let pattern = `\\b${part}\\b`;
+          if (part.startsWith(':')) {
+            pattern = `${part}\\b`;
+          }
+          const regex = new RegExp(pattern);
           const match = codeSlice.match(regex);
-
-          // named-blocks are not ElementNodes
-          if (!match && part.startsWith(':')) continue;
-
           const range = [start + match.index, 0];
           range[1] = range[0] + part.length;
           codeSlice = code.slice(range[1], n.range[1]);
@@ -426,21 +426,15 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       // always reference first part of tag name, this also has the advantage
       // that errors regarding this tag will only mark the tag name instead of
       // the whole tag + children
-      //
-      // However, with plain <footer> type nodes, there will be no "parts"
-      const n = node.parts?.[0] ?? node;
-
-      const name = n?.name ?? n.tag;
-
-      if (htmlTags.includes(name)) {
-        return null;
-      }
-
+      const n = node.parts[0];
       const { scope, variable } = findVarInParentScopes(result.scopeManager, path, n.name) || {};
       if (
+        !n.name.startsWith(':') &&
         scope &&
-        !name.startsWith(':') &&
-        (variable || isUpperCase(n.name[0]) || name.includes('.') || !htmlTags.includes(name))
+        (variable ||
+          isUpperCase(n.name[0]) ||
+          node.name.includes('.') ||
+          !htmlTags.includes(node.name))
       ) {
         registerNodeInScope(n, scope, variable);
       }
