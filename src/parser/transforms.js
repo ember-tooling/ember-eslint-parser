@@ -294,7 +294,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
       if ('blockParams' in n && n.parent) {
         // for blocks {{x as |b|}} the block range does not contain the block params...
         // for element tag it does <x as b />
-        const blockRange = n.type === 'block' ? n.parent.range : n.range;
+        const blockRange = n.type === 'Block' ? n.parent.range : n.range;
         let part = code.slice(...blockRange);
         let start = blockRange[0];
         let idx = part.indexOf('|') + 1;
