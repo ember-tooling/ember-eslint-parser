@@ -11,8 +11,8 @@ const FOLDERS = {
 await fse.remove(FOLDERS.testRoot);
 await fse.ensureDir(FOLDERS.testRoot);
 
+// Using pnpm instead of yarn, because pnpm is way faster
 await execaCommand(`git clone ${REPO}`, { cwd: FOLDERS.testRoot, stdio: 'inherit' });
-await execaCommand(`yarn install`, { cwd: FOLDERS.repo, stdio: 'inherit' });
-await execaCommand(`yarn link`, { cwd: FOLDERS.here, stdio: 'inherit' });
-await execaCommand(`yarn link ember-eslint-parser`, { cwd: FOLDERS.repo, stdio: 'inherit' });
-await execaCommand(`yarn run test`, { cwd: FOLDERS.repo, stdio: 'inherit' });
+await execaCommand(`pnpm install`, { cwd: FOLDERS.repo, stdio: 'inherit' });
+await execaCommand(`pnpm link ${FOLDERS.here}`, { cwd: FOLDERS.here, stdio: 'inherit' });
+await execaCommand(`pnpm run test`, { cwd: FOLDERS.repo, stdio: 'inherit' });
