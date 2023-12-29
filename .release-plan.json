@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.2.1",
-      "newVersion": "0.2.2",
+      "oldVersion": "0.2.2",
+      "newVersion": "0.2.3",
       "constraints": [
         {
           "impact": "patch",
@@ -13,5 +13,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2023-12-29)\n\nember-eslint-parser 0.2.2 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#15](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/15) fix named block ([@patricklx](https://github.com/patricklx))\n\n#### Committers: 1\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n"
+  "description": "## Release (2023-12-29)\n\nember-eslint-parser 0.2.3 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#18](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/18) Fix: 'this' is undefined ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 1\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }

@@ -1,6 +1,16 @@
 # Changelog
 ## Release (2023-12-29)
 
+ember-eslint-parser 0.2.3 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#18](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/18) Fix: 'this' is undefined ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 1
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+## Release (2023-12-29)
+
 ember-eslint-parser 0.2.2 (patch)
 
 #### :bug: Bug Fix
