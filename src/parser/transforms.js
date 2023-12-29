@@ -428,6 +428,14 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       // the whole tag + children
       const n = node.parts[0];
       const { scope, variable } = findVarInParentScopes(result.scopeManager, path, n.name) || {};
+      /*
+      register a node in scope if we found a variable
+      we ignore named-blocks as we know that it doesn't reference anything in current scope
+      if we do not find a variable we register it with a missing variable if
+        * it starts with upper case, it should be a component with a reference
+        * it includes a dot, it's a path which should have a reference
+        * it's NOT a standard html tag, it should have a referenced variable
+      */
       if (
         !n.name.startsWith(':') &&
         scope &&
