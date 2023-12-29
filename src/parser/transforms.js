@@ -206,8 +206,9 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
   const templateVisitorKeys = {};
   const codeLines = new DocumentLines(code);
   const comments = [];
-  const textNodes = [];
   for (const tpl of templateInfos) {
+    const currentComments = [];
+    const textNodes = [];
     const range = tpl.range;
     const template = code.slice(...range);
     const docLines = new DocumentLines(template);
@@ -221,6 +222,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         allNodes.push(node);
         if (node.type === 'CommentStatement' || node.type === 'MustacheCommentStatement') {
           comments.push(node);
+          currentComments.push(node);
         }
         if (node.type === 'TextNode') {
           n.value = node.chars;
@@ -321,7 +323,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
       allNodeTypes.add(n.type);
     }
     // ast should not contain comment nodes
-    for (const comment of comments) {
+    for (const comment of currentComments) {
       const parentBody = comment.parent.body || comment.parent.children;
       const idx = parentBody.indexOf(comment);
       parentBody.splice(idx, 1);
