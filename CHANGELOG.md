@@ -1,4 +1,16 @@
 # Changelog
+## Release (2023-12-30)
+
+ember-eslint-parser 0.2.4 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#20](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/20) fix rust utf8 ranges vs js utf16 ranges ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#22](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/22) `<@argument>` Parsing error: Cannot read properties of null (reading 'index') ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#21](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/21) Fix Incorrectly missing scope ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 1
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
 ## Release (2023-12-29)
 
 ember-eslint-parser 0.2.3 (patch)
