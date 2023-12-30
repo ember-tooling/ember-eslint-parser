@@ -6,6 +6,22 @@ const TypescriptScope = require('@typescript-eslint/scope-manager');
 const { Reference, Scope, Variable, Definition } = require('eslint-scope');
 const htmlTags = require('html-tags');
 
+const BufferMap = new WeakMap();
+
+function getBuffer(str) {
+  let buf = BufferMap.get(str);
+  if (!buf) {
+    buf = Buffer.from(str);
+    BufferMap.set(str, buf);
+  }
+  return buf;
+}
+
+function sliceByteRange(str, a, b) {
+  const buf = getBuffer(str);
+  return buf.slice(a, b).toString();
+}
+
 /**
  * finds the nearest node scope
  * @param scopeManager
@@ -206,14 +222,13 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
   const templateVisitorKeys = {};
   const codeLines = new DocumentLines(code);
   const comments = [];
+  const textNodes = [];
   for (const tpl of templateInfos) {
-    const currentComments = [];
-    const textNodes = [];
     const range = tpl.range;
-    const template = code.slice(...range);
+    const template = sliceByteRange(code, ...range);
     const docLines = new DocumentLines(template);
     const ast = glimmer.preprocess(template, { mode: 'codemod' });
-    ast.tokens = tokenize(code.slice(...tpl.templateRange), codeLines, tpl.templateRange[0]);
+    ast.tokens = tokenize(sliceByteRange(code, ...tpl.templateRange), codeLines, tpl.templateRange[0]);
     const allNodes = [];
     glimmer.traverse(ast, {
       All(node, path) {
@@ -222,7 +237,6 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         allNodes.push(node);
         if (node.type === 'CommentStatement' || node.type === 'MustacheCommentStatement') {
           comments.push(node);
-          currentComments.push(node);
         }
         if (node.type === 'TextNode') {
           n.value = node.chars;
@@ -267,12 +281,17 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         n.name = n.tag;
         n.parts = [];
         let start = n.range[0];
-        let codeSlice = code.slice(...n.range);
+        let codeSlice = sliceByteRange(code, ...n.range);
         for (const part of n.tag.split('.')) {
-          const idx = codeSlice.indexOf(part);
-          const range = [start + idx, 0];
+          let pattern = `\\b${part}\\b`;
+          if (part.startsWith(':')) {
+            pattern = `${part}\\b`;
+          }
+          const regex = new RegExp(pattern);
+          const match = codeSlice.match(regex);
+          const range = [start + match.index, 0];
           range[1] = range[0] + part.length;
-          codeSlice = code.slice(range[1], n.range[1]);
+          codeSlice = sliceByteRange(code, range[1], n.range[1]);
           start = range[1];
           n.parts.push({
             type: 'GlimmerElementNodePart',
@@ -292,11 +311,8 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         n.params = [];
       }
       if ('blockParams' in n && n.parent) {
-        // for blocks {{x as |b|}} the block range does not contain the block params...
-        // for element tag it does <x as b />
-        const blockRange = n.type === 'Block' ? n.parent.range : n.range;
-        let part = code.slice(...blockRange);
-        let start = blockRange[0];
+        let part = sliceByteRange(code, ...n.parent.range);
+        let start = n.parent.range[0];
         let idx = part.indexOf('|') + 1;
         start += idx;
         part = part.slice(idx, -1);
@@ -323,12 +339,10 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
       allNodeTypes.add(n.type);
     }
     // ast should not contain comment nodes
-    for (const comment of currentComments) {
+    for (const comment of comments) {
       const parentBody = comment.parent.body || comment.parent.children;
       const idx = parentBody.indexOf(comment);
-      if (idx >= 0) {
-        parentBody.splice(idx, 1);
-      }
+      parentBody.splice(idx, 1);
       // comment type can be a block comment or a line comment
       // mark comments as always block comment, this works for eslint in all cases
       comment.type = 'Block';
@@ -441,7 +455,6 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       if (
         n.name !== 'this' &&
         !n.name.startsWith(':') &&
-        !n.name.startsWith('@') &&
         scope &&
         (variable ||
           isUpperCase(n.name[0]) ||
@@ -474,7 +487,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
 };
 
 const replaceRange = function replaceRange(s, start, end, substitute) {
-  return s.slice(0, start) + substitute + s.slice(end);
+  return sliceByteRange(s, 0, start) + substitute + sliceByteRange(s, end);
 };
 module.exports.replaceRange = replaceRange;
 
