@@ -24,7 +24,7 @@ function sliceByteRange(str, a, b) {
 
 function byteToCharIndex(str, byteOffset) {
   const buf = getBuffer(str);
-  return buf.slice(0, byteOffset).toString().length;
+  return buf.slice(0, byteOffset + 1).toString().length - 1;
 }
 
 function byteLength(str) {
@@ -432,7 +432,8 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
 
       const template = templateInfos.find(
         (t) =>
-          t.utf16Range[0] === range[0] && (t.utf16Range[1] === range[1] || t.utf16Range[1] === range[1] + 1)
+          t.utf16Range[0] === range[0] &&
+          (t.utf16Range[1] === range[1] || t.utf16Range[1] === range[1] + 1)
       );
       if (!template) {
         return null;
