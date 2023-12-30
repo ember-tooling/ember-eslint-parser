@@ -6,6 +6,31 @@ const TypescriptScope = require('@typescript-eslint/scope-manager');
 const { Reference, Scope, Variable, Definition } = require('eslint-scope');
 const htmlTags = require('html-tags');
 
+const BufferMap = new Map();
+
+function getBuffer(str) {
+  let buf = BufferMap.get(str);
+  if (!buf) {
+    buf = Buffer.from(str);
+    BufferMap.set(str, buf);
+  }
+  return buf;
+}
+
+function sliceByteRange(str, a, b) {
+  const buf = getBuffer(str);
+  return buf.slice(a, b).toString();
+}
+
+function byteToCharIndex(str, byteOffset) {
+  const buf = getBuffer(str);
+  return buf.slice(0, byteOffset + 1).toString().length - 1;
+}
+
+function byteLength(str) {
+  return getBuffer(str).length;
+}
+
 /**
  * finds the nearest node scope
  * @param scopeManager
@@ -202,6 +227,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
   const templateInfos = info.templateInfos.map((r) => ({
     range: [r.contentRange.start, r.contentRange.end],
     templateRange: [r.range.start, r.range.end],
+    utf16Range: [byteToCharIndex(code, r.range.start), byteToCharIndex(code, r.range.end)],
   }));
   const templateVisitorKeys = {};
   const codeLines = new DocumentLines(code);
@@ -210,10 +236,14 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
     const currentComments = [];
     const textNodes = [];
     const range = tpl.range;
-    const template = code.slice(...range);
+    const template = sliceByteRange(code, ...range);
     const docLines = new DocumentLines(template);
     const ast = glimmer.preprocess(template, { mode: 'codemod' });
-    ast.tokens = tokenize(code.slice(...tpl.templateRange), codeLines, tpl.templateRange[0]);
+    ast.tokens = tokenize(
+      sliceByteRange(code, ...tpl.templateRange),
+      codeLines,
+      tpl.templateRange[0]
+    );
     const allNodes = [];
     glimmer.traverse(ast, {
       All(node, path) {
@@ -267,12 +297,12 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         n.name = n.tag;
         n.parts = [];
         let start = n.range[0];
-        let codeSlice = code.slice(...n.range);
+        let codeSlice = sliceByteRange(code, ...n.range);
         for (const part of n.tag.split('.')) {
           const idx = codeSlice.indexOf(part);
           const range = [start + idx, 0];
           range[1] = range[0] + part.length;
-          codeSlice = code.slice(range[1], n.range[1]);
+          codeSlice = sliceByteRange(code, range[1], n.range[1]);
           start = range[1];
           n.parts.push({
             type: 'GlimmerElementNodePart',
@@ -295,7 +325,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         // for blocks {{x as |b|}} the block range does not contain the block params...
         // for element tag it does <x as b />
         const blockRange = n.type === 'Block' ? n.parent.range : n.range;
-        let part = code.slice(...blockRange);
+        let part = sliceByteRange(code, ...blockRange);
         let start = blockRange[0];
         let idx = part.indexOf('|') + 1;
         start += idx;
@@ -402,8 +432,8 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
 
       const template = templateInfos.find(
         (t) =>
-          t.templateRange[0] === range[0] &&
-          (t.templateRange[1] === range[1] || t.templateRange[1] === range[1] + 1)
+          t.utf16Range[0] === range[0] &&
+          (t.utf16Range[1] === range[1] || t.utf16Range[1] === range[1] + 1)
       );
       if (!template) {
         return null;
@@ -474,7 +504,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
 };
 
 const replaceRange = function replaceRange(s, start, end, substitute) {
-  return s.slice(0, start) + substitute + s.slice(end);
+  return sliceByteRange(s, 0, start) + substitute + sliceByteRange(s, end);
 };
 module.exports.replaceRange = replaceRange;
 
@@ -508,20 +538,21 @@ module.exports.transformForLint = function transformForLint(code) {
    */
   const result = processor.parse(code);
   for (const tplInfo of result.reverse()) {
-    const lineBreaks = [...tplInfo.contents].reduce(
-      (prev, curr) => prev + (DocumentLines.isLineBreak(curr.codePointAt(0)) ? 1 : 0),
+    const backticks = [...tplInfo.contents].reduce(
+      (prev, curr) => (prev + (curr.codePointAt(0) === '`') ? 1 : 0),
       0
     );
+    const content = tplInfo.contents.replace(/`/g, '\\`');
     if (tplInfo.type === 'class-member') {
       const tplLength = tplInfo.range.end - tplInfo.range.start;
-      const spaces = tplLength - 'static{`'.length - '`}'.length - lineBreaks;
-      const total = ' '.repeat(spaces) + '\n'.repeat(lineBreaks);
+      const spaces = tplLength - byteLength(content) - 'static{`'.length - '`}'.length - backticks;
+      const total = content + ' '.repeat(spaces);
       const replacementCode = `static{\`${total}\`}`;
       jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
     } else {
       const tplLength = tplInfo.range.end - tplInfo.range.start;
-      const spaces = tplLength - '""`'.length - '`'.length - lineBreaks;
-      const total = ' '.repeat(spaces) + '\n'.repeat(lineBreaks);
+      const spaces = tplLength - byteLength(content) - '""`'.length - '`'.length - backticks;
+      const total = content + ' '.repeat(spaces);
       const replacementCode = `""\`${total}\``;
       jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
     }
