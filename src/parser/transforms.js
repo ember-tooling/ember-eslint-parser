@@ -22,7 +22,7 @@ function sliceByteRange(str, a, b) {
   return buf.slice(a, b).toString();
 }
 
-function byteToCharOffset(str, byteOffset) {
+function byteToCharIndex(str, byteOffset) {
   const buf = getBuffer(str);
   return buf.slice(0, byteOffset).toString().length;
 }
@@ -227,7 +227,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
   const templateInfos = info.templateInfos.map((r) => ({
     range: [r.contentRange.start, r.contentRange.end],
     templateRange: [r.range.start, r.range.end],
-    jsRange: [byteToCharOffset(code, r.range.start), byteToCharOffset(code, r.range.end)],
+    utf16Range: [byteToCharIndex(code, r.range.start), byteToCharIndex(code, r.range.end)],
   }));
   const templateVisitorKeys = {};
   const codeLines = new DocumentLines(code);
@@ -432,7 +432,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
 
       const template = templateInfos.find(
         (t) =>
-          t.jsRange[0] === range[0] && (t.jsRange[1] === range[1] || t.jsRange[1] === range[1] + 1)
+          t.utf16Range[0] === range[0] && (t.utf16Range[1] === range[1] || t.utf16Range[1] === range[1] + 1)
       );
       if (!template) {
         return null;
