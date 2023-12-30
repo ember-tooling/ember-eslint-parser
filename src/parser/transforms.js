@@ -508,20 +508,21 @@ module.exports.transformForLint = function transformForLint(code) {
    */
   const result = processor.parse(code);
   for (const tplInfo of result.reverse()) {
-    const lineBreaks = [...tplInfo.contents].reduce(
-      (prev, curr) => prev + (DocumentLines.isLineBreak(curr.codePointAt(0)) ? 1 : 0),
+    const backticks = [...tplInfo.contents].reduce(
+      (prev, curr) => prev + (curr.codePointAt(0) === '`') ? 1 : 0),
       0
     );
+    const content = tplInfo.contents.replace(/`/g, '\\`');
     if (tplInfo.type === 'class-member') {
       const tplLength = tplInfo.range.end - tplInfo.range.start;
-      const spaces = tplLength - 'static{`'.length - '`}'.length - lineBreaks;
-      const total = ' '.repeat(spaces) + '\n'.repeat(lineBreaks);
+      const spaces = tplLength - content.length - 'static{`'.length - '`}'.length - backticks;
+      const total = content + ' '.repeat(spaces) + '\n'.repeat(lineBreaks);
       const replacementCode = `static{\`${total}\`}`;
       jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
     } else {
       const tplLength = tplInfo.range.end - tplInfo.range.start;
-      const spaces = tplLength - '""`'.length - '`'.length - lineBreaks;
-      const total = ' '.repeat(spaces) + '\n'.repeat(lineBreaks);
+      const spaces = tplLength - conten.length - '""`'.length - '`'.length - backticks;
+      const total = content + ' '.repeat(spaces);
       const replacementCode = `""\`${total}\``;
       jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
     }
