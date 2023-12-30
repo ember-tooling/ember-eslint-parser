@@ -6,7 +6,7 @@ const TypescriptScope = require('@typescript-eslint/scope-manager');
 const { Reference, Scope, Variable, Definition } = require('eslint-scope');
 const htmlTags = require('html-tags');
 
-const BufferMap = new WeakMap();
+const BufferMap = new Map();
 
 function getBuffer(str) {
   let buf = BufferMap.get(str);
@@ -20,6 +20,15 @@ function getBuffer(str) {
 function sliceByteRange(str, a, b) {
   const buf = getBuffer(str);
   return buf.slice(a, b).toString();
+}
+
+function byteToCharOffset(str, byteOffset) {
+  const buf = getBuffer(str);
+  return buf.slice(0, byteOffset).toString().length;
+}
+
+function byteLength(str) {
+  return getBuffer(str).length;
 }
 
 /**
@@ -218,17 +227,23 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
   const templateInfos = info.templateInfos.map((r) => ({
     range: [r.contentRange.start, r.contentRange.end],
     templateRange: [r.range.start, r.range.end],
+    jsRange: [byteToCharOffset(code, r.range.start), byteToCharOffset(code, r.range.end)],
   }));
   const templateVisitorKeys = {};
   const codeLines = new DocumentLines(code);
   const comments = [];
-  const textNodes = [];
   for (const tpl of templateInfos) {
+    const currentComments = [];
+    const textNodes = [];
     const range = tpl.range;
     const template = sliceByteRange(code, ...range);
     const docLines = new DocumentLines(template);
     const ast = glimmer.preprocess(template, { mode: 'codemod' });
-    ast.tokens = tokenize(sliceByteRange(code, ...tpl.templateRange), codeLines, tpl.templateRange[0]);
+    ast.tokens = tokenize(
+      sliceByteRange(code, ...tpl.templateRange),
+      codeLines,
+      tpl.templateRange[0]
+    );
     const allNodes = [];
     glimmer.traverse(ast, {
       All(node, path) {
@@ -237,6 +252,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         allNodes.push(node);
         if (node.type === 'CommentStatement' || node.type === 'MustacheCommentStatement') {
           comments.push(node);
+          currentComments.push(node);
         }
         if (node.type === 'TextNode') {
           n.value = node.chars;
@@ -283,13 +299,8 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         let start = n.range[0];
         let codeSlice = sliceByteRange(code, ...n.range);
         for (const part of n.tag.split('.')) {
-          let pattern = `\\b${part}\\b`;
-          if (part.startsWith(':')) {
-            pattern = `${part}\\b`;
-          }
-          const regex = new RegExp(pattern);
-          const match = codeSlice.match(regex);
-          const range = [start + match.index, 0];
+          const idx = codeSlice.indexOf(part);
+          const range = [start + idx, 0];
           range[1] = range[0] + part.length;
           codeSlice = sliceByteRange(code, range[1], n.range[1]);
           start = range[1];
@@ -311,8 +322,11 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         n.params = [];
       }
       if ('blockParams' in n && n.parent) {
-        let part = sliceByteRange(code, ...n.parent.range);
-        let start = n.parent.range[0];
+        // for blocks {{x as |b|}} the block range does not contain the block params...
+        // for element tag it does <x as b />
+        const blockRange = n.type === 'Block' ? n.parent.range : n.range;
+        let part = sliceByteRange(code, ...blockRange);
+        let start = blockRange[0];
         let idx = part.indexOf('|') + 1;
         start += idx;
         part = part.slice(idx, -1);
@@ -339,10 +353,12 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
       allNodeTypes.add(n.type);
     }
     // ast should not contain comment nodes
-    for (const comment of comments) {
+    for (const comment of currentComments) {
       const parentBody = comment.parent.body || comment.parent.children;
       const idx = parentBody.indexOf(comment);
-      parentBody.splice(idx, 1);
+      if (idx >= 0) {
+        parentBody.splice(idx, 1);
+      }
       // comment type can be a block comment or a line comment
       // mark comments as always block comment, this works for eslint in all cases
       comment.type = 'Block';
@@ -416,8 +432,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
 
       const template = templateInfos.find(
         (t) =>
-          t.templateRange[0] === range[0] &&
-          (t.templateRange[1] === range[1] || t.templateRange[1] === range[1] + 1)
+          t.jsRange[0] === range[0] && (t.jsRange[1] === range[1] || t.jsRange[1] === range[1] + 1)
       );
       if (!template) {
         return null;
@@ -455,6 +470,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       if (
         n.name !== 'this' &&
         !n.name.startsWith(':') &&
+        !n.name.startsWith('@') &&
         scope &&
         (variable ||
           isUpperCase(n.name[0]) ||
@@ -522,19 +538,19 @@ module.exports.transformForLint = function transformForLint(code) {
   const result = processor.parse(code);
   for (const tplInfo of result.reverse()) {
     const backticks = [...tplInfo.contents].reduce(
-      (prev, curr) => prev + (curr.codePointAt(0) === '`') ? 1 : 0),
+      (prev, curr) => (prev + (curr.codePointAt(0) === '`') ? 1 : 0),
       0
     );
     const content = tplInfo.contents.replace(/`/g, '\\`');
     if (tplInfo.type === 'class-member') {
       const tplLength = tplInfo.range.end - tplInfo.range.start;
-      const spaces = tplLength - content.length - 'static{`'.length - '`}'.length - backticks;
-      const total = content + ' '.repeat(spaces) + '\n'.repeat(lineBreaks);
+      const spaces = tplLength - byteLength(content) - 'static{`'.length - '`}'.length - backticks;
+      const total = content + ' '.repeat(spaces);
       const replacementCode = `static{\`${total}\`}`;
       jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
     } else {
       const tplLength = tplInfo.range.end - tplInfo.range.start;
-      const spaces = tplLength - conten.length - '""`'.length - '`'.length - backticks;
+      const spaces = tplLength - byteLength(content) - '""`'.length - '`'.length - backticks;
       const total = content + ' '.repeat(spaces);
       const replacementCode = `""\`${total}\``;
       jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
