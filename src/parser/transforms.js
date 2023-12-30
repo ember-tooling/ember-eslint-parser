@@ -206,8 +206,9 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
   const templateVisitorKeys = {};
   const codeLines = new DocumentLines(code);
   const comments = [];
-  const textNodes = [];
   for (const tpl of templateInfos) {
+    const currentComments = [];
+    const textNodes = [];
     const range = tpl.range;
     const template = code.slice(...range);
     const docLines = new DocumentLines(template);
@@ -221,6 +222,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         allNodes.push(node);
         if (node.type === 'CommentStatement' || node.type === 'MustacheCommentStatement') {
           comments.push(node);
+          currentComments.push(node);
         }
         if (node.type === 'TextNode') {
           n.value = node.chars;
@@ -267,13 +269,8 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         let start = n.range[0];
         let codeSlice = code.slice(...n.range);
         for (const part of n.tag.split('.')) {
-          let pattern = `\\b${part}\\b`;
-          if (part.startsWith(':')) {
-            pattern = `${part}\\b`;
-          }
-          const regex = new RegExp(pattern);
-          const match = codeSlice.match(regex);
-          const range = [start + match.index, 0];
+          const idx = codeSlice.indexOf(part);
+          const range = [start + idx, 0];
           range[1] = range[0] + part.length;
           codeSlice = code.slice(range[1], n.range[1]);
           start = range[1];
@@ -295,8 +292,11 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         n.params = [];
       }
       if ('blockParams' in n && n.parent) {
-        let part = code.slice(...n.parent.range);
-        let start = n.parent.range[0];
+        // for blocks {{x as |b|}} the block range does not contain the block params...
+        // for element tag it does <x as b />
+        const blockRange = n.type === 'Block' ? n.parent.range : n.range;
+        let part = code.slice(...blockRange);
+        let start = blockRange[0];
         let idx = part.indexOf('|') + 1;
         start += idx;
         part = part.slice(idx, -1);
@@ -323,7 +323,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
       allNodeTypes.add(n.type);
     }
     // ast should not contain comment nodes
-    for (const comment of comments) {
+    for (const comment of currentComments) {
       const parentBody = comment.parent.body || comment.parent.children;
       const idx = parentBody.indexOf(comment);
       if (idx >= 0) {
@@ -441,6 +441,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       if (
         n.name !== 'this' &&
         !n.name.startsWith(':') &&
+        !n.name.startsWith('@') &&
         scope &&
         (variable ||
           isUpperCase(n.name[0]) ||
