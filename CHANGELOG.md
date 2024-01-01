@@ -1,4 +1,14 @@
 # Changelog
+## Release (2024-01-01)
+
+ember-eslint-parser 0.2.5 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#24](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/24) allow SVG child Elements without reference ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 1
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
 ## Release (2023-12-30)
 
 ember-eslint-parser 0.2.4 (patch)

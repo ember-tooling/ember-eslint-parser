@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.2.3",
-      "newVersion": "0.2.4",
+      "oldVersion": "0.2.4",
+      "newVersion": "0.2.5",
       "constraints": [
         {
           "impact": "patch",
@@ -13,5 +13,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2023-12-30)\n\nember-eslint-parser 0.2.4 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#20](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/20) fix rust utf8 ranges vs js utf16 ranges ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#22](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/22) `<@argument>` Parsing error: Cannot read properties of null (reading 'index') ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#21](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/21) Fix Incorrectly missing scope ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 1\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2024-01-01)\n\nember-eslint-parser 0.2.5 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#24](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/24) allow SVG child Elements without reference ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 1\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }
