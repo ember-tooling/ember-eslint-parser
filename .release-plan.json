@@ -1,8 +1,21 @@
 {
   "solution": {
     "ember-eslint-parser": {
-      "oldVersion": "0.2.4"
+      "impact": "patch",
+      "oldVersion": "0.2.4",
+      "newVersion": "0.2.5",
+      "constraints": [
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :bug: Bug Fix"
+        },
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :house: Internal"
+        }
+      ],
+      "pkgJSONPath": "./package.json"
     }
   },
-  "description": "\n\n\n\n"
+  "description": "## Release (2024-01-01)\n\nember-eslint-parser 0.2.5 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#24](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/24) allow SVG child Elements without reference ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#17](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/17) Use pnpm for eslint-plugin-ember testing ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#25](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/25) Prepare Release ([@github-actions[bot]](https://github.com/apps/github-actions))\n\n#### Committers: 2\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n- [@github-actions[bot]](https://github.com/apps/github-actions)\n"
 }
