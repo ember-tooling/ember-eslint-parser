@@ -1,4 +1,20 @@
 # Changelog
+## Release (2024-01-01)
+
+ember-eslint-parser 0.2.5 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#24](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/24) allow SVG child Elements without reference ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#17](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/17) Use pnpm for eslint-plugin-ember testing ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#25](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/25) Prepare Release ([@github-actions[bot]](https://github.com/apps/github-actions))
+
+#### Committers: 2
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+- [@github-actions[bot]](https://github.com/apps/github-actions)
 
 
 
