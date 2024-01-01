@@ -97,8 +97,8 @@ importers:
         specifier: ^8.0.1
         version: 8.56.0
       eslint-plugin-ember:
-        specifier: github:ember-cli/eslint-plugin-ember#bcd423b2
-        version: github.com/ember-cli/eslint-plugin-ember/bcd423b2(eslint@8.56.0)(typescript@5.3.3)
+        specifier: github:ember-cli/eslint-plugin-ember#master
+        version: github.com/ember-cli/eslint-plugin-ember/8dfa9a30d6410ea393d553ee295ee723679834b5(eslint@8.56.0)(typescript@5.3.3)
       typescript:
         specifier: ^5.3.3
         version: 5.3.3
@@ -5422,9 +5422,9 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  github.com/ember-cli/eslint-plugin-ember/bcd423b2(eslint@8.56.0)(typescript@5.3.3):
-    resolution: {tarball: https://codeload.github.com/ember-cli/eslint-plugin-ember/tar.gz/bcd423b2}
-    id: github.com/ember-cli/eslint-plugin-ember/bcd423b2
+  github.com/ember-cli/eslint-plugin-ember/8dfa9a30d6410ea393d553ee295ee723679834b5(eslint@8.56.0)(typescript@5.3.3):
+    resolution: {tarball: https://codeload.github.com/ember-cli/eslint-plugin-ember/tar.gz/8dfa9a30d6410ea393d553ee295ee723679834b5}
+    id: github.com/ember-cli/eslint-plugin-ember/8dfa9a30d6410ea393d553ee295ee723679834b5
     name: eslint-plugin-ember
     version: 12.0.0-alpha.4
     engines: {node: 18.* || 20.* || >= 21}
