@@ -475,18 +475,12 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
         * it includes a dot, it's a path which should have a reference
         * it's NOT a standard html tag, it should have a referenced variable
       */
-      const ignore = n.name === 'this' ||
-        n.name.startsWith(':') ||
-        n.name.startsWith('@') ||
-        !scope;
-      const registerUndef = isUpperCase(n.name[0]) ||
-        node.name.includes('.') ||
-        !htmlTags.includes(node.name);
+      const ignore =
+        n.name === 'this' || n.name.startsWith(':') || n.name.startsWith('@') || !scope;
+      const registerUndef =
+        isUpperCase(n.name[0]) || node.name.includes('.') || !htmlTags.includes(node.name);
       const allowUndef = path.parentPath?.context.inSvg;
-      if (
-        !ignore &&
-        (variable || (registerUndef && !allowUndef))
-      ) {
+      if (!ignore && (variable || (registerUndef && !allowUndef))) {
         registerNodeInScope(n, scope, variable);
       }
     }
