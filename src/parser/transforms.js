@@ -114,6 +114,7 @@ function traverse(visitorKeys, node, visitor) {
     parent: null,
     parentKey: null,
     parentPath: null,
+    context: {},
   });
 
   while (queue.length > 0) {
@@ -136,6 +137,7 @@ function traverse(visitorKeys, node, visitor) {
           queue.push({
             node: item,
             parent: currentPath.node,
+            context: Object.assign({}, currentPath.context),
             parentKey: visitorKey,
             parentPath: currentPath,
           });
@@ -144,6 +146,7 @@ function traverse(visitorKeys, node, visitor) {
         queue.push({
           node: child,
           parent: currentPath.node,
+          context: Object.assign({}, currentPath.context),
           parentKey: visitorKey,
           parentPath: currentPath,
         });
@@ -455,6 +458,9 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       }
     }
     if (node.type === 'GlimmerElementNode') {
+      if (node.tag === 'svg') {
+        path.context.inSvg = true;
+      }
       // always reference first part of tag name, this also has the advantage
       // that errors regarding this tag will only mark the tag name instead of
       // the whole tag + children
@@ -462,22 +468,19 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       const { scope, variable } = findVarInParentScopes(result.scopeManager, path, n.name) || {};
       /*
       register a node in scope if we found a variable
-      we ignore named-blocks as we know that it doesn't reference anything in current scope
+      we ignore named-blocks and args as we know that it doesn't reference anything in current scope
+      we also ignore `this`
       if we do not find a variable we register it with a missing variable if
         * it starts with upper case, it should be a component with a reference
         * it includes a dot, it's a path which should have a reference
         * it's NOT a standard html tag, it should have a referenced variable
       */
-      if (
-        n.name !== 'this' &&
-        !n.name.startsWith(':') &&
-        !n.name.startsWith('@') &&
-        scope &&
-        (variable ||
-          isUpperCase(n.name[0]) ||
-          node.name.includes('.') ||
-          !htmlTags.includes(node.name))
-      ) {
+      const ignore =
+        n.name === 'this' || n.name.startsWith(':') || n.name.startsWith('@') || !scope;
+      const registerUndef =
+        isUpperCase(n.name[0]) || node.name.includes('.') || !htmlTags.includes(node.name);
+      const allowUndef = path.parentPath?.context.inSvg;
+      if (!ignore && (variable || (registerUndef && !allowUndef))) {
         registerNodeInScope(n, scope, variable);
       }
     }
