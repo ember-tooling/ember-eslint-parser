@@ -1,4 +1,8 @@
 # Changelog
+
+
+
+
 ## Release (2023-12-30)
 
 ember-eslint-parser 0.2.4 (patch)
