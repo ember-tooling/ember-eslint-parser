@@ -122,6 +122,8 @@ function traverse(visitorKeys, node, visitor) {
 
     visitor(currentPath);
 
+    if (!currentPath.node) continue;
+
     const visitorKeys = allVisitorKeys[currentPath.node.type];
     if (!visitorKeys) {
       continue;
@@ -422,6 +424,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
   // eslint-disable-next-line complexity
   traverse(visitorKeys, result.ast, (path) => {
     const node = path.node;
+    if (!node) return null;
     if (
       node.type === 'ExpressionStatement' ||
       node.type === 'StaticBlock' ||
