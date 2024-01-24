@@ -1,4 +1,19 @@
 # Changelog
+## Release (2024-01-24)
+
+ember-eslint-parser 0.2.6 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#33](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/33) fix parsing error when array destructure ([@Techn1x](https://github.com/Techn1x))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#32](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/32) Add GJS test project ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 2
+- Brad Overton ([@Techn1x](https://github.com/Techn1x))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
 ## Release (2024-01-01)
 
 ember-eslint-parser 0.2.5 (patch)
