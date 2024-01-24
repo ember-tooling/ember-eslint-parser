@@ -40,20 +40,25 @@ module.exports = {
       throw new Error('Please install typescript to process gts');
     }
 
-    result = isTypescript
-      ? typescriptParser.parseForESLint(jsCode, { ...options, ranges: true, filePath })
-      : babelParser.parseForESLint(jsCode, { ...options, ranges: true });
-    if (!info.templateInfos?.length) {
-      return result;
+    try {
+      result = isTypescript
+        ? typescriptParser.parseForESLint(jsCode, { ...options, ranges: true, filePath })
+        : babelParser.parseForESLint(jsCode, { ...options, ranges: true });
+      if (!info.templateInfos?.length) {
+        return result;
+      }
+      const preprocessedResult = preprocessGlimmerTemplates(info, code);
+      const { templateVisitorKeys } = preprocessedResult;
+      const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
+      result.isTypescript = isTypescript;
+      convertAst(result, preprocessedResult, visitorKeys);
+      if (result.services?.program) {
+        syncMtsGtsSourceFiles(result.services?.program);
+      }
+      return { ...result, visitorKeys };
+    } catch (e) {
+      console.error(e);
+      throw e;
     }
-    const preprocessedResult = preprocessGlimmerTemplates(info, code);
-    const { templateVisitorKeys } = preprocessedResult;
-    const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
-    result.isTypescript = isTypescript;
-    convertAst(result, preprocessedResult, visitorKeys);
-    if (result.services?.program) {
-      syncMtsGtsSourceFiles(result.services?.program);
-    }
-    return { ...result, visitorKeys };
   },
 };
