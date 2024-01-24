@@ -42,7 +42,7 @@ module.exports = {
 
     result = isTypescript
       ? typescriptParser.parseForESLint(jsCode, { ...options, ranges: true, filePath })
-      : babelParser.parseForESLint(jsCode, { ...options, ranges: true });
+      : babelParser.parseForESLint(jsCode, { ...options, requireConfigFile: false, ranges: true });
     if (!info.templateInfos?.length) {
       return result;
     }
