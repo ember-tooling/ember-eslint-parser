@@ -1,5 +1,5 @@
 {
-  "name": "@test-project/gts",
+  "name": "@test-project/gjs",
   "private": true,
   "scripts": {
     "test": "eslint ."
