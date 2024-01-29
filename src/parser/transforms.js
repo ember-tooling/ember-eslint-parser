@@ -296,63 +296,24 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         n.loc.start = codeLines.offsetToPosition(tpl.templateRange[0]);
         n.loc.end = codeLines.offsetToPosition(tpl.templateRange[1]);
       }
-      // split up element node into sub nodes to be able to reference tag name
-      // parts <Foo.Bar /> -> nodes for `Foo` and `Bar`
+
       if (n.type === 'ElementNode') {
         n.name = n.tag;
-        n.parts = [];
-        let start = n.range[0];
-        let codeSlice = sliceByteRange(code, ...n.range);
-        for (const part of n.tag.split('.')) {
-          const idx = codeSlice.indexOf(part);
-          const range = [start + idx, 0];
-          range[1] = range[0] + part.length;
-          codeSlice = sliceByteRange(code, range[1], n.range[1]);
-          start = range[1];
-          n.parts.push({
-            type: 'GlimmerElementNodePart',
-            name: part,
-            range,
-            parent: n,
-            loc: {
-              start: codeLines.offsetToPosition(range[0]),
-              end: codeLines.offsetToPosition(range[1]),
-            },
-          });
-        }
+        n.parts = n.parts.map((p) => ({
+          ...p,
+          parent: n,
+          type: 'GlimmerElementNodePart',
+          name: p.value,
+        }));
       }
-      // block params do not have location information
-      // add our own nodes so we can reference them
+
       if ('blockParams' in n) {
-        n.params = [];
-      }
-      if ('blockParams' in n && n.parent) {
-        // for blocks {{x as |b|}} the block range does not contain the block params...
-        // for element tag it does <x as b />
-        const blockRange = n.type === 'Block' ? n.parent.range : n.range;
-        let part = sliceByteRange(code, ...blockRange);
-        let start = blockRange[0];
-        let idx = part.indexOf('|') + 1;
-        start += idx;
-        part = part.slice(idx, -1);
-        idx = part.indexOf('|');
-        part = part.slice(0, idx);
-        for (const param of n.blockParams) {
-          const regex = new RegExp(`\\b${param}\\b`);
-          const match = part.match(regex);
-          const range = [start + match.index, 0];
-          range[1] = range[0] + param.length;
-          n.params.push({
-            type: 'BlockParam',
-            name: param,
-            range,
-            parent: n,
-            loc: {
-              start: codeLines.offsetToPosition(range[0]),
-              end: codeLines.offsetToPosition(range[1]),
-            },
-          });
-        }
+        // program does have blockParams but not blockParamNodes
+        n.params = (n.blockParamNodes || []).map((p) => ({
+          ...p,
+          parent: n,
+          name: p.value,
+        }));
       }
       n.type = `Glimmer${n.type}`;
       allNodeTypes.add(n.type);

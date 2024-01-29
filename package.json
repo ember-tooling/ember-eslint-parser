@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@babel/eslint-parser": "^7.23.3",
-    "@glimmer/syntax": "^0.85.13",
+    "@glimmer/syntax": "^0.88.0",
     "@typescript-eslint/scope-manager": "^6.15.0",
     "content-tag": "^1.2.2",
     "eslint-scope": "^7.2.2",
