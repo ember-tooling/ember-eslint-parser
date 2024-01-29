@@ -1,4 +1,23 @@
 # Changelog
+## Release (2024-01-29)
+
+ember-eslint-parser 0.3.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#37](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/37) update glimmer ([@patricklx](https://github.com/patricklx))
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#36](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/36) fix node ranges and remove empty nodes ([@patricklx](https://github.com/patricklx))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#35](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/35) Failing parse / compatibility problem with lint rule padding-line-between-statements ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 2
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
 ## Release (2024-01-24)
 
 ember-eslint-parser 0.2.6 (patch)
