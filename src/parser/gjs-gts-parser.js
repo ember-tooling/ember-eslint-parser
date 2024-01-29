@@ -52,6 +52,7 @@ module.exports = {
         return result;
       }
       const preprocessedResult = preprocessGlimmerTemplates(info, code);
+      preprocessedResult.code = code;
       const { templateVisitorKeys } = preprocessedResult;
       const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
       result.isTypescript = isTypescript;
