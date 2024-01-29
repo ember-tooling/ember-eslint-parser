@@ -1,3 +1,4 @@
 packages:
   - '.'
   - './test-projects/*'
+  - './test-projects/rules/*'
