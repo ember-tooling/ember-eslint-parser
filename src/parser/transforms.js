@@ -312,6 +312,10 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
           parent: n,
           type: 'GlimmerElementNodePart',
           name: p.value,
+          range: [
+            docLines.positionToOffset(p.loc.start),
+            docLines.positionToOffset(p.loc.end),
+          ],
         }));
       }
 
@@ -321,6 +325,10 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
           ...p,
           parent: n,
           name: p.value,
+          range: [
+            docLines.positionToOffset(p.loc.start),
+            docLines.positionToOffset(p.loc.end),
+          ],
         }));
       }
       n.type = `Glimmer${n.type}`;
