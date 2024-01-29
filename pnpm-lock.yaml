@@ -127,27 +127,6 @@ importers:
         specifier: ^5.3.3
         version: 5.3.3
 
-  test-projects/rules/padding-line-between-statements:
-    devDependencies:
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^6.16.0
-        version: 6.16.0(@typescript-eslint/parser@6.15.0)(eslint@8.56.0)(typescript@5.3.3)
-      '@typescript-eslint/parser':
-        specifier: ^6.15.0
-        version: 6.15.0(eslint@8.56.0)(typescript@5.3.3)
-      ember-eslint-parser:
-        specifier: workspace:*
-        version: link:../../..
-      eslint:
-        specifier: ^8.0.1
-        version: 8.56.0
-      eslint-plugin-ember:
-        specifier: ^12.0.0
-        version: 12.0.0(eslint@8.56.0)(typescript@5.3.3)
-      typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
-
 packages:
 
   /@aashutoshrathi/word-wrap@1.2.6:
