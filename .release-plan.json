@@ -1,10 +1,14 @@
 {
   "solution": {
     "ember-eslint-parser": {
-      "impact": "patch",
-      "oldVersion": "0.2.5",
-      "newVersion": "0.2.6",
+      "impact": "minor",
+      "oldVersion": "0.2.6",
+      "newVersion": "0.3.0",
       "constraints": [
+        {
+          "impact": "minor",
+          "reason": "Appears in changelog section :rocket: Enhancement"
+        },
         {
           "impact": "patch",
           "reason": "Appears in changelog section :bug: Bug Fix"
@@ -17,5 +21,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2024-01-24)\n\nember-eslint-parser 0.2.6 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#33](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/33) fix parsing error when array destructure ([@Techn1x](https://github.com/Techn1x))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#32](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/32) Add GJS test project ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Brad Overton ([@Techn1x](https://github.com/Techn1x))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2024-01-29)\n\nember-eslint-parser 0.3.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#37](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/37) update glimmer ([@patricklx](https://github.com/patricklx))\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#36](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/36) fix node ranges and remove empty nodes ([@patricklx](https://github.com/patricklx))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#35](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/35) Failing parse / compatibility problem with lint rule padding-line-between-statements ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }
