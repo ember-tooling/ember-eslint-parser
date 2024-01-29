@@ -37,7 +37,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: wyvox/action-setup-pnpm@v3
-      - run: pnpm --filter '*' test 
+      - run: pnpm test
+      - run: pnpm --filter '*' test
 
 
   test_eslint-plugin-ember:

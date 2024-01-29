@@ -240,15 +240,12 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
   for (const tpl of templateInfos) {
     const currentComments = [];
     const textNodes = [];
-    const range = tpl.range;
-    const template = sliceByteRange(code, ...range);
+    const emptyTextNodes = [];
+    const range = tpl.utf16Range;
+    const template = code.slice(...range);
     const docLines = new DocumentLines(template);
     const ast = glimmer.preprocess(template, { mode: 'codemod' });
-    ast.tokens = tokenize(
-      sliceByteRange(code, ...tpl.templateRange),
-      codeLines,
-      tpl.templateRange[0]
-    );
+    ast.tokens = tokenize(sliceByteRange(code, ...tpl.templateRange), codeLines, tpl.utf16Range[0]);
     const allNodes = [];
     glimmer.traverse(ast, {
       All(node, path) {
@@ -261,7 +258,13 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         }
         if (node.type === 'TextNode') {
           n.value = node.chars;
-          textNodes.push(node);
+          // empty text nodes are not allowed, it's empty if its only whitespace or line terminators
+          // it's okay for AttrNodes
+          if (n.value.trim().length !== 0 || n.parent.type === 'AttrNode') {
+            textNodes.push(node);
+          } else {
+            emptyTextNodes.push(node);
+          }
         }
       },
     });
@@ -280,12 +283,11 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
       }
       n.range =
         n.type === 'Template'
-          ? [tpl.templateRange[0], tpl.templateRange[1]]
+          ? [tpl.utf16Range[0], tpl.utf16Range[1]]
           : [
               range[0] + docLines.positionToOffset(n.loc.start),
               range[0] + docLines.positionToOffset(n.loc.end),
             ];
-
       n.start = n.range[0];
       n.end = n.range[1];
       n.loc = {
@@ -293,8 +295,8 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         end: codeLines.offsetToPosition(n.range[1]),
       };
       if (n.type === 'Template') {
-        n.loc.start = codeLines.offsetToPosition(tpl.templateRange[0]);
-        n.loc.end = codeLines.offsetToPosition(tpl.templateRange[1]);
+        n.loc.start = codeLines.offsetToPosition(tpl.utf16Range[0]);
+        n.loc.end = codeLines.offsetToPosition(tpl.utf16Range[1]);
       }
       // split up element node into sub nodes to be able to reference tag name
       // parts <Foo.Bar /> -> nodes for `Foo` and `Bar`
@@ -357,6 +359,14 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
       n.type = `Glimmer${n.type}`;
       allNodeTypes.add(n.type);
     }
+
+    // ast should not contains empty text nodes
+    for (const node of emptyTextNodes) {
+      const children = node.parent.children || node.parent.body;
+      const idx = children.indexOf(node);
+      children.splice(idx, 1);
+    }
+
     // ast should not contain comment nodes
     for (const comment of currentComments) {
       const parentBody = comment.parent.body || comment.parent.children;
@@ -416,8 +426,8 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
   result.ast.comments.push(...preprocessedResult.comments);
 
   for (const ti of templateInfos) {
-    const firstIdx = result.ast.tokens.findIndex((t) => t.range[0] === ti.templateRange[0]);
-    const lastIdx = result.ast.tokens.findIndex((t) => t.range[1] === ti.templateRange[1]);
+    const firstIdx = result.ast.tokens.findIndex((t) => t.range[0] === ti.utf16Range[0]);
+    const lastIdx = result.ast.tokens.findIndex((t) => t.range[1] === ti.utf16Range[1]);
     result.ast.tokens.splice(firstIdx, lastIdx - firstIdx + 1, ...ti.ast.tokens);
   }
 
@@ -425,6 +435,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
   traverse(visitorKeys, result.ast, (path) => {
     const node = path.node;
     if (!node) return null;
+
     if (
       node.type === 'ExpressionStatement' ||
       node.type === 'StaticBlock' ||
@@ -504,6 +515,21 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
     return null;
   });
 
+  traverse(visitorKeys, result.ast, (path) => {
+    const node = path.node;
+    if (!node) return null;
+
+    if (
+      ['GlimmerMustacheStatement', 'GlimmerBlockStatement', 'GlimmerSubExpression'].includes(
+        node.type
+      )
+    ) {
+      if (node.hash && node.hash.pairs.length === 0) {
+        node.hash = null;
+      }
+    }
+  });
+
   if (counter !== templateInfos.length) {
     throw new Error('failed to process all templates');
   }
@@ -572,3 +598,6 @@ module.exports.transformForLint = function transformForLint(code) {
     output: jsCode,
   };
 };
+
+module.exports.traverse = traverse;
+module.exports.tokenize = tokenize;

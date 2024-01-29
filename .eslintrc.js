@@ -15,6 +15,15 @@ module.exports = {
         sourceType: 'script',
       },
     },
+    {
+      env: {
+        node: true,
+      },
+      files: ['tests/**/*.js'],
+      parserOptions: {
+        sourceType: 'module',
+      },
+    },
   ],
   ignorePatterns: ['tests/fixtures/**/*.js'],
   parserOptions: {
