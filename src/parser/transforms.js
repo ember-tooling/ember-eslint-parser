@@ -271,7 +271,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
           n.value = node.chars;
           // empty text nodes are not allowed, it's empty if its only whitespace or line terminators
           // it's okay for AttrNodes
-          if (n.value.trim().length !== 0 || n.parent.type === 'AttrNode') {
+          if (n.value.trim().length !== 0 || n.parent.type === 'GlimmerAttrNode') {
             textNodes.push(node);
           } else {
             emptyTextNodes.push(node);
