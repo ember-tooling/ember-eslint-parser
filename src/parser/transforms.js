@@ -126,10 +126,14 @@ function traverse(visitorKeys, node, visitor) {
 
     const visitorKeys = allVisitorKeys[currentPath.node.type];
     if (currentPath.node.type === 'GlimmerElementNode') {
-      visitorKeys.push('blockParamNodes', 'parts');
+      if (!visitorKeys.includes('blockParamNodes')) {
+        visitorKeys.push('blockParamNodes', 'parts');
+      }
     }
     if (currentPath.node.type === 'GlimmerProgram') {
-      visitorKeys.push('blockParamNodes');
+      if (!visitorKeys.includes('blockParamNodes')) {
+        visitorKeys.push('blockParamNodes');
+      }
     }
     if (!visitorKeys) {
       continue;
