@@ -1,4 +1,14 @@
 # Changelog
+## Release (2024-01-30)
+
+ember-eslint-parser 0.3.1 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#40](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/40) fix missing ranges ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
 ## Release (2024-01-29)
 
 ember-eslint-parser 0.3.0 (minor)
