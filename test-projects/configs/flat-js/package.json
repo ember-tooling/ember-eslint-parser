@@ -1,0 +1,21 @@
+{
+  "name": "@test-project/configs-flat-js",
+  "private": true,
+  "scripts": {
+    "test:notes": "This isn't just 'eslint .' because we aren't in a type=module package",
+    "test": "pnpm eslint:with-config .",
+    "eslint:with-config": "ESLINT_USE_FLAT_CONFIG=true eslint --config ./eslint.config.mjs",
+    "eslint:debug-file": "pnpm eslint:with-config --print-config"
+  },
+  "devDependencies": {
+    "@babel/eslint-parser": "7.23.3",
+    "@babel/plugin-proposal-decorators": "^7.23.3",
+    "ember-eslint-parser": "workspace:^",
+    "eslint": "^8.0.1",
+    "eslint-plugin-ember": "^12.0.0",
+    "globals": "^13.24.0"
+  },
+  "dependencies": {
+    "@eslint/js": "^8.56.0"
+  }
+}
