@@ -125,6 +125,16 @@ function traverse(visitorKeys, node, visitor) {
     if (!currentPath.node) continue;
 
     const visitorKeys = allVisitorKeys[currentPath.node.type];
+    if (currentPath.node.type === 'GlimmerElementNode') {
+      if (!visitorKeys.includes('blockParamNodes')) {
+        visitorKeys.push('blockParamNodes', 'parts');
+      }
+    }
+    if (currentPath.node.type === 'GlimmerProgram') {
+      if (!visitorKeys.includes('blockParamNodes')) {
+        visitorKeys.push('blockParamNodes');
+      }
+    }
     if (!visitorKeys) {
       continue;
     }
@@ -242,6 +252,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
     const textNodes = [];
     const emptyTextNodes = [];
     const range = tpl.utf16Range;
+    const offset = range[0];
     const template = code.slice(...range);
     const docLines = new DocumentLines(template);
     const ast = glimmer.preprocess(template, { mode: 'codemod' });
@@ -273,8 +284,8 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
     for (const n of allNodes) {
       if (n.type === 'PathExpression') {
         n.head.range = [
-          range[0] + docLines.positionToOffset(n.head.loc.start),
-          range[0] + docLines.positionToOffset(n.head.loc.end),
+          offset + docLines.positionToOffset(n.head.loc.start),
+          offset + docLines.positionToOffset(n.head.loc.end),
         ];
         n.head.loc = {
           start: codeLines.offsetToPosition(n.head.range[0]),
@@ -283,10 +294,10 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
       }
       n.range =
         n.type === 'Template'
-          ? [tpl.utf16Range[0], tpl.utf16Range[1]]
+          ? [...tpl.utf16Range]
           : [
-              range[0] + docLines.positionToOffset(n.loc.start),
-              range[0] + docLines.positionToOffset(n.loc.end),
+              offset + docLines.positionToOffset(n.loc.start),
+              offset + docLines.positionToOffset(n.loc.end),
             ];
       n.start = n.range[0];
       n.end = n.range[1];
@@ -306,6 +317,10 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
           parent: n,
           type: 'GlimmerElementNodePart',
           name: p.value,
+          range: [
+            offset + docLines.positionToOffset(p.loc.start),
+            offset + docLines.positionToOffset(p.loc.end),
+          ],
         }));
       }
 
@@ -315,6 +330,10 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
           ...p,
           parent: n,
           name: p.value,
+          range: [
+            offset + docLines.positionToOffset(p.loc.start),
+            offset + docLines.positionToOffset(p.loc.end),
+          ],
         }));
       }
       n.type = `Glimmer${n.type}`;
