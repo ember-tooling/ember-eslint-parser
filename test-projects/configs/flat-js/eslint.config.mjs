@@ -43,6 +43,14 @@ export default [
     files: ['**/*.gjs'],
     languageOptions: {
       parser: emberParser,
+      parserOptions: {
+        ecmaFeatures: { modules: true },
+        ecmaVersion: 'latest',
+        requireConfigFile: false,
+        babelOptions: {
+          plugins: [['@babel/plugin-proposal-decorators', { decoratorsBeforeExport: true }]],
+        },
+      },
       globals: {
         ...globals.browser,
       },
