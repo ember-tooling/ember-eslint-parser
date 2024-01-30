@@ -36,7 +36,7 @@ export const NotFound = <template>
   <ReportIssue />
 
   <br /><br /><br>
-  <BackToStart />
+  <BackToStart test="  {{foo}} {{bar}}" />
 </template>;
     `;
 
