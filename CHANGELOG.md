@@ -1,4 +1,14 @@
 # Changelog
+## Release (2024-01-31)
+
+ember-eslint-parser 0.3.2 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#43](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/43) fix bad removal of text nodes ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
 ## Release (2024-01-30)
 
 ember-eslint-parser 0.3.1 (patch)
