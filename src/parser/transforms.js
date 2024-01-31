@@ -342,7 +342,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
 
     // ast should not contains empty text nodes
     for (const node of emptyTextNodes) {
-      const children = node.parent.children || node.parent.body;
+      const children = node.parent.children || node.parent.body || node.parent.parts;
       const idx = children.indexOf(node);
       children.splice(idx, 1);
     }
