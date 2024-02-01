@@ -37,8 +37,7 @@ export const NotFound = <template>
 
   <br /><br /><br>
   <BackToStart test="  {{foo}} {{bar}}" />
-</template>;
-    `;
+</template>`;
 
     result = parseForESLint(text, {
       filePath: 'example.gts',
@@ -106,8 +105,7 @@ export const NotFound = <template>
 
         <br /><br /><br>
         <BackToStart test="  {{foo}} {{bar}}" />
-      </template>;
-          ",
+      </template>",
         "type": "Program",
       }
     `);
@@ -124,7 +122,7 @@ export const NotFound = <template>
 
         <br /><br /><br>
         <BackToStart test="  {{foo}} {{bar}}" />
-      </template>;",
+      </template>",
         "type": "ExportNamedDeclaration",
       }
     `);
@@ -141,7 +139,7 @@ export const NotFound = <template>
 
         <br /><br /><br>
         <BackToStart test="  {{foo}} {{bar}}" />
-      </template>;",
+      </template>",
         "type": "VariableDeclaration",
       }
     `);
@@ -929,7 +927,6 @@ export const NotFound = <template>
             "/",
             "template",
             ">",
-            ";",
           ],
           "type": "Program",
         }
@@ -1002,7 +999,6 @@ export const NotFound = <template>
             "/",
             "template",
             ">",
-            ";",
           ],
           "type": "ExportNamedDeclaration",
         }
@@ -1074,7 +1070,6 @@ export const NotFound = <template>
             "/",
             "template",
             ">",
-            ";",
           ],
           "type": "VariableDeclaration",
         }
