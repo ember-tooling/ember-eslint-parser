@@ -24,7 +24,7 @@ function sliceByteRange(str, a, b) {
 
 function byteToCharIndex(str, byteOffset) {
   const buf = getBuffer(str);
-  return buf.slice(0, byteOffset + 1).toString().length - 1;
+  return buf.slice(0, byteOffset).toString().length;
 }
 
 function byteLength(str) {
