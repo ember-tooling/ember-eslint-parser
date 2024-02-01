@@ -1,4 +1,14 @@
 # Changelog
+## Release (2024-02-01)
+
+ember-eslint-parser 0.3.3 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#46](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/46) fix bad byteToCharIndex ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
 ## Release (2024-01-31)
 
 ember-eslint-parser 0.3.2 (patch)
