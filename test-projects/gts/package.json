@@ -5,8 +5,8 @@
     "test": "eslint ."
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^6.16.0",
-    "@typescript-eslint/parser": "^6.15.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "ember-eslint-parser": "workspace:^",
     "eslint": "^8.0.1",
     "eslint-plugin-ember": "^12.0.0",
