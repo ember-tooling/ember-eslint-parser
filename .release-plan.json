@@ -2,16 +2,20 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.3.2",
-      "newVersion": "0.3.3",
+      "oldVersion": "0.3.3",
+      "newVersion": "0.3.4",
       "constraints": [
         {
           "impact": "patch",
           "reason": "Appears in changelog section :bug: Bug Fix"
+        },
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :house: Internal"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2024-02-01)\n\nember-eslint-parser 0.3.3 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#46](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/46) fix bad byteToCharIndex ([@patricklx](https://github.com/patricklx))\n\n#### Committers: 1\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n"
+  "description": "## Release (2024-02-13)\n\nember-eslint-parser 0.3.4 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#49](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/49) fix typed linting ([@patricklx](https://github.com/patricklx))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#41](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/41) GJS: Add tests to ensure flat-configs work with the parser ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }
