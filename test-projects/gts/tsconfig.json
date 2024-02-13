@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2019",
+    "lib": ["ES2018", "DOM"],
+    "module": "commonjs",
+    "experimentalDecorators": true,
+    "rootDir": ".",
+    "allowJs": true,
+    "strictNullChecks": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.gts",
+    "index.d.ts"
+  ],
+}
+  

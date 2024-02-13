@@ -9,6 +9,10 @@ interface Args {
   promise: Promise<ComponentLike | undefined>;
 }
 
+export class Other {
+
+}
+
 export class Await extends Component<Args> {
   @tracked resolved?: ComponentLike;
   @tracked error?: Error;
@@ -25,11 +29,11 @@ export class Await extends Component<Args> {
       .catch((error) => {
         if (isDestroying(this) || isDestroyed(this)) return;
 
-        this.error = error;
+        this.error = error as unknown;
         this.resolved = undefined;
       });
 
-    waitForPromise(promise);
+    void waitForPromise(promise);
   }
 
   get isPending() {
