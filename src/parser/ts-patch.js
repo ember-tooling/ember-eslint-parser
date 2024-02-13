@@ -1,14 +1,17 @@
 const fs = require('node:fs');
 const { transformForLint } = require('./transforms');
-const babel = require('@babel/core');
 const { replaceRange } = require('./transforms');
 
-let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser;
+let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched;
 
 try {
   const ts = require('typescript');
   typescriptParser = require('@typescript-eslint/parser');
   patchTs = function patchTs() {
+    if (isPatched) {
+      return;
+    }
+    isPatched = true;
     const sys = { ...ts.sys };
     const newSys = {
       ...ts.sys,
@@ -32,13 +35,23 @@ try {
           content = fs.readFileSync(fileName).toString();
         }
         if (fileName.endsWith('.gts')) {
-          content = transformForLint(content).output;
+          try {
+            content = transformForLint(content).output;
+          } catch (e) {
+            console.error('failed to transformForLint for gts processing');
+            console.error(e);
+          }
         }
         if (
           (!fileName.endsWith('.d.ts') && fileName.endsWith('.ts')) ||
           fileName.endsWith('.gts')
         ) {
-          content = replaceExtensions(content);
+          try {
+            content = replaceExtensions(content);
+          } catch (e) {
+            console.error('failed to replace extensions for gts processing');
+            console.error(e);
+          }
         }
         return content;
       },
@@ -48,20 +61,12 @@ try {
 
   replaceExtensions = function replaceExtensions(code) {
     let jsCode = code;
-    const babelParseResult = babel.parse(jsCode, {
-      parserOpts: { ranges: true, plugins: ['typescript'] },
-    });
+    const sourceFile = ts.createSourceFile('__x__.ts', code, ts.ScriptTarget.Latest);
     const length = jsCode.length;
-    for (const b of babelParseResult.program.body) {
-      if (b.type === 'ImportDeclaration' && b.source.value.endsWith('.gts')) {
-        const value = b.source.value.replace(/\.gts$/, '.mts');
-        const strWrapper = jsCode[b.source.start];
-        jsCode = replaceRange(
-          jsCode,
-          b.source.start,
-          b.source.end,
-          strWrapper + value + strWrapper
-        );
+    for (const b of sourceFile.statements) {
+      if (b.kind === ts.SyntaxKind.ImportDeclaration && b.moduleSpecifier.text.endsWith('.gts')) {
+        const value = b.moduleSpecifier.text.replace(/\.gts$/, '.mts');
+        jsCode = replaceRange(jsCode, b.moduleSpecifier.pos + 2, b.moduleSpecifier.end - 1, value);
       }
     }
     if (length !== jsCode.length) {

@@ -6,9 +6,7 @@ import type { TOC } from '@ember/component/template-only';
 
 const orGlimdown = (format: string | undefined) => format || 'glimdown';
 
-export const Placeholder: TOC<{
-  Element: HTMLPreElement;
-}> = <template>
+export const Placeholder = <template>
   {{#let (service "editor") as |context|}}
     <label class="sr-only" for="initial-editor">
       Glimmer + Markdown Code Editor
@@ -24,4 +22,6 @@ export const Placeholder: TOC<{
       ...attributes
     ><code class="{{orGlimdown (qp 'format')}} hljs">{{context.text}}</code></pre>
   {{/let}}
-</template>;
+</template> as TOC<{
+    Element: HTMLPreElement;
+}>;

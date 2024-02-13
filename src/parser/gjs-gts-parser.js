@@ -8,8 +8,6 @@ const {
 } = require('./ts-patch');
 const { transformForLint, preprocessGlimmerTemplates, convertAst } = require('./transforms');
 
-patchTs();
-
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers
  * 1. transforms gts/gjs files into parseable ts/js without changing the offsets and locations around it
@@ -23,12 +21,13 @@ patchTs();
  */
 module.exports = {
   parseForESLint(code, options) {
+    patchTs();
     registerParsedFile(options.filePath);
     let jsCode = code;
     const info = transformForLint(code);
     jsCode = info.output;
 
-    const isTypescript = options.filePath.endsWith('.gts');
+    const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');
 
     let result = null;
     const filePath = options.filePath;

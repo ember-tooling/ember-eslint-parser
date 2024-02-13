@@ -419,7 +419,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
     if (
       node.type === 'ExpressionStatement' ||
       node.type === 'StaticBlock' ||
-      node.type === 'TaggedTemplateExpression' ||
+      node.type === 'TemplateLiteral' ||
       node.type === 'ExportDefaultDeclaration'
     ) {
       let range = node.range;
@@ -563,9 +563,9 @@ module.exports.transformForLint = function transformForLint(code) {
       jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
     } else {
       const tplLength = tplInfo.range.end - tplInfo.range.start;
-      const spaces = tplLength - byteLength(content) - '""`'.length - '`'.length - backticks;
+      const spaces = tplLength - byteLength(content) - '`'.length - '`'.length - backticks;
       const total = content + ' '.repeat(spaces);
-      const replacementCode = `""\`${total}\``;
+      const replacementCode = `\`${total}\``;
       jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
     }
   }

@@ -1,4 +1,3 @@
-// @ts-ignore-expect-error
 import { hash } from '@ember/helper';
 
 import HeadlessMenu from 'ember-headlessui/components/menu';
@@ -30,16 +29,7 @@ const Button: TOC<{
   </@item>
 </template>;
 
-const DefaultTrigger: TOC<{
-  Element: HTMLButtonElement;
-  Args: {
-    menu: MenuTypes.Menu;
-    trigger: ModifierLike<any>;
-  };
-  Blocks: {
-    default: [MenuTypes.Menu];
-  };
-}> = <template>
+const DefaultTrigger = <template>
   <@menu.Button
     {{@trigger}}
     class="text-black rounded border bg-white px-2 py-1 -my-1 text-left transition ease-in-out duration-150 sm:text-sm drop-shadow-md hover:drop-shadow-xl focus:ring-4 focus-visible:outline-none ring-ember-brand focus:outline-none"
@@ -47,13 +37,22 @@ const DefaultTrigger: TOC<{
   >
     {{yield @menu}}
   </@menu.Button>
-</template>;
+</template> as TOC<{
+  Element: HTMLButtonElement;
+  Args: {
+    menu: MenuTypes.Menu;
+    trigger: ModifierLike<unknown>;
+  };
+  Blocks: {
+    default: [MenuTypes.Menu];
+  };
+}>;
 
 const PlainTrigger: TOC<{
   Element: HTMLButtonElement;
   Args: {
     menu: MenuTypes.Menu;
-    trigger: ModifierLike<any>;
+    trigger: ModifierLike<unknown>;
   };
   Blocks: {
     default: [MenuTypes.Menu];

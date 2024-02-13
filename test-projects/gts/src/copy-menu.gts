@@ -1,7 +1,11 @@
 import Component from '@glimmer/component';
 import { on } from '@ember/modifier';
 
-import { getSnippetElement, toClipboard, withExtraStyles } from './copy-utils';
+let { getSnippetElement, toClipboard, withExtraStyles }  = {} as {
+  getSnippetElement: unknown,
+  toClipboard: unknown,
+  withExtraStyles: unknown,
+};
 import Menu from './menu';
 
 /**
@@ -9,15 +13,15 @@ import Menu from './menu';
  */
 export default class CopyMenu extends Component {
   copyAsText = (event: Event) => {
-    let code = getSnippetElement(event);
+    let code = getSnippetElement(event) as unknown;
 
-    navigator.clipboard.writeText(code.innerText);
+    void navigator.clipboard.writeText(code.innerText as string);
   };
 
   copyAsImage = async (event: Event) => {
-    let code = getSnippetElement(event);
+    let code = getSnippetElement(event) as unknown;
 
-    await withExtraStyles(code, () => toClipboard(code));
+    await withExtraStyles(code, () => toClipboard(code) as void);
   };
 
   <template>
