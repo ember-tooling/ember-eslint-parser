@@ -1,4 +1,20 @@
 # Changelog
+
+## Release (2024-02-13)
+
+ember-eslint-parser 0.3.4 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#49](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/49) fix typed linting ([@patricklx](https://github.com/patricklx))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#41](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/41) GJS: Add tests to ensure flat-configs work with the parser ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 2
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
 ## Release (2024-02-01)
 
 ember-eslint-parser 0.3.3 (patch)
