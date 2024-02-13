@@ -28,4 +28,4 @@ export const Footer = <template>
       </ExternalLink>
     </nav>
   </footer>
-</template> as unknown;
+</template>;

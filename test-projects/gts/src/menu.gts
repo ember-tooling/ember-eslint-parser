@@ -27,7 +27,7 @@ const Button: TOC<{
       {{yield}}
     </i.Element>
   </@item>
-</template> as unknown;
+</template>;
 
 const DefaultTrigger = <template>
   <@menu.Button
@@ -61,7 +61,7 @@ const PlainTrigger: TOC<{
   <@menu.Button {{@trigger}} ...attributes>
     {{yield @menu}}
   </@menu.Button>
-</template> as unknown;
+</template>;
 
 const Items: TOC<{
   Element: HTMLDivElement;
@@ -80,7 +80,7 @@ const Items: TOC<{
   >
     {{yield (component Button item=items.Item)}}
   </@items>
-</template> as unknown;
+</template>;
 
 const Menu: TOC<{
   Element: HTMLDivElement;
@@ -143,6 +143,6 @@ const Menu: TOC<{
 
     </HeadlessMenu>
   </Popover>
-</template> as unknown;
+</template>;
 
 export default Menu;
