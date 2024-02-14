@@ -124,7 +124,7 @@ function traverse(visitorKeys, node, visitor) {
 
     if (!currentPath.node) continue;
 
-    const visitorKeys = allVisitorKeys[currentPath.node.type];
+    const visitorKeys = [...(allVisitorKeys[currentPath.node.type] || [])];
     if (currentPath.node.type === 'GlimmerElementNode') {
       if (!visitorKeys.includes('blockParamNodes')) {
         visitorKeys.push('blockParamNodes', 'parts');
