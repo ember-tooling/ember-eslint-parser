@@ -2,6 +2,23 @@
 
 ## Release (2024-02-14)
 
+ember-eslint-parser 0.3.6 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#55](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/55) fix location info ([@patricklx](https://github.com/patricklx))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#53](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/53) add visitor keys test ([@patricklx](https://github.com/patricklx))
+  * [#52](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/52) Update eslint-plugin-ember script ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 2
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
+## Release (2024-02-14)
+
 ember-eslint-parser 0.3.5 (patch)
 
 #### :bug: Bug Fix
