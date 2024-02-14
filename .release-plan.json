@@ -2,16 +2,20 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.3.4",
-      "newVersion": "0.3.5",
+      "oldVersion": "0.3.5",
+      "newVersion": "0.3.6",
       "constraints": [
         {
           "impact": "patch",
           "reason": "Appears in changelog section :bug: Bug Fix"
+        },
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :house: Internal"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2024-02-14)\n\nember-eslint-parser 0.3.5 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#50](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/50) do not add extra keys to the VisitorKeys map ([@patricklx](https://github.com/patricklx))\n\n#### Committers: 1\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n"
+  "description": "## Release (2024-02-14)\n\nember-eslint-parser 0.3.6 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#55](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/55) fix location info ([@patricklx](https://github.com/patricklx))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#53](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/53) add visitor keys test ([@patricklx](https://github.com/patricklx))\n  * [#52](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/52) Update eslint-plugin-ember script ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }
