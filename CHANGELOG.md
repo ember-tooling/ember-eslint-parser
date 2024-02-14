@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2024-02-14)
+
+ember-eslint-parser 0.3.5 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#50](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/50) do not add extra keys to the VisitorKeys map ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+
 ## Release (2024-02-13)
 
 ember-eslint-parser 0.3.4 (patch)
