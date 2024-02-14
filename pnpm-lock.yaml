@@ -38,6 +38,9 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^6.21.0
         version: 6.21.0(eslint@8.56.0)(typescript@5.3.3)
+      '@typescript-eslint/visitor-keys':
+        specifier: ^6.21.0
+        version: 6.21.0
       concurrently:
         specifier: ^8.2.2
         version: 8.2.2

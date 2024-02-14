@@ -2,6 +2,8 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
 import { traverse } from '../src/parser/transforms.js';
 import { SourceCode } from 'eslint';
+import { visitorKeys as tsVisitors } from '@typescript-eslint/visitor-keys';
+import { visitorKeys as glimmerVisitorKeys } from '@glimmer/syntax';
 
 describe('transform', () => {
   let text, result;
@@ -46,6 +48,14 @@ export const NotFound = <template>
       range: true,
       tokens: true,
     });
+  });
+
+  it('has merged visitor keys', () => {
+    const visitorKeys = { ...tsVisitors };
+    for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
+      visitorKeys[`Glimmer${k}`] = [...v];
+    }
+    expect(result.visitorKeys).toStrictEqual(visitorKeys);
   });
 
   it('all tokens are correct', () => {
