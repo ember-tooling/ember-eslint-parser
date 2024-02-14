@@ -312,29 +312,45 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
 
       if (n.type === 'ElementNode') {
         n.name = n.tag;
-        n.parts = n.parts.map((p) => ({
-          ...p,
-          parent: n,
-          type: 'GlimmerElementNodePart',
-          name: p.value,
-          range: [
+        n.parts = n.parts.map((p) => {
+          const range = [
             offset + docLines.positionToOffset(p.loc.start),
             offset + docLines.positionToOffset(p.loc.end),
-          ],
-        }));
+          ];
+          const loc = {
+            start: codeLines.offsetToPosition(range[0]),
+            end: codeLines.offsetToPosition(range[1]),
+          };
+          return {
+            ...p,
+            parent: n,
+            type: 'GlimmerElementNodePart',
+            name: p.value,
+            range,
+            loc,
+          };
+        });
       }
 
       if ('blockParams' in n) {
         // program does have blockParams but not blockParamNodes
-        n.params = (n.blockParamNodes || []).map((p) => ({
-          ...p,
-          parent: n,
-          name: p.value,
-          range: [
+        n.params = (n.blockParamNodes || []).map((p) => {
+          const range = [
             offset + docLines.positionToOffset(p.loc.start),
             offset + docLines.positionToOffset(p.loc.end),
-          ],
-        }));
+          ];
+          const loc = {
+            start: codeLines.offsetToPosition(range[0]),
+            end: codeLines.offsetToPosition(range[1]),
+          };
+          return {
+            ...p,
+            parent: n,
+            name: p.value,
+            range,
+            loc,
+          };
+        });
       }
       n.type = `Glimmer${n.type}`;
       allNodeTypes.add(n.type);
