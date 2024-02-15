@@ -28,6 +28,9 @@ It's recommended to only use _overrides_ when defining your eslint config, so us
     },
 ```
 
+if we detect a typescript parser, it will also be used for all files, otherwise babel parser will be used.
+If we cannot find a typescript parser when linting gts we throw an error. 
+
 ## Support
 
 eslint-plugin-ember is the primary consumer of this parser library, so SemVer _may_ not be respected for other consumers.
