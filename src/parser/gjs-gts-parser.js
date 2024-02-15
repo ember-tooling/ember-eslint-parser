@@ -65,7 +65,7 @@ module.exports = {
       preprocessedResult.code = code;
       const { templateVisitorKeys } = preprocessedResult;
       const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
-      result.isTypescript = isTypescript;
+      result.isTypescript = isTypescript || useTypescript;
       convertAst(result, preprocessedResult, visitorKeys);
       if (result.services?.program) {
         syncMtsGtsSourceFiles(result.services?.program);
