@@ -41,7 +41,12 @@ module.exports = {
 
     try {
       result = isTypescript
-        ? typescriptParser.parseForESLint(jsCode, { ...options, ranges: true, filePath })
+        ? typescriptParser.parseForESLint(jsCode, {
+            ...options,
+            ranges: true,
+            extraFileExtensions: ['.gts', '.gjs'],
+            filePath,
+          })
         : babelParser.parseForESLint(jsCode, {
             ...options,
             requireConfigFile: false,
