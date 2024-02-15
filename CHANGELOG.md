@@ -1,5 +1,17 @@
 # Changelog
 
+## Release (2024-02-15)
+
+ember-eslint-parser 0.3.7 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#60](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/60) use typescript parser by default ([@patricklx](https://github.com/patricklx))
+  * [#59](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/59) add extraFileExtensions by default ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+
 ## Release (2024-02-14)
 
 ember-eslint-parser 0.3.6 (patch)
