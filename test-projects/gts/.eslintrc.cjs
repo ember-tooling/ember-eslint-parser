@@ -4,8 +4,7 @@ module.exports = {
   root: true,
   parserOptions: {
     project: true,
-    tsconfigRootDir: __dirname,
-    extraFileExtensions: ['.gts', '.gjs']
+    tsconfigRootDir: __dirname
   },
   overrides: [
     {
