@@ -28,6 +28,11 @@ module.exports = {
     jsCode = info.output;
 
     const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');
+    let useTypescript = true;
+
+    if (options.useBabel || !typescriptParser) {
+      useTypescript = false;
+    }
 
     let result = null;
     const filePath = options.filePath;
@@ -40,18 +45,19 @@ module.exports = {
     }
 
     try {
-      result = isTypescript
-        ? typescriptParser.parseForESLint(jsCode, {
-            ...options,
-            ranges: true,
-            extraFileExtensions: ['.gts', '.gjs'],
-            filePath,
-          })
-        : babelParser.parseForESLint(jsCode, {
-            ...options,
-            requireConfigFile: false,
-            ranges: true,
-          });
+      result =
+        isTypescript || useTypescript
+          ? typescriptParser.parseForESLint(jsCode, {
+              ...options,
+              ranges: true,
+              extraFileExtensions: ['.gts', '.gjs'],
+              filePath,
+            })
+          : babelParser.parseForESLint(jsCode, {
+              ...options,
+              requireConfigFile: false,
+              ranges: true,
+            });
       if (!info.templateInfos?.length) {
         return result;
       }
