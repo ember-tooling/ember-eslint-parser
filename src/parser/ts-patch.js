@@ -87,7 +87,7 @@ try {
     const sourceFiles = program.getSourceFiles();
     for (const sourceFile of sourceFiles) {
       // check for deleted gts files, need to remove mts as well
-      if (sourceFile.path.match(/\.m?ts/) && sourceFile.isVirtualGts) {
+      if (sourceFile.path.match(/\.m?ts$/) && sourceFile.isVirtualGts) {
         const gtsFile = program.getSourceFile(sourceFile.path.replace(/\.m?ts$/, '.gts'));
         if (!gtsFile) {
           sourceFile.version = null;
