@@ -28,6 +28,10 @@ try {
       readFile(fname) {
         let fileName = fname;
         let content = '';
+        if (fileName.endsWith('tsconfig.tsbuildinfo')) {
+          return content;
+        }
+
         try {
           content = fs.readFileSync(fileName).toString();
         } catch {
