@@ -5,11 +5,6 @@ module.exports = {
   parserOptions: {
     project: true,
     tsconfigRootDir: __dirname,
-    ember: {
-      ts: {
-        checkExtensions: true,
-      },
-    },
   },
   overrides: [
     {
