@@ -13,6 +13,10 @@ export class Other {
 
 }
 
+export function hi() {
+  return 'hi';
+}
+
 export class Await extends Component<Args> {
   @tracked resolved?: ComponentLike;
   @tracked error?: Error;
