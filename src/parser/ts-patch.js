@@ -23,15 +23,19 @@ try {
         ];
       },
       fileExists(fileName) {
-        return fs.existsSync(fileName.replace(/\.mts$/, '.gts')) || fs.existsSync(fileName);
+        return fs.existsSync(fileName.replace(/\.m?ts$/, '.gts')) || fs.existsSync(fileName);
       },
       readFile(fname) {
         let fileName = fname;
         let content = '';
+        if (fileName.endsWith('tsconfig.tsbuildinfo')) {
+          return content;
+        }
+
         try {
           content = fs.readFileSync(fileName).toString();
         } catch {
-          fileName = fileName.replace(/\.mts$/, '.gts');
+          fileName = fileName.replace(/\.m?ts$/, '.gts');
           content = fs.readFileSync(fileName).toString();
         }
         if (fileName.endsWith('.gts')) {
@@ -83,8 +87,8 @@ try {
     const sourceFiles = program.getSourceFiles();
     for (const sourceFile of sourceFiles) {
       // check for deleted gts files, need to remove mts as well
-      if (sourceFile.path.endsWith('.mts') && sourceFile.isVirtualGts) {
-        const gtsFile = program.getSourceFile(sourceFile.path.replace(/\.mts$/, '.gts'));
+      if (sourceFile.path.match(/\.m?ts$/) && sourceFile.isVirtualGts) {
+        const gtsFile = program.getSourceFile(sourceFile.path.replace(/\.m?ts$/, '.gts'));
         if (!gtsFile) {
           sourceFile.version = null;
         }
@@ -93,7 +97,10 @@ try {
         /**
          * @type {ts.SourceFile}
          */
-        const mtsSourceFile = program.getSourceFile(sourceFile.path.replace(/\.gts$/, '.mts'));
+        let mtsSourceFile = program.getSourceFile(sourceFile.path.replace(/\.gts$/, '.mts'));
+        if (!mtsSourceFile) {
+          mtsSourceFile = program.getSourceFile(sourceFile.path.replace(/\.gts$/, '.ts'));
+        }
         if (mtsSourceFile) {
           const keep = {
             fileName: mtsSourceFile.fileName,

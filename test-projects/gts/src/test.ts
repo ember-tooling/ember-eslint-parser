@@ -1,4 +1,4 @@
-import { hi } from './await.gts';
+import { hi } from './await';
 import type { Other } from './await.gts';
 
 console.log(hi());
