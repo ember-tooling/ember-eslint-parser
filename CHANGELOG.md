@@ -1,5 +1,20 @@
 # Changelog
 
+## Release (2024-02-21)
+
+ember-eslint-parser 0.3.8 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#63](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/63) TypeScript: Support imports without extensions ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#62](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/62) Add test situation to verify if imports from gts no longer accidentally are cast to `any` ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 1
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2024-02-15)
 
 ember-eslint-parser 0.3.7 (patch)
