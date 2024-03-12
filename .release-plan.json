@@ -1,13 +1,13 @@
 {
   "solution": {
     "ember-eslint-parser": {
-      "impact": "patch",
-      "oldVersion": "0.3.7",
-      "newVersion": "0.3.8",
+      "impact": "minor",
+      "oldVersion": "0.3.8",
+      "newVersion": "0.4.0",
       "constraints": [
         {
-          "impact": "patch",
-          "reason": "Appears in changelog section :bug: Bug Fix"
+          "impact": "minor",
+          "reason": "Appears in changelog section :rocket: Enhancement"
         },
         {
           "impact": "patch",
@@ -17,5 +17,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2024-02-21)\n\nember-eslint-parser 0.3.8 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#63](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/63) TypeScript: Support imports without extensions ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#62](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/62) Add test situation to verify if imports from gts no longer accidentally are cast to `any` ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 1\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2024-03-12)\n\nember-eslint-parser 0.4.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#66](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/66) bump ts deps ([@patricklx](https://github.com/patricklx))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#69](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/69) Update devDependencies ([@renovate[bot]](https://github.com/apps/renovate))\n\n#### Committers: 1\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n"
 }

@@ -1,5 +1,20 @@
 # Changelog
 
+## Release (2024-03-12)
+
+ember-eslint-parser 0.4.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#66](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/66) bump ts deps ([@patricklx](https://github.com/patricklx))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#69](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/69) Update devDependencies ([@renovate[bot]](https://github.com/apps/renovate))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+
 ## Release (2024-02-21)
 
 ember-eslint-parser 0.3.8 (patch)
