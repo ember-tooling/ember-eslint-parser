@@ -39,6 +39,8 @@ export const NotFound = <template>
 
   <br /><br /><br>
   <BackToStart test="  {{foo}} {{bar}}" />
+  \${{this.price}}
+  \`
 </template>`;
 
     result = parseForESLint(text, {
@@ -115,6 +117,8 @@ export const NotFound = <template>
 
         <br /><br /><br>
         <BackToStart test="  {{foo}} {{bar}}" />
+        \${{this.price}}
+        \`
       </template>",
         "type": "Program",
       }
@@ -132,6 +136,8 @@ export const NotFound = <template>
 
         <br /><br /><br>
         <BackToStart test="  {{foo}} {{bar}}" />
+        \${{this.price}}
+        \`
       </template>",
         "type": "ExportNamedDeclaration",
       }
@@ -149,6 +155,8 @@ export const NotFound = <template>
 
         <br /><br /><br>
         <BackToStart test="  {{foo}} {{bar}}" />
+        \${{this.price}}
+        \`
       </template>",
         "type": "VariableDeclaration",
       }
@@ -166,6 +174,8 @@ export const NotFound = <template>
 
         <br /><br /><br>
         <BackToStart test="  {{foo}} {{bar}}" />
+        \${{this.price}}
+        \`
       </template>",
         "type": "VariableDeclarator",
       }
@@ -183,6 +193,8 @@ export const NotFound = <template>
 
         <br /><br /><br>
         <BackToStart test="  {{foo}} {{bar}}" />
+        \${{this.price}}
+        \`
       </template>",
         "type": "GlimmerTemplate",
       }
@@ -200,6 +212,8 @@ export const NotFound = <template>
 
         <br /><br /><br>
         <BackToStart test="  {{foo}} {{bar}}" />
+        \${{this.price}}
+        \`
       </template>",
         "type": "GlimmerElementNode",
       }
@@ -208,6 +222,33 @@ export const NotFound = <template>
       {
         "slice": "template",
         "type": "GlimmerElementNodePart",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
+        "slice": "
+        \`
+      ",
+        "type": "GlimmerTextNode",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
+        "slice": "{{this.price}}",
+        "type": "GlimmerMustacheStatement",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
+        "slice": "this.price",
+        "type": "GlimmerPathExpression",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
+        "slice": "
+        $",
+        "type": "GlimmerTextNode",
       }
     `);
     expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
@@ -720,30 +761,6 @@ export const NotFound = <template>
         "type": "Identifier",
       }
     `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "Link",
-        "type": "Identifier",
-      }
-    `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "ExternalLink",
-        "type": "ImportSpecifier",
-      }
-    `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "ExternalLink",
-        "type": "Identifier",
-      }
-    `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "ExternalLink",
-        "type": "Identifier",
-      }
-    `);
   });
 
   it('node tokens are correct', () => {
@@ -933,6 +950,18 @@ export const NotFound = <template>
             """,
             "/",
             ">",
+            "
+          $",
+            "{",
+            "{",
+            "this",
+            ".",
+            "price",
+            "}",
+            "}",
+            "
+          \`
+        ",
             "<",
             "/",
             "template",
@@ -1005,6 +1034,18 @@ export const NotFound = <template>
             """,
             "/",
             ">",
+            "
+          $",
+            "{",
+            "{",
+            "this",
+            ".",
+            "price",
+            "}",
+            "}",
+            "
+          \`
+        ",
             "<",
             "/",
             "template",
@@ -1076,6 +1117,18 @@ export const NotFound = <template>
             """,
             "/",
             ">",
+            "
+          $",
+            "{",
+            "{",
+            "this",
+            ".",
+            "price",
+            "}",
+            "}",
+            "
+          \`
+        ",
             "<",
             "/",
             "template",
@@ -1146,6 +1199,18 @@ export const NotFound = <template>
             """,
             "/",
             ">",
+            "
+          $",
+            "{",
+            "{",
+            "this",
+            ".",
+            "price",
+            "}",
+            "}",
+            "
+          \`
+        ",
             "<",
             "/",
             "template",
@@ -1214,6 +1279,18 @@ export const NotFound = <template>
             """,
             "/",
             ">",
+            "
+          $",
+            "{",
+            "{",
+            "this",
+            ".",
+            "price",
+            "}",
+            "}",
+            "
+          \`
+        ",
             "<",
             "/",
             "template",
@@ -1282,6 +1359,18 @@ export const NotFound = <template>
             """,
             "/",
             ">",
+            "
+          $",
+            "{",
+            "{",
+            "this",
+            ".",
+            "price",
+            "}",
+            "}",
+            "
+          \`
+        ",
             "<",
             "/",
             "template",
@@ -1299,6 +1388,53 @@ export const NotFound = <template>
         "type": "GlimmerElementNodePart",
       }
     `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "
+          \`
+        ",
+          ],
+          "type": "GlimmerTextNode",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "{",
+            "{",
+            "this",
+            ".",
+            "price",
+            "}",
+            "}",
+          ],
+          "type": "GlimmerMustacheStatement",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "this",
+            ".",
+            "price",
+          ],
+          "type": "GlimmerPathExpression",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "
+          $",
+          ],
+          "type": "GlimmerTextNode",
+        }
+      `);
     expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
       .toMatchInlineSnapshot(`
         {
@@ -2536,42 +2672,6 @@ export const NotFound = <template>
       {
         "tokens": [
           "Link",
-        ],
-        "type": "Identifier",
-      }
-    `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-      {
-        "tokens": [
-          "Link",
-        ],
-        "type": "Identifier",
-      }
-    `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-      {
-        "tokens": [
-          "ExternalLink",
-        ],
-        "type": "ImportSpecifier",
-      }
-    `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-      {
-        "tokens": [
-          "ExternalLink",
-        ],
-        "type": "Identifier",
-      }
-    `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-      {
-        "tokens": [
-          "ExternalLink",
         ],
         "type": "Identifier",
       }
