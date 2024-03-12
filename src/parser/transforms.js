@@ -566,20 +566,21 @@ module.exports.transformForLint = function transformForLint(code) {
    */
   const result = processor.parse(code);
   for (const tplInfo of result.reverse()) {
-    const backticks = [...tplInfo.contents].reduce(
-      (prev, curr) => (prev + (curr.codePointAt(0) === '`') ? 1 : 0),
+    const specialChars = [...tplInfo.contents].reduce(
+      (prev, curr) => (prev + ['`', '$'].includes(curr.codePointAt(0)) ? 1 : 0),
       0
     );
-    const content = tplInfo.contents.replace(/`/g, '\\`');
+    const content = tplInfo.contents.replace(/`/g, '\\`').replace(/\$/g, '\\$');
     if (tplInfo.type === 'class-member') {
       const tplLength = tplInfo.range.end - tplInfo.range.start;
-      const spaces = tplLength - byteLength(content) - 'static{`'.length - '`}'.length - backticks;
+      const spaces =
+        tplLength - byteLength(content) - 'static{`'.length - '`}'.length - specialChars;
       const total = content + ' '.repeat(spaces);
       const replacementCode = `static{\`${total}\`}`;
       jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
     } else {
       const tplLength = tplInfo.range.end - tplInfo.range.start;
-      const spaces = tplLength - byteLength(content) - '`'.length - '`'.length - backticks;
+      const spaces = tplLength - byteLength(content) - '`'.length - '`'.length - specialChars;
       const total = content + ' '.repeat(spaces);
       const replacementCode = `\`${total}\``;
       jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
