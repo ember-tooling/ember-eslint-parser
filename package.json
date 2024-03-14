@@ -20,10 +20,10 @@
   "scripts": {
     "test": "vitest run",
     "lint": "concurrently \"npm:lint:*(!fix)\" --names \"lint:\"",
-    "lint:js": "eslint .",
+    "lint:js": "eslint . --max-warnings=0",
     "lint:package": "pnpm publint",
     "lint:fix": "concurrently \"npm:lint:*:fix\" --names \"fix:\"",
-    "lint:js:fix": "eslint . --fix"
+    "lint:js:fix": "eslint . --fix --max-warnings=0"
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",
