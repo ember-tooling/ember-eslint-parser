@@ -1,10 +1,14 @@
 {
   "solution": {
     "ember-eslint-parser": {
-      "impact": "patch",
-      "oldVersion": "0.3.7",
-      "newVersion": "0.3.8",
+      "impact": "minor",
+      "oldVersion": "0.3.8",
+      "newVersion": "0.4.0",
       "constraints": [
+        {
+          "impact": "minor",
+          "reason": "Appears in changelog section :rocket: Enhancement"
+        },
         {
           "impact": "patch",
           "reason": "Appears in changelog section :bug: Bug Fix"
@@ -17,5 +21,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2024-02-21)\n\nember-eslint-parser 0.3.8 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#63](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/63) TypeScript: Support imports without extensions ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#62](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/62) Add test situation to verify if imports from gts no longer accidentally are cast to `any` ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 1\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2024-03-15)\n\nember-eslint-parser 0.4.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#66](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/66) bump ts deps ([@patricklx](https://github.com/patricklx))\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#81](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/81) remove unnecessary code ([@patricklx](https://github.com/patricklx))\n  * [#76](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/76) fix parsing issue ([@patricklx](https://github.com/patricklx))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#80](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/80) Do not allow warnings in our tests ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#79](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/79) Add TS compatibility matrix ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#72](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/72) Update peter-evans/create-pull-request action to v6 ([@renovate[bot]](https://github.com/apps/renovate))\n  * [#71](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/71) Update devDependencies ([@renovate[bot]](https://github.com/apps/renovate))\n  * [#69](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/69) Update devDependencies ([@renovate[bot]](https://github.com/apps/renovate))\n\n#### Committers: 2\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }

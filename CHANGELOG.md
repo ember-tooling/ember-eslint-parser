@@ -1,5 +1,30 @@
 # Changelog
 
+## Release (2024-03-15)
+
+ember-eslint-parser 0.4.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#66](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/66) bump ts deps ([@patricklx](https://github.com/patricklx))
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#81](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/81) remove unnecessary code ([@patricklx](https://github.com/patricklx))
+  * [#76](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/76) fix parsing issue ([@patricklx](https://github.com/patricklx))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#80](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/80) Do not allow warnings in our tests ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#79](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/79) Add TS compatibility matrix ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#72](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/72) Update peter-evans/create-pull-request action to v6 ([@renovate[bot]](https://github.com/apps/renovate))
+  * [#71](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/71) Update devDependencies ([@renovate[bot]](https://github.com/apps/renovate))
+  * [#69](https://github.com/NullVoxPopuli/ember-eslint-parser/pull/69) Update devDependencies ([@renovate[bot]](https://github.com/apps/renovate))
+
+#### Committers: 2
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2024-02-21)
 
 ember-eslint-parser 0.3.8 (patch)
