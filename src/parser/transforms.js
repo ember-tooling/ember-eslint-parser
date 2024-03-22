@@ -2,9 +2,15 @@ const ContentTag = require('content-tag');
 const glimmer = require('@glimmer/syntax');
 const DocumentLines = require('../utils/document');
 const { visitorKeys: glimmerVisitorKeys } = require('@glimmer/syntax');
-const TypescriptScope = require('@typescript-eslint/scope-manager');
 const { Reference, Scope, Variable, Definition } = require('eslint-scope');
 const htmlTags = require('html-tags');
+
+let TypescriptScope = null;
+try {
+  TypescriptScope = require('@typescript-eslint/scope-manager');
+} catch {
+  // not available
+}
 
 const BufferMap = new Map();
 
