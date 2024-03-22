@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",
+    "@typescript-eslint/scope-manager": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "@typescript-eslint/visitor-keys": "^7.1.0",
     "concurrently": "^8.2.2",
@@ -65,15 +66,10 @@
   },
   "peerDependencies": {
     "@babel/core": "^7.23.6",
-    "@typescript-eslint/parser": "^7.1.0",
-    "typescript": "^5.3.3",
-    "@typescript-eslint/scope-manager": "^7.1.0",
+    "@typescript-eslint/parser": "*"
   },
   "peerDependenciesMeta": {
     "typescript": {
-      "optional": true
-    },
-    "@typescript-eslint/scope-manager": {
       "optional": true
     }
   },
