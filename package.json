@@ -72,5 +72,5 @@
     "@typescript-eslint/parser": {
       "optional": true
     }
-  },
+  }
 }
