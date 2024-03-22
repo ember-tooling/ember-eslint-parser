@@ -7,7 +7,8 @@ const htmlTags = require('html-tags');
 
 let TypescriptScope = null;
 try {
-  TypescriptScope = require('@typescript-eslint/scope-manager');
+  const path = require.resolve('@typescript-eslint/parser');
+  TypescriptScope = require('@typescript-eslint/scope-manager', { paths: [path] });
 } catch {
   // not available
 }
