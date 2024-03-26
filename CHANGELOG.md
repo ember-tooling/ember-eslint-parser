@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2024-03-26)
+
+ember-eslint-parser 0.4.1 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#82](https://github.com/ember-tooling/ember-eslint-parser/pull/82) fix ts peer deps ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+
 ## Release (2024-03-15)
 
 ember-eslint-parser 0.4.0 (minor)
