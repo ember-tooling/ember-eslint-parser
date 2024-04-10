@@ -508,12 +508,17 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       const scope = result.isTypescript
         ? new TypescriptScope.BlockScope(result.scopeManager, upperScope, node)
         : new Scope(result.scopeManager, 'block', upperScope, node);
+      const declaredVariables =
+        result.scopeManager.declaredVariables || result.scopeManager.__declaredVariables;
+      const vars = [];
+      declaredVariables.set(node, vars);
       for (const [i, b] of node.params.entries()) {
         const v = new Variable(b.name, scope);
         v.identifiers.push(b);
         v.defs.push(new Definition('Parameter', b, node, node, i, 'Block Param'));
         scope.variables.push(v);
         scope.set.set(b.name, v);
+        vars.push(v);
       }
     }
     return null;
