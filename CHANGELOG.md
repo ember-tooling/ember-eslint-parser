@@ -1,5 +1,17 @@
 # Changelog
 
+## Release (2024-04-10)
+
+ember-eslint-parser 0.4.2 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#84](https://github.com/ember-tooling/ember-eslint-parser/pull/84) add vars to scope manager declaredVariables ([@patricklx](https://github.com/patricklx))
+  * [#74](https://github.com/ember-tooling/ember-eslint-parser/pull/74) update glimmer ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+
 ## Release (2024-03-26)
 
 ember-eslint-parser 0.4.1 (patch)
