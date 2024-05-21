@@ -6,6 +6,10 @@ module.exports = {
     project: true,
     tsconfigRootDir: __dirname
   },
+  rules: {
+    'no-use-before-define': ['error'],
+    'no-unused-vars': ['error'],
+  },
   overrides: [
     {
       files: ['**/*.{js,ts}'],
