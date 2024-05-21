@@ -512,13 +512,29 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
         result.scopeManager.declaredVariables || result.scopeManager.__declaredVariables;
       const vars = [];
       declaredVariables.set(node, vars);
+      const virtualJSParentNode = {
+        type: 'FunctionDeclaration',
+        params: node.params,
+        range: node.range,
+        loc: node.loc,
+        parent: path.parent
+      };
       for (const [i, b] of node.params.entries()) {
         const v = new Variable(b.name, scope);
         v.identifiers.push(b);
-        v.defs.push(new Definition('Parameter', b, node, node, i, 'Block Param'));
         scope.variables.push(v);
         scope.set.set(b.name, v);
         vars.push(v);
+
+        const virtualJSNode = {
+          type: 'Identifier',
+          name: b.name,
+          range: b.range,
+          loc: b.loc,
+          parent: virtualJSParentNode
+        };
+        v.defs.push(new Definition('Parameter', virtualJSNode, node, node, i, 'Block Param'));
+        v.defs.push(new Definition('Parameter', b, node, node, i, 'Block Param'));
       }
     }
     return null;
