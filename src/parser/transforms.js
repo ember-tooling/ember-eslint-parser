@@ -517,7 +517,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
         params: node.params,
         range: node.range,
         loc: node.loc,
-        parent: path.parent
+        parent: path.parent,
       };
       for (const [i, b] of node.params.entries()) {
         const v = new Variable(b.name, scope);
@@ -531,7 +531,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
           name: b.name,
           range: b.range,
           loc: b.loc,
-          parent: virtualJSParentNode
+          parent: virtualJSParentNode,
         };
         v.defs.push(new Definition('Parameter', virtualJSNode, node, node, i, 'Block Param'));
         v.defs.push(new Definition('Parameter', b, node, node, i, 'Block Param'));
