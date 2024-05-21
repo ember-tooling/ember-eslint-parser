@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.4.1",
-      "newVersion": "0.4.2",
+      "oldVersion": "0.4.2",
+      "newVersion": "0.4.3",
       "constraints": [
         {
           "impact": "patch",
@@ -13,5 +13,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2024-04-10)\n\nember-eslint-parser 0.4.2 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#84](https://github.com/ember-tooling/ember-eslint-parser/pull/84) add vars to scope manager declaredVariables ([@patricklx](https://github.com/patricklx))\n  * [#74](https://github.com/ember-tooling/ember-eslint-parser/pull/74) update glimmer ([@patricklx](https://github.com/patricklx))\n\n#### Committers: 1\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n"
+  "description": "## Release (2024-05-21)\n\nember-eslint-parser 0.4.3 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#88](https://github.com/ember-tooling/ember-eslint-parser/pull/88) add virtual js nodes to support more eslint rules ([@patricklx](https://github.com/patricklx))\n\n#### Committers: 1\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n"
 }

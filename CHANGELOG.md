@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2024-05-21)
+
+ember-eslint-parser 0.4.3 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#88](https://github.com/ember-tooling/ember-eslint-parser/pull/88) add virtual js nodes to support more eslint rules ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+
 ## Release (2024-04-10)
 
 ember-eslint-parser 0.4.2 (patch)
