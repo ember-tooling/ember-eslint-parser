@@ -1,5 +1,20 @@
 # Changelog
 
+## Release (2024-07-05)
+
+ember-eslint-parser 0.5.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#91](https://github.com/ember-tooling/ember-eslint-parser/pull/91) Bump content tag ([@SergeAstapov](https://github.com/SergeAstapov))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#90](https://github.com/ember-tooling/ember-eslint-parser/pull/90) Update repository url in package.json ([@SergeAstapov](https://github.com/SergeAstapov))
+
+#### Committers: 1
+- Sergey Astapov ([@SergeAstapov](https://github.com/SergeAstapov))
+
 ## Release (2024-05-21)
 
 ember-eslint-parser 0.4.3 (patch)
