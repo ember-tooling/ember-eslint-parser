@@ -5,7 +5,7 @@
   "keywords": [],
   "repository": {
     "type": "git",
-    "url": "git@github.com:NullVoxPopuli/ember-eslint-parser.git"
+    "url": "git@github.com:ember-tooling/ember-eslint-parser.git"
   },
   "license": "ISC",
   "author": "",
