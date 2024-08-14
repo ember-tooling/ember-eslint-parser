@@ -20,6 +20,11 @@ const { transformForLint, preprocessGlimmerTemplates, convertAst } = require('./
  * @type {import('eslint').ParserModule}
  */
 module.exports = {
+  meta: {
+    name: 'ember-eslint-parser',
+    version: '*',
+  },
+
   parseForESLint(code, options) {
     patchTs();
     registerParsedFile(options.filePath);
