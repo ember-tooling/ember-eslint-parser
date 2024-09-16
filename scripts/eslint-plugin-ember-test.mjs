@@ -17,6 +17,7 @@ await execaCommand(`git checkout 8f485b2198ce143ccbf88768fa36316d82cc36ae`, {
   cwd: FOLDERS.repo,
   stdio: 'inherit',
 });
-await execaCommand(`pnpm install --frozen-lockfile`, { cwd: FOLDERS.repo, stdio: 'inherit' });
-await execaCommand(`pnpm add ${FOLDERS.here}`, { cwd: FOLDERS.repo, stdio: 'inherit' });
-await execaCommand(`pnpm run test`, { cwd: FOLDERS.repo, stdio: 'inherit' });
+await execaCommand(`yarn install`, { cwd: FOLDERS.repo, stdio: 'inherit' });
+await execaCommand(`yarn link`, { cwd: FOLDERS.here, stdio: 'inherit' });
+await execaCommand(`yarn link ember-eslint-parser`, { cwd: FOLDERS.repo, stdio: 'inherit' });
+await execaCommand(`yarn run test`, { cwd: FOLDERS.repo, stdio: 'inherit' });
