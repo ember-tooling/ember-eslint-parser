@@ -1,21 +1,17 @@
 {
   "solution": {
     "ember-eslint-parser": {
-      "impact": "minor",
-      "oldVersion": "0.4.3",
-      "newVersion": "0.5.0",
+      "impact": "patch",
+      "oldVersion": "0.5.0",
+      "newVersion": "0.5.1",
       "constraints": [
         {
-          "impact": "minor",
-          "reason": "Appears in changelog section :rocket: Enhancement"
-        },
-        {
           "impact": "patch",
-          "reason": "Appears in changelog section :house: Internal"
+          "reason": "Appears in changelog section :bug: Bug Fix"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2024-07-05)\n\nember-eslint-parser 0.5.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#91](https://github.com/ember-tooling/ember-eslint-parser/pull/91) Bump content tag ([@SergeAstapov](https://github.com/SergeAstapov))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#90](https://github.com/ember-tooling/ember-eslint-parser/pull/90) Update repository url in package.json ([@SergeAstapov](https://github.com/SergeAstapov))\n\n#### Committers: 1\n- Sergey Astapov ([@SergeAstapov](https://github.com/SergeAstapov))\n"
+  "description": "## Release (2024-09-16)\n\nember-eslint-parser 0.5.1 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#95](https://github.com/ember-tooling/ember-eslint-parser/pull/95) chore: dont pin eslint-parser, allow eslint 9 ([@Techn1x](https://github.com/Techn1x))\n  * [#93](https://github.com/ember-tooling/ember-eslint-parser/pull/93) Add missing parser metadata ([@yannbertrand](https://github.com/yannbertrand))\n\n#### Committers: 2\n- Brad Overton ([@Techn1x](https://github.com/Techn1x))\n- Yann Bertrand ([@yannbertrand](https://github.com/yannbertrand))\n"
 }
