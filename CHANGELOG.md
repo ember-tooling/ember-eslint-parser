@@ -1,5 +1,18 @@
 # Changelog
 
+## Release (2024-09-16)
+
+ember-eslint-parser 0.5.1 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#95](https://github.com/ember-tooling/ember-eslint-parser/pull/95) chore: dont pin eslint-parser, allow eslint 9 ([@Techn1x](https://github.com/Techn1x))
+  * [#93](https://github.com/ember-tooling/ember-eslint-parser/pull/93) Add missing parser metadata ([@yannbertrand](https://github.com/yannbertrand))
+
+#### Committers: 2
+- Brad Overton ([@Techn1x](https://github.com/Techn1x))
+- Yann Bertrand ([@yannbertrand](https://github.com/yannbertrand))
+
 ## Release (2024-07-05)
 
 ember-eslint-parser 0.5.0 (minor)
