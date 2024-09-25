@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2024-09-25)
+
+ember-eslint-parser 0.5.2 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#99](https://github.com/ember-tooling/ember-eslint-parser/pull/99) note about multiple versions ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+
 ## Release (2024-09-16)
 
 ember-eslint-parser 0.5.1 (patch)
