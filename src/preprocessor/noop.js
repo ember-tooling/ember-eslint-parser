@@ -22,8 +22,8 @@ module.exports = {
       };
       msgs[0].message += '\n';
       msgs[0].message +=
-        'To lint Gjs/Gts files please follow the setup guide at https://github.com/ember-cli/eslint-plugin-ember#gtsgjs'
-        + '\nNote that this error can also happen if you have multiple versions of ember-eslint-plugin in your node_modules';
+        'To lint Gjs/Gts files please follow the setup guide at https://github.com/ember-cli/eslint-plugin-ember#gtsgjs' +
+        '\nNote that this error can also happen if you have multiple versions of ember-eslint-plugin in your node_modules';
     }
     parsedFiles.delete(fileName); // required for tests
     return msgs;
