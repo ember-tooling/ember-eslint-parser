@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.5.0",
-      "newVersion": "0.5.1",
+      "oldVersion": "0.5.1",
+      "newVersion": "0.5.2",
       "constraints": [
         {
           "impact": "patch",
@@ -13,5 +13,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2024-09-16)\n\nember-eslint-parser 0.5.1 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#95](https://github.com/ember-tooling/ember-eslint-parser/pull/95) chore: dont pin eslint-parser, allow eslint 9 ([@Techn1x](https://github.com/Techn1x))\n  * [#93](https://github.com/ember-tooling/ember-eslint-parser/pull/93) Add missing parser metadata ([@yannbertrand](https://github.com/yannbertrand))\n\n#### Committers: 2\n- Brad Overton ([@Techn1x](https://github.com/Techn1x))\n- Yann Bertrand ([@yannbertrand](https://github.com/yannbertrand))\n"
+  "description": "## Release (2024-09-25)\n\nember-eslint-parser 0.5.2 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#99](https://github.com/ember-tooling/ember-eslint-parser/pull/99) note about multiple versions ([@patricklx](https://github.com/patricklx))\n\n#### Committers: 1\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n"
 }
