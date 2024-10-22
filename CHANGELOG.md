@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2024-10-22)
+
+ember-eslint-parser 0.5.3 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#101](https://github.com/ember-tooling/ember-eslint-parser/pull/101) fix: Typo in error message ([@HeroicEric](https://github.com/HeroicEric))
+
+#### Committers: 1
+- Eric Kelly ([@HeroicEric](https://github.com/HeroicEric))
+
 ## Release (2024-09-25)
 
 ember-eslint-parser 0.5.2 (patch)
