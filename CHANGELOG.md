@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2024-11-21)
+
+ember-eslint-parser 0.5.4 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#104](https://github.com/ember-tooling/ember-eslint-parser/pull/104) throw useful error message for eslint ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+
 ## Release (2024-10-22)
 
 ember-eslint-parser 0.5.3 (patch)
