@@ -2,7 +2,7 @@
   "name": "@test-project/gjs",
   "private": true,
   "scripts": {
-    "test": "eslint . --max-warnings=0"
+    "test": "eslint . --max-warnings=0 |  grep -q '26:15  error  Parsing error: × Unexpected eof'"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.21.0",

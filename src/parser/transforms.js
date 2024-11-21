@@ -567,13 +567,12 @@ module.exports.replaceRange = replaceRange;
 
 const processor = new ContentTag.Preprocessor();
 
-
 class EmberParserError extends Error {
   constructor(message, fileName, location) {
     super(message);
     this.location = location;
     this.fileName = fileName;
-    Object.defineProperty(this, "name", {
+    Object.defineProperty(this, 'name', {
       configurable: true,
       enumerable: false,
       value: new.target.name,
@@ -631,8 +630,11 @@ module.exports.transformForLint = function transformForLint(code, fileName) {
     result = processor.parse(code);
   } catch (e) {
     // Parse Error at <anon>:1:19: 1:19
-    if (e.message.includes("Parse Error at")) {
-      const [line, column] = e.message.split(":").slice(-2).map(x => parseInt(x));
+    if (e.message.includes('Parse Error at')) {
+      const [line, column] = e.message
+        .split(':')
+        .slice(-2)
+        .map((x) => parseInt(x));
       // e.source_code has actually usable info, e.g × Expected ',', got 'string literal (, '')'
       //     ╭─[9:1]
       //   9 │

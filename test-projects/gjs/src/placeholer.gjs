@@ -21,3 +21,6 @@ export const Placeholder = <template>
     ><code class="{{orGlimdown (qp 'format')}} hljs">{{context.text}}</code></pre>
   {{/let}}
 </template>;
+
+
+console.log(')
