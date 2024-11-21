@@ -29,7 +29,7 @@ module.exports = {
     patchTs();
     registerParsedFile(options.filePath);
     let jsCode = code;
-    const info = transformForLint(code);
+    const info = transformForLint(code, options.filePath);
     jsCode = info.output;
 
     const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');

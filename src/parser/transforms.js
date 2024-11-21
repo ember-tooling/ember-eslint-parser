@@ -567,7 +567,39 @@ module.exports.replaceRange = replaceRange;
 
 const processor = new ContentTag.Preprocessor();
 
-module.exports.transformForLint = function transformForLint(code) {
+class EmberParserError extends Error {
+  constructor(message, fileName, location) {
+    super(message);
+    this.location = location;
+    this.fileName = fileName;
+    Object.defineProperty(this, 'name', {
+      configurable: true,
+      enumerable: false,
+      value: new.target.name,
+    });
+  }
+
+  // For old version of ESLint https://github.com/typescript-eslint/typescript-eslint/pull/6556#discussion_r1123237311
+  get index() {
+    return this.location.start.offset;
+  }
+
+  // https://github.com/eslint/eslint/blob/b09a512107249a4eb19ef5a37b0bd672266eafdb/lib/linter/linter.js#L853
+  get lineNumber() {
+    return this.location.start.line;
+  }
+
+  // https://github.com/eslint/eslint/blob/b09a512107249a4eb19ef5a37b0bd672266eafdb/lib/linter/linter.js#L854
+  get column() {
+    return this.location.start.column;
+  }
+}
+
+function createError(code, message, fileName, start, end = start) {
+  return new EmberParserError(message, fileName, { end, start });
+}
+
+module.exports.transformForLint = function transformForLint(code, fileName) {
   let jsCode = code;
   /**
    *
@@ -593,7 +625,26 @@ module.exports.transformForLint = function transformForLint(code) {
    *   };
    * }[]}
    */
-  const result = processor.parse(code);
+  let result = null;
+  try {
+    result = processor.parse(code);
+  } catch (e) {
+    // Parse Error at <anon>:1:19: 1:19
+    if (e.message.includes('Parse Error at')) {
+      const [line, column] = e.message
+        .split(':')
+        .slice(-2)
+        .map((x) => parseInt(x));
+      // e.source_code has actually usable info, e.g × Expected ',', got 'string literal (, '')'
+      //     ╭─[9:1]
+      //   9 │
+      //  10 │ console.log(test'');
+      //     ·                 ──
+      //     ╰────
+      throw createError(code, e.source_code, fileName, { line, column });
+    }
+    throw e;
+  }
   for (const tplInfo of result.reverse()) {
     const content = tplInfo.contents.replace(/`/g, '\\`').replace(/\$/g, '\\$');
     if (tplInfo.type === 'class-member') {

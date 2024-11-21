@@ -2677,4 +2677,28 @@ export const NotFound = <template>
       }
     `);
   });
+
+  it('throws eslint syntax error', () => {
+    try {
+      result = parseForESLint(`console.log('test)`, {
+        filePath: 'example.gts',
+        comment: true,
+        loc: true,
+        range: true,
+        tokens: true,
+      });
+    } catch (e) {
+      expect(e.lineNumber).toBe(1);
+      expect(e.column).toBe(19);
+      expect(e.fileName).toBe('example.gts');
+      expect(e.message).toMatchInlineSnapshot(`
+        "
+          × Unexpected eof
+           ╭────
+         1 │ console.log('test)
+           ╰────
+        "
+      `);
+    }
+  });
 });
