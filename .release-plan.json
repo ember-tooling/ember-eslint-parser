@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.5.2",
-      "newVersion": "0.5.3",
+      "oldVersion": "0.5.3",
+      "newVersion": "0.5.4",
       "constraints": [
         {
           "impact": "patch",
@@ -13,5 +13,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2024-10-22)\n\nember-eslint-parser 0.5.3 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#101](https://github.com/ember-tooling/ember-eslint-parser/pull/101) fix: Typo in error message ([@HeroicEric](https://github.com/HeroicEric))\n\n#### Committers: 1\n- Eric Kelly ([@HeroicEric](https://github.com/HeroicEric))\n"
+  "description": "## Release (2024-11-21)\n\nember-eslint-parser 0.5.4 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#104](https://github.com/ember-tooling/ember-eslint-parser/pull/104) throw useful error message for eslint ([@patricklx](https://github.com/patricklx))\n\n#### Committers: 1\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n"
 }
