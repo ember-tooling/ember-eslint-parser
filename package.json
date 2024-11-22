@@ -18,12 +18,20 @@
     "src"
   ],
   "scripts": {
-    "test": "vitest run",
     "lint": "concurrently \"npm:lint:*(!fix)\" --names \"lint:\"",
-    "lint:js": "eslint . --max-warnings=0",
-    "lint:package": "pnpm publint",
     "lint:fix": "concurrently \"npm:lint:*:fix\" --names \"fix:\"",
-    "lint:js:fix": "eslint . --fix --max-warnings=0"
+    "lint:js": "eslint . --max-warnings=0",
+    "lint:js:fix": "eslint . --fix --max-warnings=0",
+    "lint:package": "pnpm publint",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@babel/eslint-parser": "^7.23.10",
+    "@glimmer/syntax": "^0.92.0",
+    "content-tag": "^2.0.1",
+    "eslint-scope": "^7.2.2",
+    "html-tags": "^3.3.1",
+    "svg-tags": "^1.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.23.6",
@@ -42,26 +50,10 @@
     "fs-extra": "^11.2.0",
     "prettier": "^3.2.5",
     "publint": "^0.2.6",
-    "release-plan": "^0.8.0",
+    "release-plan": "^0.9.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
     "vitest": "^1.2.2"
-  },
-  "dependencies": {
-    "@babel/eslint-parser": "^7.23.10",
-    "@glimmer/syntax": "^0.92.0",
-    "content-tag": "^2.0.1",
-    "eslint-scope": "^7.2.2",
-    "html-tags": "^3.3.1",
-    "svg-tags": "^1.0.0"
-  },
-  "engines": {
-    "node": ">=16.0.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "ember-eslint-parser": "workspace:*"
-    }
   },
   "peerDependencies": {
     "@babel/core": "^7.23.6",
@@ -70,6 +62,15 @@
   "peerDependenciesMeta": {
     "@typescript-eslint/parser": {
       "optional": true
+    }
+  },
+  "packageManager": "pnpm@9.13.2",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "ember-eslint-parser": "workspace:*"
     }
   }
 }
