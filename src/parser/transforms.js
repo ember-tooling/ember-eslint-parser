@@ -5,6 +5,7 @@ const { visitorKeys: glimmerVisitorKeys } = require('@glimmer/syntax');
 const { Reference, Scope, Variable, Definition } = require('eslint-scope');
 const htmlTags = require('html-tags');
 const svgTags = require('svg-tags');
+const mathMLTags = require('mathml-tag-names');
 
 let TypescriptScope = null;
 try {
@@ -489,7 +490,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       if we do not find a variable we register it with a missing variable if
         * it starts with upper case, it should be a component with a reference
         * it includes a dot, it's a path which should have a reference
-        * it's NOT a standard html or svg tag, it should have a referenced variable
+        * it's NOT a standard html, svg or mathml tag, it should have a referenced variable
       */
       const ignore =
         // Local instance access
@@ -507,7 +508,9 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       const registerUndef =
         isUpperCase(n.name[0]) ||
         node.name.includes('.') ||
-        (!htmlTags.includes(node.name) && !svgTags.includes(node.name));
+        (!htmlTags.includes(node.name) &&
+          !svgTags.includes(node.name) &&
+          !mathMLTags.includes(node.name));
 
       if (!ignore && (variable || registerUndef)) {
         registerNodeInScope(n, scope, variable);
