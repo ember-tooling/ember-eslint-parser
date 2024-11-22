@@ -2701,4 +2701,23 @@ export const NotFound = <template>
       `);
     }
   });
+
+  it('svg elements are not added to global scope', () => {
+    result = parseForESLint(
+      `<template>
+        <div></div>
+        <rect x="0" y="0" width="100" height="100" fill="red" />
+        <polygon points="200,10 250,190 160,210" fill="lime" />
+      </template>`,
+      {
+        filePath: 'example.gts',
+        comment: true,
+        loc: true,
+        range: true,
+        tokens: true,
+      }
+    );
+
+    expect(result.scopeManager.scopes[0].through.length).toBe(0);
+  });
 });

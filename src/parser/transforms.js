@@ -4,6 +4,7 @@ const DocumentLines = require('../utils/document');
 const { visitorKeys: glimmerVisitorKeys } = require('@glimmer/syntax');
 const { Reference, Scope, Variable, Definition } = require('eslint-scope');
 const htmlTags = require('html-tags');
+const svgTags = require('svg-tags');
 
 let TypescriptScope = null;
 try {
@@ -476,9 +477,6 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       }
     }
     if (node.type === 'GlimmerElementNode') {
-      if (node.tag === 'svg') {
-        path.context.inSvg = true;
-      }
       // always reference first part of tag name, this also has the advantage
       // that errors regarding this tag will only mark the tag name instead of
       // the whole tag + children
@@ -491,14 +489,15 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       if we do not find a variable we register it with a missing variable if
         * it starts with upper case, it should be a component with a reference
         * it includes a dot, it's a path which should have a reference
-        * it's NOT a standard html tag, it should have a referenced variable
+        * it's NOT a standard html or svg tag, it should have a referenced variable
       */
       const ignore =
         n.name === 'this' || n.name.startsWith(':') || n.name.startsWith('@') || !scope;
       const registerUndef =
-        isUpperCase(n.name[0]) || node.name.includes('.') || !htmlTags.includes(node.name);
-      const allowUndef = path.parentPath?.context.inSvg;
-      if (!ignore && (variable || (registerUndef && !allowUndef))) {
+        isUpperCase(n.name[0]) ||
+        node.name.includes('.') ||
+        (!htmlTags.includes(node.name) && !svgTags.includes(node.name));
+      if (!ignore && (variable || registerUndef)) {
         registerNodeInScope(n, scope, variable);
       }
     }
