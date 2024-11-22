@@ -1,5 +1,22 @@
 # Changelog
 
+## Release (2024-11-22)
+
+ember-eslint-parser 0.5.5 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#109](https://github.com/ember-tooling/ember-eslint-parser/pull/109) Don't error on custom-elements ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#106](https://github.com/ember-tooling/ember-eslint-parser/pull/106) Check for svg tags like we do for html tags ([@evoactivity](https://github.com/evoactivity))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#107](https://github.com/ember-tooling/ember-eslint-parser/pull/107) Update release-plan ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 2
+- Liam Potter ([@evoactivity](https://github.com/evoactivity))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2024-11-21)
 
 ember-eslint-parser 0.5.4 (patch)
