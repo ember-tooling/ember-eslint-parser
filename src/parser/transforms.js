@@ -498,7 +498,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
         n.name.startsWith(':') ||
         // argument
         n.name.startsWith('@') ||
-        // definend rocally
+        // defined locally
         !scope ||
         // custom-elements are allowed to be used even if they don't exist
         // and are undefined
