@@ -2721,6 +2721,24 @@ export const NotFound = <template>
     expect(result.scopeManager.scopes[0].through.length).toBe(0);
   });
 
+  it('mathml elements are not added to global scope', () => {
+    result = parseForESLint(
+      `<template>
+        <math><msqrt><mi>x</mi></msqrt></math>
+        <mi>x</mi>
+      </template>`,
+      {
+        filePath: 'example.gts',
+        comment: true,
+        loc: true,
+        range: true,
+        tokens: true,
+      }
+    );
+
+    expect(result.scopeManager.scopes[0].through.length).toBe(0);
+  });
+
   it('custom-elements are ignored entirely, like they are in the browser', () => {
     result = parseForESLint(
       `<template>
