@@ -492,11 +492,23 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
         * it's NOT a standard html or svg tag, it should have a referenced variable
       */
       const ignore =
-        n.name === 'this' || n.name.startsWith(':') || n.name.startsWith('@') || !scope;
+        // Local instance access
+        n.name === 'this' ||
+        // named block
+        n.name.startsWith(':') ||
+        // argument
+        n.name.startsWith('@') ||
+        // definend rocally
+        !scope ||
+        // custom-elements are allowed to be used even if they don't exist
+        // and are undefined
+        n.name.includes('-');
+
       const registerUndef =
         isUpperCase(n.name[0]) ||
         node.name.includes('.') ||
         (!htmlTags.includes(node.name) && !svgTags.includes(node.name));
+
       if (!ignore && (variable || registerUndef)) {
         registerNodeInScope(n, scope, variable);
       }
