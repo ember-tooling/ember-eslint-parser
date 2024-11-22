@@ -2,20 +2,16 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.5.4",
-      "newVersion": "0.5.5",
+      "oldVersion": "0.5.5",
+      "newVersion": "0.5.6",
       "constraints": [
         {
           "impact": "patch",
           "reason": "Appears in changelog section :bug: Bug Fix"
-        },
-        {
-          "impact": "patch",
-          "reason": "Appears in changelog section :house: Internal"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2024-11-22)\n\nember-eslint-parser 0.5.5 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#109](https://github.com/ember-tooling/ember-eslint-parser/pull/109) Don't error on custom-elements ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#106](https://github.com/ember-tooling/ember-eslint-parser/pull/106) Check for svg tags like we do for html tags ([@evoactivity](https://github.com/evoactivity))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#107](https://github.com/ember-tooling/ember-eslint-parser/pull/107) Update release-plan ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Liam Potter ([@evoactivity](https://github.com/evoactivity))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2024-11-22)\n\nember-eslint-parser 0.5.6 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#110](https://github.com/ember-tooling/ember-eslint-parser/pull/110) Add mathml tag check ([@evoactivity](https://github.com/evoactivity))\n\n#### Committers: 1\n- Liam Potter ([@evoactivity](https://github.com/evoactivity))\n"
 }

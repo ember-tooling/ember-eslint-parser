@@ -2,6 +2,17 @@
 
 ## Release (2024-11-22)
 
+ember-eslint-parser 0.5.6 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#110](https://github.com/ember-tooling/ember-eslint-parser/pull/110) Add mathml tag check ([@evoactivity](https://github.com/evoactivity))
+
+#### Committers: 1
+- Liam Potter ([@evoactivity](https://github.com/evoactivity))
+
+## Release (2024-11-22)
+
 ember-eslint-parser 0.5.5 (patch)
 
 #### :bug: Bug Fix
