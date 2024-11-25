@@ -7,16 +7,16 @@
  *
  */
 
-const parsedFiles = new Set();
+globalThis.parsedFiles = new Set();
 
 module.exports = {
   registerParsedFile(f) {
-    parsedFiles.add(f);
+    globalThis.parsedFiles.add(f);
   },
   preprocess: null,
   postprocess: (messages, fileName) => {
     const msgs = messages.flat();
-    if (!parsedFiles.has(fileName)) {
+    if (!globalThis.parsedFiles.has(fileName)) {
       msgs[0] = msgs[0] || {
         message: '',
       };
@@ -25,7 +25,7 @@ module.exports = {
         'To lint Gjs/Gts files please follow the setup guide at https://github.com/ember-cli/eslint-plugin-ember#gtsgjs' +
         '\nNote that this error can also happen if you have multiple versions of eslint-plugin-ember in your node_modules';
     }
-    parsedFiles.delete(fileName); // required for tests
+    globalThis.parsedFiles.delete(fileName); // required for tests
     return msgs;
   },
   supportsAutofix: true,
