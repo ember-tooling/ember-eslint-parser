@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2024-12-01)
+
+ember-eslint-parser 0.5.7 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#114](https://github.com/ember-tooling/ember-eslint-parser/pull/114) Define `preprocess` as `undefined` ([@MrChocolatine](https://github.com/MrChocolatine))
+
+#### Committers: 1
+- [@MrChocolatine](https://github.com/MrChocolatine)
+
 ## Release (2024-11-22)
 
 ember-eslint-parser 0.5.6 (patch)
