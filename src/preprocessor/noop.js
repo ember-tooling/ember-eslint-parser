@@ -13,7 +13,7 @@ module.exports = {
   registerParsedFile(f) {
     parsedFiles.add(f);
   },
-  preprocess: null,
+  preprocess: undefined,
   postprocess: (messages, fileName) => {
     const msgs = messages.flat();
     if (!parsedFiles.has(fileName)) {
