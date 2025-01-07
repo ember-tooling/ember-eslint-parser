@@ -3,7 +3,7 @@ import qp from 'limber/helpers/qp';
 import highlighted from 'limber/modifiers/highlighted';
 import { service } from 'limber-ui';
 
-const orGlimdown = (format) => format || 'glimdown';
+const orGlimdown = (format: string) => format || 'glimdown';
 
 export const Placeholder = <template>
   {{#let (service "editor") as |context|}}
