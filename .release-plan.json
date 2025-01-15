@@ -2,16 +2,20 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.5.6",
-      "newVersion": "0.5.7",
+      "oldVersion": "0.5.7",
+      "newVersion": "0.5.8",
       "constraints": [
         {
           "impact": "patch",
           "reason": "Appears in changelog section :bug: Bug Fix"
+        },
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :house: Internal"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2024-12-01)\n\nember-eslint-parser 0.5.7 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#114](https://github.com/ember-tooling/ember-eslint-parser/pull/114) Define `preprocess` as `undefined` ([@MrChocolatine](https://github.com/MrChocolatine))\n\n#### Committers: 1\n- [@MrChocolatine](https://github.com/MrChocolatine)\n"
+  "description": "## Release (2025-01-15)\n\nember-eslint-parser 0.5.8 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#118](https://github.com/ember-tooling/ember-eslint-parser/pull/118) Fix resolving of peer deps ([@simonihmig](https://github.com/simonihmig))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#116](https://github.com/ember-tooling/ember-eslint-parser/pull/116) Tests for TS flat-config ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Simon Ihmig ([@simonihmig](https://github.com/simonihmig))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }
