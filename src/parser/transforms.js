@@ -9,9 +9,12 @@ const mathMLTags = require('mathml-tag-names');
 
 let TypescriptScope = null;
 try {
-  const path = require.resolve('@typescript-eslint/parser');
+  const parserPath = require.resolve('@typescript-eslint/parser');
   // eslint-disable-next-line n/no-unpublished-require
-  TypescriptScope = require('@typescript-eslint/scope-manager', { paths: [path] });
+  const scopeManagerPath = require.resolve('@typescript-eslint/scope-manager', {
+    paths: [parserPath],
+  });
+  TypescriptScope = require(scopeManagerPath);
 } catch {
   // not available
 }
