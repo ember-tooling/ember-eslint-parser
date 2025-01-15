@@ -5,9 +5,10 @@ const { replaceRange } = require('./transforms');
 let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched;
 
 try {
-  const tsPath = require.resolve('@typescript-eslint/parser');
+  const parserPath = require.resolve('@typescript-eslint/parser');
   // eslint-disable-next-line n/no-unpublished-require
-  const ts = require('typescript', { paths: [tsPath] });
+  const tsPath = require.resolve('typescript', { paths: [parserPath] });
+  const ts = require(tsPath);
   typescriptParser = require('@typescript-eslint/parser');
   patchTs = function patchTs() {
     if (isPatched) {
