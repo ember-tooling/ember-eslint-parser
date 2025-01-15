@@ -1,5 +1,21 @@
 # Changelog
 
+## Release (2025-01-15)
+
+ember-eslint-parser 0.5.8 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#118](https://github.com/ember-tooling/ember-eslint-parser/pull/118) Fix resolving of peer deps ([@simonihmig](https://github.com/simonihmig))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#116](https://github.com/ember-tooling/ember-eslint-parser/pull/116) Tests for TS flat-config ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 2
+- Simon Ihmig ([@simonihmig](https://github.com/simonihmig))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2024-12-01)
 
 ember-eslint-parser 0.5.7 (patch)
