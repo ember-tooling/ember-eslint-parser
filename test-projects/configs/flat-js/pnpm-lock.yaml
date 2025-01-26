@@ -13,7 +13,7 @@ importers:
         version: 8.57.1
     devDependencies:
       '@babel/eslint-parser':
-        specifier: ^7.23.10
+        specifier: ^7.26.5
         version: 7.26.5(eslint@8.57.1)
       '@babel/plugin-proposal-decorators':
         specifier: ^7.23.9

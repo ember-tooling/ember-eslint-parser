@@ -9,7 +9,7 @@
     "eslint:debug-file": "pnpm eslint:with-config --print-config"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.0",
+    "@babel/core": "^7.26.7",
     "@babel/eslint-parser": "^7.25.9",
     "@babel/plugin-transform-typescript": "^7.26.3",
     "@eslint/js": "^9.17.0",

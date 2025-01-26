@@ -8,7 +8,7 @@
     "eslint:debug-file": "pnpm eslint:with-config --print-config"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.23.10",
+    "@babel/eslint-parser": "^7.26.5",
     "@babel/plugin-proposal-decorators": "^7.23.9",
     "ember-eslint-parser": "workspace:^",
     "eslint": "^8.0.1",
