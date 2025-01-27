@@ -3,8 +3,10 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "test:notes": "This isn't just 'eslint .' because we aren't in a type=module package",
-    "test": "pnpm eslint:with-config .",
+    "_test:notes": "This isn't just 'eslint .' because we aren't in a type=module package",
+    "test": "pnpm run /test:.*/",
+    "test:check": "pnpm eslint:with-config .",
+    "test:fix": "pnpm eslint:with-config . --fix",
     "eslint:with-config": "ESLINT_USE_FLAT_CONFIG=true eslint --config ./eslint.config.mjs --max-warnings=0",
     "eslint:debug-file": "pnpm eslint:with-config --print-config"
   },
