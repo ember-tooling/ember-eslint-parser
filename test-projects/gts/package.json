@@ -2,7 +2,6 @@
   "name": "@test-project/gts",
   "private": true,
   "scripts": {
-    "test": "pnpm run /test:.*/",
     "test:check": "eslint . --max-warnings=0",
     "test:fix": "eslint . --fix --max-warnings=0",
     "types": "tsc --noEmit"

@@ -68,7 +68,9 @@ jobs:
           mv "$tmp" package.json
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm test
-      - run: pnpm --filter '*' test
+      - run: pnpm --filter '*' test:check
+      - run: pnpm --filter '*' test:fix
+
 
 
   test_eslint-plugin-ember:
