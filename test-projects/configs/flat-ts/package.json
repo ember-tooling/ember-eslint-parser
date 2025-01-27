@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "_test:notes": "This isn't just 'eslint .' because we aren't in a type=module package",
+    "notes": "This isn't just 'eslint .' because we aren't in a type=module package",
     "test": "pnpm run /test:.*/",
     "test:check": "pnpm eslint:with-config .",
     "test:fix": "pnpm eslint:with-config . --fix",
