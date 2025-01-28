@@ -2,7 +2,8 @@
   "name": "@test-project/rules-padding-line-between-statements",
   "private": true,
   "scripts": {
-    "test": "eslint . --max-warnings=0"
+    "test:check": "eslint . --max-warnings=0",
+    "test:fix": "eslint . --fix --max-warnings=0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.21.0",
