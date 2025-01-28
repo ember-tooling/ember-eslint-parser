@@ -41,16 +41,19 @@ jobs:
       - run: pnpm --filter '*' test
 
   ts_support:
-    name: "TS: ${{ matrix.tsVersion }}"
+    name: "TS: ${{ matrix.tsVersion }}, eslint-ts-deps: ${{ matrix.eslintTsVersion }}"
     runs-on: ubuntu-latest
     needs: [tests]
     timeout-minutes: 2
     strategy:
       fail-fast: false
       matrix:
+        eslintTsVersion:
+          - ^6
+          - ^7
+          - ^8
+          - canary
         tsVersion:
-          - 5.1
-          - 5.2
           - 5.3 
           - 5.4
           - 5.5
@@ -61,11 +64,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: wyvox/action-setup-pnpm@v3
-      - name: 'Change TS to ${{ matrix.tsVersion }}'
-        run: |
-          tmp=$(mktemp)
-          jq '.pnpm.overrides.typescript = "${{ matrix.tsVersion }}"' package.json > "$tmp"
-          mv "$tmp" package.json
+      - name: 'TS: ${{ matrix.tsVersion }}, eslint-plugin-ts: ${{ matrix.eslintTsVersion }}'
+        run: |-
+          function sponge() {
+            local line;
+            tmp=$(mktemp)
+            while IFS= read -r line
+            do
+              echo $line >> $tmp;
+            done
+            mv "$tmp" $1
+          }
+          jq '.pnpm.overrides."@typescript-eslint/parser" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
+          jq '.pnpm.overrides."@typescript-eslint/scope-manager" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
+          jq '.pnpm.overrides."@typescript-eslint/visitor-keys" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
+          jq '.pnpm.overrides.typescript = "${{ matrix.tsVersion }}"' package.json | sponge package.json
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm test
       - run: pnpm --filter '*' test:check
