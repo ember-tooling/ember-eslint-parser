@@ -110,6 +110,7 @@ try {
             path: mtsSourceFile.path,
             originalFileName: mtsSourceFile.originalFileName,
             resolvedPath: mtsSourceFile.resolvedPath,
+            impliedNodeFormat: mtsSourceFile.impliedNodeFormat,
           };
           Object.assign(mtsSourceFile, sourceFile, keep);
           mtsSourceFile.isVirtualGts = true;
