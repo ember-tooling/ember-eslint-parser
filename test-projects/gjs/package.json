@@ -2,7 +2,7 @@
   "name": "@test-project/gjs",
   "private": true,
   "scripts": {
-    "test:check": "pnpm run /test:check.*/",
+    "test:check": "pnpm run /test:check:.*/",
     "test:check:correct-handle-syntax-error": "eslint . | grep -q '26:15  error  Parsing error: × Unexpected eof'",
     "test:check:only-one-error": "eslint --format compact .  | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1",
     "test:fix": "eslint --fix --format compact . | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1"
