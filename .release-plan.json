@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.5.7",
-      "newVersion": "0.5.8",
+      "oldVersion": "0.5.8",
+      "newVersion": "0.5.9",
       "constraints": [
         {
           "impact": "patch",
@@ -17,5 +17,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2025-01-15)\n\nember-eslint-parser 0.5.8 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#118](https://github.com/ember-tooling/ember-eslint-parser/pull/118) Fix resolving of peer deps ([@simonihmig](https://github.com/simonihmig))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#116](https://github.com/ember-tooling/ember-eslint-parser/pull/116) Tests for TS flat-config ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Simon Ihmig ([@simonihmig](https://github.com/simonihmig))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2025-01-28)\n\nember-eslint-parser 0.5.9 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#126](https://github.com/ember-tooling/ember-eslint-parser/pull/126) Fix lint-fixing with typescript-eslint 8 ([@bendemboski](https://github.com/bendemboski))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#125](https://github.com/ember-tooling/ember-eslint-parser/pull/125) Add --fix checking ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#124](https://github.com/ember-tooling/ember-eslint-parser/pull/124) Upgrade to pnpm 10 ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#121](https://github.com/ember-tooling/ember-eslint-parser/pull/121) Test against TS 5.5, 5.6, 5.7 ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Ben Demboski ([@bendemboski](https://github.com/bendemboski))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }
