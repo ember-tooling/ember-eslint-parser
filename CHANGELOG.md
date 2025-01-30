@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2025-01-30)
+
+ember-eslint-parser 0.5.10 (patch)
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#127](https://github.com/ember-tooling/ember-eslint-parser/pull/127) test eslint fix && with different ts eslint plugin versions ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 1
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+
 ## Release (2025-01-28)
 
 ember-eslint-parser 0.5.9 (patch)
