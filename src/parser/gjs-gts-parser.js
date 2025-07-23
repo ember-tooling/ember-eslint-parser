@@ -26,7 +26,7 @@ module.exports = {
   },
 
   parseForESLint(code, options) {
-    patchTs();
+    patchTs({ allowGjs: options.allowGjs });
     registerParsedFile(options.filePath);
     let jsCode = code;
     const info = transformForLint(code, options.filePath);

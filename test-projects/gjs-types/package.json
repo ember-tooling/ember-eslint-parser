@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test:check": "eslint src --max-warnings=0"
+    "test:check": "pnpm run /test:check:.*/",
+    "test:check:no-errors-with-allow-js": "eslint src --max-warnings=0",
+    "test:check:errors-without-allow-js": "ALLOW_GJS=false eslint --format compact .  | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1"
   },
   "devDependencies": {
     "typescript": "^5.0.0",

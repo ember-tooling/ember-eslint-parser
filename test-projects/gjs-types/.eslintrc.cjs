@@ -16,20 +16,24 @@ module.exports = {
   },
   overrides: [
     {
+      files: ['**/*.{js,ts,gts,gjs}'],
+      parser: 'ember-eslint-parser',
+      parserOptions: {
+        allowGjs: process.env.ALLOW_GJS !== 'false'
+      }
+    },
+    {
       files: ['**/*.{js,ts}'],
       plugins: ['ember'],
-      parser: 'ember-eslint-parser',
       extends: ['eslint:recommended', 'plugin:ember/recommended', 'plugin:@typescript-eslint/recommended-type-checked'],
     },
     {
       files: ['**/*.gts'],
-      parser: 'ember-eslint-parser',
       plugins: ['ember'],
       extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended-type-checked', 'plugin:ember/recommended', 'plugin:ember/recommended-gts'],
     },
     {
       files: ['**/*.gjs'],
-      parser: 'ember-eslint-parser',
       plugins: ['ember'],
       extends: ['eslint:recommended', 'plugin:ember/recommended', 'plugin:ember/recommended-gjs'],
     },
