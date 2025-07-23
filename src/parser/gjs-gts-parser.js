@@ -73,7 +73,7 @@ module.exports = {
       result.isTypescript = isTypescript || useTypescript;
       convertAst(result, preprocessedResult, visitorKeys);
       if (result.services?.program) {
-        syncMtsGtsSourceFiles(result.services?.program);
+        syncMtsGtsSourceFiles(result.services.program);
       }
       return { ...result, visitorKeys };
     } catch (e) {

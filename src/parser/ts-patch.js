@@ -23,10 +23,15 @@ try {
         return [
           ...results,
           ...results.filter((x) => x.endsWith('.gts')).map((f) => f.replace(/\.gts$/, '.mts')),
+          ...results.filter((x) => x.endsWith('.gjs')).map((f) => f.replace(/\.gjs$/, '.mjs')),
         ];
       },
       fileExists(fileName) {
-        return fs.existsSync(fileName.replace(/\.m?ts$/, '.gts')) || fs.existsSync(fileName);
+        return (
+          fs.existsSync(fileName.replace(/\.m?ts$/, '.gts')) ||
+          fs.existsSync(fileName.replace(/\.m?js$/, '.gjs')) ||
+          fs.existsSync(fileName)
+        );
       },
       readFile(fname) {
         let fileName = fname;
@@ -38,25 +43,30 @@ try {
         try {
           content = fs.readFileSync(fileName).toString();
         } catch {
-          fileName = fileName.replace(/\.m?ts$/, '.gts');
+          if (fileName.match(/\.m?ts$/)) {
+            fileName = fileName.replace(/\.m?ts$/, '.gts');
+          } else if (fileName.match(/\.m?js$/)) {
+            fileName = fileName.replace(/\.m?js$/, '.gjs');
+          }
           content = fs.readFileSync(fileName).toString();
         }
-        if (fileName.endsWith('.gts')) {
+        if (fileName.endsWith('.gts') || fileName.endsWith('.gjs')) {
           try {
             content = transformForLint(content).output;
           } catch (e) {
-            console.error('failed to transformForLint for gts processing');
+            console.error('failed to transformForLint for gts/gjs processing');
             console.error(e);
           }
         }
         if (
           (!fileName.endsWith('.d.ts') && fileName.endsWith('.ts')) ||
-          fileName.endsWith('.gts')
+          fileName.endsWith('.gts') ||
+          fileName.endsWith('.gjs')
         ) {
           try {
             content = replaceExtensions(content);
           } catch (e) {
-            console.error('failed to replace extensions for gts processing');
+            console.error('failed to replace extensions for gts/gjs processing');
             console.error(e);
           }
         }
@@ -88,34 +98,41 @@ try {
    */
   syncMtsGtsSourceFiles = function syncMtsGtsSourceFiles(program) {
     const sourceFiles = program.getSourceFiles();
-    for (const sourceFile of sourceFiles) {
-      // check for deleted gts files, need to remove mts as well
-      if (sourceFile.path.match(/\.m?ts$/) && sourceFile.isVirtualGts) {
-        const gtsFile = program.getSourceFile(sourceFile.path.replace(/\.m?ts$/, '.gts'));
-        if (!gtsFile) {
+    function syncVirtualFile(sourceFile, ext, virtualExt, virtualFlag) {
+      // check for deleted files, need to remove virtual as well
+      if (sourceFile.path.match(new RegExp(`\\.m?${virtualExt}$`)) && sourceFile[virtualFlag]) {
+        const origFile = program.getSourceFile(
+          sourceFile.path.replace(new RegExp(`\\.m?${virtualExt}$`), `.${ext}`)
+        );
+        if (!origFile) {
           sourceFile.version = null;
         }
       }
-      if (sourceFile.path.endsWith('.gts')) {
-        /**
-         * @type {ts.SourceFile}
-         */
-        let mtsSourceFile = program.getSourceFile(sourceFile.path.replace(/\.gts$/, '.mts'));
-        if (!mtsSourceFile) {
-          mtsSourceFile = program.getSourceFile(sourceFile.path.replace(/\.gts$/, '.ts'));
+      if (sourceFile.path.endsWith(`.${ext}`)) {
+        let virtualSourceFile = program.getSourceFile(
+          sourceFile.path.replace(new RegExp(`\\.${ext}$`), `.${virtualExt}`)
+        );
+        if (!virtualSourceFile) {
+          virtualSourceFile = program.getSourceFile(
+            sourceFile.path.replace(new RegExp(`\\.${ext}$`), virtualExt === 'mts' ? '.ts' : '.js')
+          );
         }
-        if (mtsSourceFile) {
+        if (virtualSourceFile) {
           const keep = {
-            fileName: mtsSourceFile.fileName,
-            path: mtsSourceFile.path,
-            originalFileName: mtsSourceFile.originalFileName,
-            resolvedPath: mtsSourceFile.resolvedPath,
-            impliedNodeFormat: mtsSourceFile.impliedNodeFormat,
+            fileName: virtualSourceFile.fileName,
+            path: virtualSourceFile.path,
+            originalFileName: virtualSourceFile.originalFileName,
+            resolvedPath: virtualSourceFile.resolvedPath,
+            impliedNodeFormat: virtualSourceFile.impliedNodeFormat,
           };
-          Object.assign(mtsSourceFile, sourceFile, keep);
-          mtsSourceFile.isVirtualGts = true;
+          Object.assign(virtualSourceFile, sourceFile, keep);
+          virtualSourceFile[virtualFlag] = true;
         }
       }
+    }
+    for (const sourceFile of sourceFiles) {
+      syncVirtualFile(sourceFile, 'gts', 'mts', 'isVirtualGts');
+      syncVirtualFile(sourceFile, 'gjs', 'mjs', 'isVirtualGjs');
     }
   };
 } catch /* istanbul ignore next */ {
