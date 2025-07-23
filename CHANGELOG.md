@@ -1,5 +1,21 @@
 # Changelog
 
+## Release (2025-07-23)
+
+ember-eslint-parser 0.5.10 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#130](https://github.com/ember-tooling/ember-eslint-parser/pull/130) Widen @glimmer/syntax range ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#127](https://github.com/ember-tooling/ember-eslint-parser/pull/127) test eslint fix && with different ts eslint plugin versions ([@patricklx](https://github.com/patricklx))
+
+#### Committers: 2
+- Patrick Pircher ([@patricklx](https://github.com/patricklx))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2025-01-28)
 
 ember-eslint-parser 0.5.9 (patch)

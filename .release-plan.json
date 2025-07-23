@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.5.8",
-      "newVersion": "0.5.9",
+      "oldVersion": "0.5.9",
+      "newVersion": "0.5.10",
       "constraints": [
         {
           "impact": "patch",
@@ -17,5 +17,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2025-01-28)\n\nember-eslint-parser 0.5.9 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#126](https://github.com/ember-tooling/ember-eslint-parser/pull/126) Fix lint-fixing with typescript-eslint 8 ([@bendemboski](https://github.com/bendemboski))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#125](https://github.com/ember-tooling/ember-eslint-parser/pull/125) Add --fix checking ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#124](https://github.com/ember-tooling/ember-eslint-parser/pull/124) Upgrade to pnpm 10 ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#121](https://github.com/ember-tooling/ember-eslint-parser/pull/121) Test against TS 5.5, 5.6, 5.7 ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Ben Demboski ([@bendemboski](https://github.com/bendemboski))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2025-07-23)\n\nember-eslint-parser 0.5.10 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#130](https://github.com/ember-tooling/ember-eslint-parser/pull/130) Widen @glimmer/syntax range ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#127](https://github.com/ember-tooling/ember-eslint-parser/pull/127) test eslint fix && with different ts eslint plugin versions ([@patricklx](https://github.com/patricklx))\n\n#### Committers: 2\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }
