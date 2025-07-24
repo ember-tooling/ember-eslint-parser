@@ -17,6 +17,9 @@ importers:
       '@glimmer/syntax':
         specifier: '>= 0.92.0'
         version: 0.92.3
+      '@typescript-eslint/tsconfig-utils':
+        specifier: ^8.38.0
+        version: 8.38.0(typescript@5.7.2)
       content-tag:
         specifier: ^2.0.1
         version: 2.0.3
@@ -1545,6 +1548,12 @@ packages:
   '@typescript-eslint/scope-manager@8.19.1':
     resolution: {integrity: sha512-60L9KIuN/xgmsINzonOcMDSB8p82h95hoBfSBtXuO4jlR1R9L1xSkmVZKgCPVfavDlXihh4ARNjXhh1gGnLC7Q==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript-eslint/tsconfig-utils@8.38.0':
+    resolution: {integrity: sha512-Lum9RtSE3EroKk/bYns+sPOodqb2Fv50XOl/gMviMKNvanETUuUcC9ObRbzrJ4VSd2JalPqgSAavwrPiPvnAiQ==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      typescript: '>=4.8.4 <5.9.0'
 
   '@typescript-eslint/type-utils@6.21.0':
     resolution: {integrity: sha512-rZQI7wHfao8qMX3Rd3xqeYSMCL3SoiSQLBATSiVKARdFGCYSRvmViieZjqc58jKgs8Y8i9YvVVhRbHSTA4VBag==}
@@ -6585,6 +6594,10 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.19.1
       '@typescript-eslint/visitor-keys': 8.19.1
+
+  '@typescript-eslint/tsconfig-utils@8.38.0(typescript@5.7.2)':
+    dependencies:
+      typescript: 5.7.2
 
   '@typescript-eslint/type-utils@6.21.0(eslint@8.57.1)(typescript@5.7.2)':
     dependencies:

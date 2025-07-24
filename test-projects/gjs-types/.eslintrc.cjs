@@ -1,12 +1,21 @@
 'use strict';
 
+const path = require('path');
+
+const parserOptions = {};
+if (process.env.PROJECT_SERVICE) {
+  parserOptions.projectService = {
+    defaultProject: process.env.DEFAULT_PROJECT || 'tsconfig.json',
+    allowDefaultProject: process.env.ALLOW_DEFAULT_PROJECT === 'true' ? ['**/*.js'] : []
+  };
+}
+
+parserOptions.tsconfigRootDir = process.env.TSCONFIG_ROOT_DIR || __dirname;
+parserOptions.project = process.env.PROJECT === undefined ? true : process.env.PROJECT;
+
 module.exports = {
   root: true,
-  parserOptions: {
-    project: true,
-    projectService: true,
-    tsconfigRootDir: __dirname
-  },
+  parserOptions,
   rules: {
     'no-use-before-define': ['error'],
     'no-unused-vars': ['error'],
@@ -19,7 +28,7 @@ module.exports = {
       files: ['**/*.{js,ts,gts,gjs}'],
       parser: 'ember-eslint-parser',
       parserOptions: {
-        allowGjs: process.env.ALLOW_GJS !== 'false'
+        allowGjs: process.env.ALLOW_GJS !== undefined ? process.env.ALLOW_GJS === 'true' : undefined
       }
     },
     {
