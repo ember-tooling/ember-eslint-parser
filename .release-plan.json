@@ -2,8 +2,9 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.5.9",
-      "newVersion": "0.5.10",
+      "oldVersion": "0.5.10",
+      "newVersion": "0.5.11",
+      "tagName": "latest",
       "constraints": [
         {
           "impact": "patch",
@@ -17,5 +18,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2025-07-23)\n\nember-eslint-parser 0.5.10 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#130](https://github.com/ember-tooling/ember-eslint-parser/pull/130) Widen @glimmer/syntax range ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#127](https://github.com/ember-tooling/ember-eslint-parser/pull/127) test eslint fix && with different ts eslint plugin versions ([@patricklx](https://github.com/patricklx))\n\n#### Committers: 2\n- Patrick Pircher ([@patricklx](https://github.com/patricklx))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2025-08-05)\n\n* ember-eslint-parser 0.5.11 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#131](https://github.com/ember-tooling/ember-eslint-parser/pull/131) Preserve types from gjs files ([@wagenet](https://github.com/wagenet))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#133](https://github.com/ember-tooling/ember-eslint-parser/pull/133) Update release-plan ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Peter Wagenet ([@wagenet](https://github.com/wagenet))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }

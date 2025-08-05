@@ -1,5 +1,21 @@
 # Changelog
 
+## Release (2025-08-05)
+
+* ember-eslint-parser 0.5.11 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#131](https://github.com/ember-tooling/ember-eslint-parser/pull/131) Preserve types from gjs files ([@wagenet](https://github.com/wagenet))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#133](https://github.com/ember-tooling/ember-eslint-parser/pull/133) Update release-plan ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 2
+- Peter Wagenet ([@wagenet](https://github.com/wagenet))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2025-07-23)
 
 ember-eslint-parser 0.5.10 (patch)
