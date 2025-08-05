@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const { transformForLint } = require('./transforms');
 const { replaceRange } = require('./transforms');
 
-let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched;
+let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs;
 
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
@@ -10,23 +10,27 @@ try {
   const tsPath = require.resolve('typescript', { paths: [parserPath] });
   const ts = require(tsPath);
   typescriptParser = require('@typescript-eslint/parser');
-  patchTs = function patchTs() {
-    if (isPatched) {
-      return;
-    }
+  patchTs = function patchTs(options = {}) {
+    if (isPatched) return { allowGjs };
     isPatched = true;
+    allowGjs = options.allowGjs !== undefined ? options.allowGjs : true;
     const sys = { ...ts.sys };
     const newSys = {
       ...ts.sys,
       readDirectory(...args) {
         const results = sys.readDirectory.call(this, ...args);
-        return [
-          ...results,
-          ...results.filter((x) => x.endsWith('.gts')).map((f) => f.replace(/\.gts$/, '.mts')),
-        ];
+        const gtsVirtuals = results
+          .filter((x) => x.endsWith('.gts'))
+          .map((f) => f.replace(/\.gts$/, '.mts'));
+        const gjsVirtuals = allowGjs
+          ? results.filter((x) => x.endsWith('.gjs')).map((f) => f.replace(/\.gjs$/, '.mjs'))
+          : [];
+        return results.concat(gtsVirtuals, gjsVirtuals);
       },
       fileExists(fileName) {
-        return fs.existsSync(fileName.replace(/\.m?ts$/, '.gts')) || fs.existsSync(fileName);
+        const gtsExists = fs.existsSync(fileName.replace(/\.m?ts$/, '.gts'));
+        const gjsExists = allowGjs ? fs.existsSync(fileName.replace(/\.m?js$/, '.gjs')) : false;
+        return gtsExists || gjsExists || fs.existsSync(fileName);
       },
       readFile(fname) {
         let fileName = fname;
@@ -38,25 +42,30 @@ try {
         try {
           content = fs.readFileSync(fileName).toString();
         } catch {
-          fileName = fileName.replace(/\.m?ts$/, '.gts');
+          if (fileName.match(/\.m?ts$/)) {
+            fileName = fileName.replace(/\.m?ts$/, '.gts');
+          } else if (allowGjs && fileName.match(/\.m?js$/)) {
+            fileName = fileName.replace(/\.m?js$/, '.gjs');
+          }
           content = fs.readFileSync(fileName).toString();
         }
-        if (fileName.endsWith('.gts')) {
+        if (fileName.endsWith('.gts') || (allowGjs && fileName.endsWith('.gjs'))) {
           try {
             content = transformForLint(content).output;
           } catch (e) {
-            console.error('failed to transformForLint for gts processing');
+            console.error('failed to transformForLint for gts/gjs processing');
             console.error(e);
           }
         }
         if (
           (!fileName.endsWith('.d.ts') && fileName.endsWith('.ts')) ||
-          fileName.endsWith('.gts')
+          fileName.endsWith('.gts') ||
+          (allowGjs && fileName.endsWith('.gjs'))
         ) {
           try {
             content = replaceExtensions(content);
           } catch (e) {
-            console.error('failed to replace extensions for gts processing');
+            console.error('failed to replace extensions for gts/gjs processing');
             console.error(e);
           }
         }
@@ -64,6 +73,7 @@ try {
       },
     };
     ts.setSys(newSys);
+    return { allowGjs };
   };
 
   replaceExtensions = function replaceExtensions(code) {
@@ -88,34 +98,41 @@ try {
    */
   syncMtsGtsSourceFiles = function syncMtsGtsSourceFiles(program) {
     const sourceFiles = program.getSourceFiles();
-    for (const sourceFile of sourceFiles) {
-      // check for deleted gts files, need to remove mts as well
-      if (sourceFile.path.match(/\.m?ts$/) && sourceFile.isVirtualGts) {
-        const gtsFile = program.getSourceFile(sourceFile.path.replace(/\.m?ts$/, '.gts'));
-        if (!gtsFile) {
+    function syncVirtualFile(sourceFile, ext, virtualExt, virtualFlag) {
+      // check for deleted files, need to remove virtual as well
+      if (sourceFile.path.match(new RegExp(`\\.m?${virtualExt}$`)) && sourceFile[virtualFlag]) {
+        const origFile = program.getSourceFile(
+          sourceFile.path.replace(new RegExp(`\\.m?${virtualExt}$`), `.${ext}`)
+        );
+        if (!origFile) {
           sourceFile.version = null;
         }
       }
-      if (sourceFile.path.endsWith('.gts')) {
-        /**
-         * @type {ts.SourceFile}
-         */
-        let mtsSourceFile = program.getSourceFile(sourceFile.path.replace(/\.gts$/, '.mts'));
-        if (!mtsSourceFile) {
-          mtsSourceFile = program.getSourceFile(sourceFile.path.replace(/\.gts$/, '.ts'));
+      if (sourceFile.path.endsWith(`.${ext}`)) {
+        let virtualSourceFile = program.getSourceFile(
+          sourceFile.path.replace(new RegExp(`\\.${ext}$`), `.${virtualExt}`)
+        );
+        if (!virtualSourceFile) {
+          virtualSourceFile = program.getSourceFile(
+            sourceFile.path.replace(new RegExp(`\\.${ext}$`), virtualExt === 'mts' ? '.ts' : '.js')
+          );
         }
-        if (mtsSourceFile) {
+        if (virtualSourceFile) {
           const keep = {
-            fileName: mtsSourceFile.fileName,
-            path: mtsSourceFile.path,
-            originalFileName: mtsSourceFile.originalFileName,
-            resolvedPath: mtsSourceFile.resolvedPath,
-            impliedNodeFormat: mtsSourceFile.impliedNodeFormat,
+            fileName: virtualSourceFile.fileName,
+            path: virtualSourceFile.path,
+            originalFileName: virtualSourceFile.originalFileName,
+            resolvedPath: virtualSourceFile.resolvedPath,
+            impliedNodeFormat: virtualSourceFile.impliedNodeFormat,
           };
-          Object.assign(mtsSourceFile, sourceFile, keep);
-          mtsSourceFile.isVirtualGts = true;
+          Object.assign(virtualSourceFile, sourceFile, keep);
+          virtualSourceFile[virtualFlag] = true;
         }
       }
+    }
+    for (const sourceFile of sourceFiles) {
+      syncVirtualFile(sourceFile, 'gts', 'mts', 'isVirtualGts');
+      syncVirtualFile(sourceFile, 'gjs', 'mjs', 'isVirtualGjs');
     }
   };
 } catch /* istanbul ignore next */ {
