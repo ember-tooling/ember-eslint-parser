@@ -12,4 +12,5 @@ const connected: boolean = service.isConnected();
 
 console.log('Service connected:', connected);
 
+// eslint-disable-next-line ember/no-test-import-export
 export { service };

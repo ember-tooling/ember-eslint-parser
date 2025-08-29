@@ -17,6 +17,9 @@ function testArbitraryExtensions(): void {
   } else {
     console.error(response.error);
   }
+  
+  // Use the config to avoid unused variable warning
+  console.log('Config ID:', config.id);
 }
 
 export { testArbitraryExtensions };

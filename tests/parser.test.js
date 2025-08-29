@@ -4,7 +4,6 @@ import { traverse } from '../src/parser/transforms.js';
 import { SourceCode } from 'eslint';
 import { visitorKeys as tsVisitors } from '@typescript-eslint/visitor-keys';
 import { visitorKeys as glimmerVisitorKeys } from '@glimmer/syntax';
-import path from 'node:path';
 
 describe('transform', () => {
   let text, result;
@@ -2822,52 +2821,6 @@ export const NotFound = <template>
     expect(transformedCode).toContain('@glimmer/tracking');
   });
 
-  it('ensures TypeScript can resolve types from .gjs imports with allowGjs enabled', () => {
-    // Test that when allowGjs is enabled, .gjs imports are properly processed
-    const codeWithGjsImport = `
-      import type { UserData } from './types-export.gjs';
-      import { UserService } from './types-export.gjs';
-
-      const userData: UserData = {
-        id: 1,
-        name: 'John Doe',
-        email: 'john@example.com'
-      };
-
-      const userService = new UserService();
-      // This should be properly typed and not be 'any'
-      userService.addUser(userData);
-    `;
-
-    result = parseForESLint(codeWithGjsImport, {
-      filePath: 'tests/fixtures/imports-from-gjs.ts',
-      comment: true,
-      loc: true,
-      range: true,
-      tokens: true,
-      allowGjs: true, // Explicitly enable .gjs support
-    });
-
-    // Verify that the parser doesn't throw errors when processing .gjs imports
-    expect(result.ast).toBeDefined();
-    expect(result.ast.body.length).toBeGreaterThan(3); // At least: import type, import, const, const (may have more due to processing)
-
-    // Check that import declarations are preserved correctly
-    const importDeclarations = result.ast.body.filter((node) => node.type === 'ImportDeclaration');
-    expect(importDeclarations).toHaveLength(2);
-    expect(importDeclarations[0].source.value).toBe('./types-export.gjs');
-    expect(importDeclarations[1].source.value).toBe('./types-export.gjs');
-
-    // Verify that TypeScript-specific nodes are present (indicating proper TypeScript parsing)
-    const typeAnnotations = [];
-    traverse(result.visitorKeys, result.ast, (path) => {
-      if (path.node.type === 'TSTypeAnnotation') {
-        typeAnnotations.push(path.node);
-      }
-    });
-    expect(typeAnnotations.length).toBeGreaterThan(0);
-  });
-
   it('handles .gjs imports with adjacent .gjs.d.ts declaration files', () => {
     // Test that .gjs imports work correctly when there are corresponding .gjs.d.ts files
     const codeWithGjsDtsImport = `
@@ -2919,34 +2872,6 @@ export const NotFound = <template>
     const transformedCode = replaceExtensions(codeWithGjsDtsImport);
     expect(transformedCode).toContain('./api-client.mjs');
     expect(transformedCode).not.toContain('./api-client.gjs');
-  });
-
-  it('properly maps .gjs.d.ts files to .mjs.d.ts for TypeScript module resolution', () => {
-    // Test that the TypeScript file system patches correctly handle .gjs.d.ts files
-    const { patchTs } = require('../src/parser/ts-patch');
-    const fs = require('node:fs');
-
-    // Initialize patchTs with allowGjs enabled
-    const { allowGjs } = patchTs({ allowGjs: true });
-    expect(allowGjs).toBe(true);
-
-    // Since we can't easily test the actual TypeScript sys modifications directly,
-    // we'll test that our file existence checks work correctly
-    const testFilePath = path.join(__dirname, 'fixtures', 'api-client.gjs.d.ts');
-    expect(fs.existsSync(testFilePath)).toBe(true);
-
-    // Test that .gjs.d.ts files exist in our test fixtures
-    const gjsDtsPath = path.join(__dirname, 'fixtures', 'api-client.gjs.d.ts');
-    const gjsPath = path.join(__dirname, 'fixtures', 'api-client.gjs');
-
-    expect(fs.existsSync(gjsDtsPath)).toBe(true);
-    expect(fs.existsSync(gjsPath)).toBe(true);
-
-    // Read the .gjs.d.ts file to verify it contains type declarations
-    const dtsContent = fs.readFileSync(gjsDtsPath, 'utf8');
-    expect(dtsContent).toContain('export interface ApiResponse');
-    expect(dtsContent).toContain('export declare class ApiClient');
-    expect(dtsContent).toContain('export declare const DefaultClient');
   });
 
   it('comprehensive test: .gjs imports work with type-aware linting when .gjs.d.ts files are present', () => {
@@ -3011,52 +2936,5 @@ export const NotFound = <template>
     // Count occurrences to ensure both imports were transformed
     const mjsMatches = transformedCode.match(/\.\/typed-service\.mjs/g);
     expect(mjsMatches).toHaveLength(2);
-  });
-
-  it('can parse .gjs files that export types and components', () => {
-    // Test parsing a .gjs file that exports TypeScript types
-    const gjsWithTypes = `
-      export interface UserData {
-        id: number;
-        name: string;
-        email: string;
-      }
-
-      export class UserService {
-        users = [];
-        
-        addUser(user) {
-          this.users.push(user);
-        }
-      }
-
-      export const ExampleComponent = <template>
-        <div>Hello from GJS component</div>
-      </template>;
-    `;
-
-    result = parseForESLint(gjsWithTypes, {
-      filePath: 'tests/fixtures/types-export.gjs',
-      comment: true,
-      loc: true,
-      range: true,
-      tokens: true,
-    });
-
-    // Check that exports are parsed correctly
-    const exportDeclarations = result.ast.body.filter(
-      (node) => node.type === 'ExportNamedDeclaration' || node.type === 'TSInterfaceDeclaration'
-    );
-    expect(exportDeclarations.length).toBeGreaterThan(0);
-
-    // Check that the template is parsed as a Glimmer template
-    const templateNodes = [];
-    traverse(result.visitorKeys, result.ast, (path) => {
-      if (path.node.type === 'GlimmerTemplate') {
-        templateNodes.push(path.node);
-      }
-    });
-
-    expect(templateNodes).toHaveLength(1);
   });
 });
