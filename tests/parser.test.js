@@ -2783,12 +2783,12 @@ export const NotFound = <template>
     // Check that the import declarations are parsed correctly
     const importDeclarations = result.ast.body.filter((node) => node.type === 'ImportDeclaration');
     expect(importDeclarations).toHaveLength(2);
-    
+
     // Check the first import (type import)
     expect(importDeclarations[0].importKind).toBe('type');
     expect(importDeclarations[0].source.value).toBe('./types-export.gjs');
     expect(importDeclarations[0].specifiers[0].imported.name).toBe('UserData');
-    
+
     // Check the second import (value imports)
     expect(importDeclarations[1].importKind).toBe('value');
     expect(importDeclarations[1].source.value).toBe('./types-export.gjs');
@@ -2800,10 +2800,10 @@ export const NotFound = <template>
   it('replaces .gjs extensions with .mjs for TypeScript processing', () => {
     // Test that .gjs imports are transformed to .mjs for TypeScript compatibility
     const { patchTs, replaceExtensions } = require('../src/parser/ts-patch');
-    
+
     // Initialize patchTs with allowGjs enabled
     patchTs({ allowGjs: true });
-    
+
     const codeWithGjsImports = `
       import type { UserData } from './types-export.gjs';
       import { UserService } from './api-service.gjs';
@@ -2812,7 +2812,7 @@ export const NotFound = <template>
     `;
 
     const transformedCode = replaceExtensions(codeWithGjsImports);
-    
+
     // Check that .gjs extensions are replaced with .mjs
     expect(transformedCode).toContain('./types-export.mjs');
     expect(transformedCode).toContain('./api-service.mjs');
@@ -2898,12 +2898,12 @@ export const NotFound = <template>
     // Check that import declarations are parsed correctly
     const importDeclarations = result.ast.body.filter((node) => node.type === 'ImportDeclaration');
     expect(importDeclarations).toHaveLength(2);
-    
+
     // First import should be a type import
     expect(importDeclarations[0].importKind).toBe('type');
     expect(importDeclarations[0].source.value).toBe('./api-client.gjs');
     expect(importDeclarations[0].specifiers[0].imported.name).toBe('ApiResponse');
-    
+
     // Second import should be value imports
     expect(importDeclarations[1].importKind).toBe('value');
     expect(importDeclarations[1].source.value).toBe('./api-client.gjs');
@@ -2914,7 +2914,7 @@ export const NotFound = <template>
     // Verify that our extension replacement transforms .gjs to .mjs for TypeScript processing
     const { patchTs, replaceExtensions } = require('../src/parser/ts-patch');
     patchTs({ allowGjs: true });
-    
+
     const transformedCode = replaceExtensions(codeWithGjsDtsImport);
     expect(transformedCode).toContain('./api-client.mjs');
     expect(transformedCode).not.toContain('./api-client.gjs');
@@ -2924,7 +2924,7 @@ export const NotFound = <template>
     // Test that the TypeScript file system patches correctly handle .gjs.d.ts files
     const { patchTs } = require('../src/parser/ts-patch');
     const fs = require('node:fs');
-    
+
     // Initialize patchTs with allowGjs enabled
     const { allowGjs } = patchTs({ allowGjs: true });
     expect(allowGjs).toBe(true);
@@ -2940,7 +2940,7 @@ export const NotFound = <template>
       '/Users/pwagenet/Development/OSS/Ember/ember-eslint-parser/tests/fixtures/api-client.gjs.d.ts';
     const gjsPath =
       '/Users/pwagenet/Development/OSS/Ember/ember-eslint-parser/tests/fixtures/api-client.gjs';
-    
+
     expect(fs.existsSync(gjsDtsPath)).toBe(true);
     expect(fs.existsSync(gjsPath)).toBe(true);
 
@@ -2991,11 +2991,11 @@ export const NotFound = <template>
     // Check that both type and value imports are handled
     const importDeclarations = result.ast.body.filter((node) => node.type === 'ImportDeclaration');
     expect(importDeclarations).toHaveLength(2);
-    
+
     // Type import
     expect(importDeclarations[0].importKind).toBe('type');
     expect(importDeclarations[0].source.value).toBe('./typed-service.gjs');
-    
+
     // Value import
     expect(importDeclarations[1].importKind).toBe('value');
     expect(importDeclarations[1].source.value).toBe('./typed-service.gjs');
@@ -3003,13 +3003,13 @@ export const NotFound = <template>
     // Verify that extension replacement works
     const { patchTs, replaceExtensions } = require('../src/parser/ts-patch');
     patchTs({ allowGjs: true });
-    
+
     const transformedCode = replaceExtensions(codeWithComplexGjsImports);
-    
+
     // Should transform all .gjs imports to .mjs for TypeScript
     expect(transformedCode).toContain('./typed-service.mjs');
     expect(transformedCode).not.toContain('./typed-service.gjs');
-    
+
     // Count occurrences to ensure both imports were transformed
     const mjsMatches = transformedCode.match(/\.\/typed-service\.mjs/g);
     expect(mjsMatches).toHaveLength(2);
@@ -3058,7 +3058,7 @@ export const NotFound = <template>
         templateNodes.push(path.node);
       }
     });
-    
+
     expect(templateNodes).toHaveLength(1);
   });
 });
