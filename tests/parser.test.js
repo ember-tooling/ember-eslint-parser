@@ -4,6 +4,7 @@ import { traverse } from '../src/parser/transforms.js';
 import { SourceCode } from 'eslint';
 import { visitorKeys as tsVisitors } from '@typescript-eslint/visitor-keys';
 import { visitorKeys as glimmerVisitorKeys } from '@glimmer/syntax';
+import path from 'node:path';
 
 describe('transform', () => {
   let text, result;
@@ -2931,15 +2932,12 @@ export const NotFound = <template>
 
     // Since we can't easily test the actual TypeScript sys modifications directly,
     // we'll test that our file existence checks work correctly
-    const testFilePath =
-      '/Users/pwagenet/Development/OSS/Ember/ember-eslint-parser/tests/fixtures/api-client.gjs.d.ts';
+    const testFilePath = path.join(__dirname, 'fixtures', 'api-client.gjs.d.ts');
     expect(fs.existsSync(testFilePath)).toBe(true);
 
     // Test that .gjs.d.ts files exist in our test fixtures
-    const gjsDtsPath =
-      '/Users/pwagenet/Development/OSS/Ember/ember-eslint-parser/tests/fixtures/api-client.gjs.d.ts';
-    const gjsPath =
-      '/Users/pwagenet/Development/OSS/Ember/ember-eslint-parser/tests/fixtures/api-client.gjs';
+    const gjsDtsPath = path.join(__dirname, 'fixtures', 'api-client.gjs.d.ts');
+    const gjsPath = path.join(__dirname, 'fixtures', 'api-client.gjs');
 
     expect(fs.existsSync(gjsDtsPath)).toBe(true);
     expect(fs.existsSync(gjsPath)).toBe(true);
