@@ -4,6 +4,65 @@ const { replaceRange } = require('./transforms');
 
 let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs;
 
+/**
+ * Helper function to find the first existing file among possible variants
+ * @param {string} fileName - The original file name to resolve
+ * @param {boolean} allowGjs - Whether .gjs files are allowed
+ * @returns {string|null} - The first existing file path, or null if none exist
+ */
+function findExistingFile(fileName, allowGjs) {
+  // Check .gts first
+  const gtsFile = fileName.replace(/\.m?ts$/, '.gts');
+  if (fs.existsSync(gtsFile)) return gtsFile;
+
+  // Check .gjs (if allowed)
+  if (allowGjs) {
+    const gjsFile = fileName.replace(/\.m?js$/, '.gjs');
+    if (fs.existsSync(gjsFile)) return gjsFile;
+
+    // Check .gjs.d.ts (multiple patterns)
+    const gjsDtsFile1 = fileName.replace(/\.mjs\.d\.ts$/, '.gjs.d.ts');
+    const gjsDtsFile2 = fileName.replace(/\.d\.mts$/, '.gjs.d.ts');
+    if (fs.existsSync(gjsDtsFile1)) return gjsDtsFile1;
+    if (fs.existsSync(gjsDtsFile2)) return gjsDtsFile2;
+
+    // Check .d.gjs.ts pattern
+    const dGjsFile = fileName.replace(/\.d\.mts$/, '.d.gjs.ts');
+    if (fs.existsSync(dGjsFile)) return dGjsFile;
+  }
+
+  // Check original file
+  if (fs.existsSync(fileName)) return fileName;
+
+  return null;
+}
+
+/**
+ * Helper function to resolve the actual file path for reading
+ * @param {string} fileName - The original file name to resolve
+ * @param {boolean} allowGjs - Whether .gjs files are allowed
+ * @returns {string} - The resolved file path to read from
+ */
+function resolveFileForReading(fileName, allowGjs) {
+  // Handle declaration files first (more specific patterns)
+  if (fileName.endsWith('.d.mts')) {
+    // .d.mts files could map to .gjs declaration patterns
+    if (allowGjs && fs.existsSync(fileName.replace(/\.d\.mts$/, '.d.gjs.ts'))) {
+      return fileName.replace(/\.d\.mts$/, '.d.gjs.ts');
+    } else if (allowGjs && fs.existsSync(fileName.replace(/\.d\.mts$/, '.gjs.d.ts'))) {
+      return fileName.replace(/\.d\.mts$/, '.gjs.d.ts');
+    }
+  } else if (allowGjs && fileName.endsWith('.mjs.d.ts')) {
+    return fileName.replace(/\.mjs\.d\.ts$/, '.gjs.d.ts');
+  } else if (fileName.match(/\.m?ts$/) && !fileName.endsWith('.d.ts')) {
+    return fileName.replace(/\.m?ts$/, '.gts');
+  } else if (allowGjs && fileName.match(/\.m?js$/) && !fileName.endsWith('.d.ts')) {
+    return fileName.replace(/\.m?js$/, '.gjs');
+  }
+
+  return fileName;
+}
+
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
   // eslint-disable-next-line n/no-unpublished-require
@@ -44,18 +103,7 @@ try {
         return results.concat(gtsVirtuals, gjsVirtuals, gjsDtsVirtuals, dGjsVirtuals);
       },
       fileExists(fileName) {
-        const gtsExists = fs.existsSync(fileName.replace(/\.m?ts$/, '.gts'));
-        const gjsExists = allowGjs ? fs.existsSync(fileName.replace(/\.m?js$/, '.gjs')) : false;
-        // Check for .gjs.d.ts files with multiple patterns
-        const gjsDtsExists = allowGjs
-          ? fs.existsSync(fileName.replace(/\.mjs\.d\.ts$/, '.gjs.d.ts')) ||
-            fs.existsSync(fileName.replace(/\.d\.mts$/, '.gjs.d.ts'))
-          : false;
-        // Check for .d.gjs.ts pattern (allowArbitraryExtensions for .gjs files only)
-        const dGjsExists = allowGjs
-          ? fs.existsSync(fileName.replace(/\.d\.mts$/, '.d.gjs.ts'))
-          : false;
-        return gtsExists || gjsExists || gjsDtsExists || dGjsExists || fs.existsSync(fileName);
+        return findExistingFile(fileName, allowGjs) !== null;
       },
       readFile(fname) {
         let fileName = fname;
@@ -67,21 +115,7 @@ try {
         try {
           content = fs.readFileSync(fileName).toString();
         } catch {
-          // Handle declaration files first (more specific patterns)
-          if (fileName.endsWith('.d.mts')) {
-            // .d.mts files could map to .gjs declaration patterns
-            if (allowGjs && fs.existsSync(fileName.replace(/\.d\.mts$/, '.d.gjs.ts'))) {
-              fileName = fileName.replace(/\.d\.mts$/, '.d.gjs.ts');
-            } else if (allowGjs && fs.existsSync(fileName.replace(/\.d\.mts$/, '.gjs.d.ts'))) {
-              fileName = fileName.replace(/\.d\.mts$/, '.gjs.d.ts');
-            }
-          } else if (allowGjs && fileName.endsWith('.mjs.d.ts')) {
-            fileName = fileName.replace(/\.mjs\.d\.ts$/, '.gjs.d.ts');
-          } else if (fileName.match(/\.m?ts$/) && !fileName.endsWith('.d.ts')) {
-            fileName = fileName.replace(/\.m?ts$/, '.gts');
-          } else if (allowGjs && fileName.match(/\.m?js$/) && !fileName.endsWith('.d.ts')) {
-            fileName = fileName.replace(/\.m?js$/, '.gjs');
-          }
+          fileName = resolveFileForReading(fileName, allowGjs);
           content = fs.readFileSync(fileName).toString();
         }
         // Only transform template files, not declaration files
