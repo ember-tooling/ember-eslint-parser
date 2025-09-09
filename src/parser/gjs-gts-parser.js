@@ -43,28 +43,6 @@ function parseCompilerOptionFromTsconfig(tsconfigPath, rootDir, property) {
 }
 
 /**
- * @param {Array<boolean|undefined>} values
- * @param {string} source
- * @returns {boolean|null}
- */
-function resolveAllowJs(values, source) {
-  const filtered = values.filter((val) => typeof val !== 'undefined');
-  if (filtered.length > 0) {
-    const uniqueValues = [...new Set(filtered)];
-    if (uniqueValues.length > 1) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `[ember-eslint-parser] Conflicting allowJs values in ${source}. Defaulting allowGjs to false.`
-      );
-      return false;
-    } else {
-      return uniqueValues[0];
-    }
-  }
-  return null;
-}
-
-/**
  * @param {Array<{getCompilerOptions?: Function}>|undefined} programs
  * @returns {boolean|null}
  */
@@ -74,7 +52,21 @@ function getAllowJsFromPrograms(programs) {
     .map((p) => p.getCompilerOptions?.())
     .filter(Boolean)
     .map((opts) => opts.allowJs);
-  return resolveAllowJs(allowJsValues, 'programs');
+
+  const filtered = allowJsValues.filter((val) => typeof val !== 'undefined');
+  if (filtered.length > 0) {
+    const uniqueValues = [...new Set(filtered)];
+    if (uniqueValues.length > 1) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[ember-eslint-parser] Conflicting allowJs values in programs. Defaulting allowGjs to false.`
+      );
+      return false;
+    } else {
+      return uniqueValues[0];
+    }
+  }
+  return null;
 }
 
 /**
@@ -108,10 +100,9 @@ function getProjectServiceTsconfigPath(projectService) {
  * @param {object} options - Parser options
  * @param {string} property - The compiler option property to resolve (e.g., 'allowJs', 'allowArbitraryExtensions')
  * @param {Function} [programsExtractor] - Function to extract the property from programs (optional)
- * @param {Function} [multiValueResolver] - Function to resolve conflicts when multiple values exist (optional)
  * @returns {boolean} - The resolved value
  */
-function getCompilerOption(options, property, programsExtractor, multiValueResolver) {
+function getCompilerOption(options, property, programsExtractor) {
   // Check programs first (if extractor provided)
   if (programsExtractor) {
     const programsValue = programsExtractor(options.programs);
@@ -136,18 +127,9 @@ function getCompilerOption(options, property, programsExtractor, multiValueResol
   }
 
   if (tsconfigPaths.length > 0) {
-    if (multiValueResolver) {
-      // For allowJs - handle multiple values with conflict resolution
-      const values = tsconfigPaths.map((cfg) =>
-        parseCompilerOptionFromTsconfig(cfg, rootDir, property)
-      );
-      return multiValueResolver(values, 'project');
-    } else {
-      // For allowArbitraryExtensions - return first found value
-      for (const tsconfigPath of tsconfigPaths) {
-        const result = parseCompilerOptionFromTsconfig(tsconfigPath, rootDir, property);
-        if (result !== undefined) return result;
-      }
+    for (const tsconfigPath of tsconfigPaths) {
+      const result = parseCompilerOptionFromTsconfig(tsconfigPath, rootDir, property);
+      if (result !== undefined) return result;
     }
   }
 
@@ -158,7 +140,7 @@ function getCompilerOption(options, property, programsExtractor, multiValueResol
  * Returns the resolved allowJs value based on priority: programs > projectService > project/tsconfig
  */
 function getAllowJs(options) {
-  return getCompilerOption(options, 'allowJs', getAllowJsFromPrograms, resolveAllowJs);
+  return getCompilerOption(options, 'allowJs', getAllowJsFromPrograms);
 }
 
 /**
