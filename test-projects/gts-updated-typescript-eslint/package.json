@@ -1,0 +1,24 @@
+{
+  "name": "@test-project/gts-updated-typescript-eslint",
+  "private": true,
+  "scripts": {
+    "test:check": "eslint src --max-warnings=0",
+    "test:fix": "eslint ./src-fixable --fix --max-warnings=0",
+    "types": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@ember/test-waiters": "^4.1.1",
+    "@glimmer/component": "^2.0.0",
+    "@glimmer/tracking": "^1.1.2",
+    "@glint/template": "^1.6.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "@test-project/types-providing-uses-ember-concurrency": "workspace:*",
+    "ember-eslint-parser": "workspace:^",
+    "ember-source": "^6.8.0",
+    "eslint": "^9.37.0",
+    "eslint-plugin-ember": "^12.7.4",
+    "globals": "^16.4.0",
+    "typescript": "^5.9.3"
+  }
+}
