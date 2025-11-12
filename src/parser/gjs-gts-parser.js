@@ -20,43 +20,26 @@ const { transformForLint, preprocessGlimmerTemplates, convertAst } = require('./
 /**
  * @param {string} tsconfigPath
  * @param {string} rootDir
+ * @param {string} property - The compiler option property to extract
  * @returns {boolean|undefined}
  */
-function parseAllowJsFromTsconfig(tsconfigPath, rootDir) {
+function parseCompilerOptionFromTsconfig(tsconfigPath, rootDir, property) {
   try {
     const parserPath = require.resolve('@typescript-eslint/parser');
     // eslint-disable-next-line n/no-unpublished-require
     const tsPath = require.resolve('typescript', { paths: [parserPath] });
     const ts = require(tsPath);
     const parsed = tsconfigUtils.getParsedConfigFile(ts, tsconfigPath, rootDir);
-    return parsed?.options?.allowJs;
+    return parsed?.options?.[property];
   } catch (e) {
     // eslint-disable-next-line no-console
-    console.warn('[ember-eslint-parser] Failed to parse tsconfig:', tsconfigPath, e);
+    console.warn(
+      `[ember-eslint-parser] Failed to parse tsconfig for ${property}:`,
+      tsconfigPath,
+      e
+    );
     return undefined;
   }
-}
-
-/**
- * @param {Array<boolean|undefined>} values
- * @param {string} source
- * @returns {boolean|null}
- */
-function resolveAllowJs(values, source) {
-  const filtered = values.filter((val) => typeof val !== 'undefined');
-  if (filtered.length > 0) {
-    const uniqueValues = [...new Set(filtered)];
-    if (uniqueValues.length > 1) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        `[ember-eslint-parser] Conflicting allowJs values in ${source}. Defaulting allowGjs to false.`
-      );
-      return false;
-    } else {
-      return uniqueValues[0];
-    }
-  }
-  return null;
 }
 
 /**
@@ -69,7 +52,21 @@ function getAllowJsFromPrograms(programs) {
     .map((p) => p.getCompilerOptions?.())
     .filter(Boolean)
     .map((opts) => opts.allowJs);
-  return resolveAllowJs(allowJsValues, 'programs');
+
+  const filtered = allowJsValues.filter((val) => typeof val !== 'undefined');
+  if (filtered.length > 0) {
+    const uniqueValues = [...new Set(filtered)];
+    if (uniqueValues.length > 1) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[ember-eslint-parser] Conflicting allowJs values in programs. Defaulting allowGjs to false.`
+      );
+      return false;
+    } else {
+      return uniqueValues[0];
+    }
+  }
+  return null;
 }
 
 /**
@@ -99,17 +96,25 @@ function getProjectServiceTsconfigPath(projectService) {
 }
 
 /**
- * Returns the resolved allowJs value based on priority: programs > projectService > project/tsconfig
+ * Generic function to resolve compiler options based on priority: programs > projectService > project/tsconfig
+ * @param {object} options - Parser options
+ * @param {string} property - The compiler option property to resolve (e.g., 'allowJs', 'allowArbitraryExtensions')
+ * @param {Function} [programsExtractor] - Function to extract the property from programs (optional)
+ * @returns {boolean} - The resolved value
  */
-function getAllowJs(options) {
-  const allowJsFromPrograms = getAllowJsFromPrograms(options.programs);
-  if (allowJsFromPrograms !== null) return allowJsFromPrograms;
+function getCompilerOption(options, property, programsExtractor) {
+  // Check programs first (if extractor provided)
+  if (programsExtractor) {
+    const programsValue = programsExtractor(options.programs);
+    if (programsValue !== null) return programsValue;
+  }
 
   const rootDir = options.tsconfigRootDir || process.cwd();
 
   const projectServiceTsconfigPath = getProjectServiceTsconfigPath(options.projectService);
   if (projectServiceTsconfigPath) {
-    return parseAllowJsFromTsconfig(projectServiceTsconfigPath, rootDir);
+    const result = parseCompilerOptionFromTsconfig(projectServiceTsconfigPath, rootDir, property);
+    if (result !== undefined) return result;
   }
 
   let tsconfigPaths = [];
@@ -120,12 +125,29 @@ function getAllowJs(options) {
   } else if (options.project) {
     tsconfigPaths = ['tsconfig.json'];
   }
+
   if (tsconfigPaths.length > 0) {
-    const allowJsValues = tsconfigPaths.map((cfg) => parseAllowJsFromTsconfig(cfg, rootDir));
-    return resolveAllowJs(allowJsValues, 'project');
+    for (const tsconfigPath of tsconfigPaths) {
+      const result = parseCompilerOptionFromTsconfig(tsconfigPath, rootDir, property);
+      if (result !== undefined) return result;
+    }
   }
 
-  return false;
+  return false; // Default to false if not found
+}
+
+/**
+ * Returns the resolved allowJs value based on priority: programs > projectService > project/tsconfig
+ */
+function getAllowJs(options) {
+  return getCompilerOption(options, 'allowJs', getAllowJsFromPrograms);
+}
+
+/**
+ * Returns the resolved allowArbitraryExtensions value based on priority: projectService > project/tsconfig
+ */
+function getAllowArbitraryExtensions(options) {
+  return getCompilerOption(options, 'allowArbitraryExtensions');
 }
 
 /**
@@ -140,10 +162,30 @@ module.exports = {
   parseForESLint(code, options) {
     const allowGjsWasSet = options.allowGjs !== undefined;
     const allowGjs = allowGjsWasSet ? options.allowGjs : getAllowJs(options);
-    let actualAllowGjs;
+    const allowArbitraryExtensionsWasSet = options.allowArbitraryExtensions !== undefined;
+    const allowArbitraryExtensions = allowArbitraryExtensionsWasSet
+      ? options.allowArbitraryExtensions
+      : getAllowArbitraryExtensions(options);
+    let actualAllowGjs, actualAllowArbitraryExtensions;
     // Only patch TypeScript if we actually need it.
     if (options.programs || options.projectService || options.project) {
-      ({ allowGjs: actualAllowGjs } = patchTs({ allowGjs }));
+      ({ allowGjs: actualAllowGjs, allowArbitraryExtensions: actualAllowArbitraryExtensions } =
+        patchTs({
+          allowGjs,
+          allowArbitraryExtensions,
+        }));
+
+      if (actualAllowGjs !== allowGjs) {
+        console.warn(
+          `ember-eslint-parser: allowGjs changed from ${allowGjs} to ${actualAllowGjs} due to TypeScript configuration`
+        );
+      }
+
+      if (actualAllowArbitraryExtensions !== allowArbitraryExtensions) {
+        console.warn(
+          `ember-eslint-parser: allowArbitraryExtensions changed from ${allowArbitraryExtensions} to ${actualAllowArbitraryExtensions} due to TypeScript configuration`
+        );
+      }
     }
     registerParsedFile(options.filePath);
     let jsCode = code;
@@ -205,6 +247,23 @@ module.exports = {
               `    Current: ${allowGjs}, Program: ${programAllowJs}`
           );
         }
+
+        // Compare allowArbitraryExtensions with the actual program's compiler options
+        const programAllowArbitraryExtensions =
+          result.services.program.getCompilerOptions?.()?.allowArbitraryExtensions;
+        if (
+          !allowArbitraryExtensionsWasSet &&
+          programAllowArbitraryExtensions !== undefined &&
+          actualAllowArbitraryExtensions !== undefined &&
+          actualAllowArbitraryExtensions !== programAllowArbitraryExtensions
+        ) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            '[ember-eslint-parser] allowArbitraryExtensions does not match the actual program. Consider setting allowArbitraryExtensions explicitly.\n' +
+              `    Current: ${allowArbitraryExtensions}, Program: ${programAllowArbitraryExtensions}`
+          );
+        }
+
         syncMtsGtsSourceFiles(result.services.program);
       }
       return { ...result, visitorKeys };
