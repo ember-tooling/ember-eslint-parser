@@ -79,7 +79,6 @@ jobs:
           jq '.pnpm.overrides."@typescript-eslint/scope-manager" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
           jq '.pnpm.overrides."@typescript-eslint/visitor-keys" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
           jq '.pnpm.overrides."@typescript-eslint/eslint-plugin" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
-          jq '.pnpm.overrides."@typescript-eslint/tsconfig-utils" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
           jq '.pnpm.overrides.typescript = "${{ matrix.tsVersion }}"' package.json | sponge package.json
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm test
