@@ -7,8 +7,8 @@ on:
   pull_request: {}
 
 concurrency:
-   group: ci-${{ github.head_ref || github.ref }}
-   cancel-in-progress: true
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # Fills the dep cache so parallel jobs can start faster.
@@ -51,10 +51,10 @@ jobs:
         eslintTsVersion:
           - ^6
           - ^7
-          - ^8
+          - ~8.45
           - canary
         tsVersion:
-          - 5.3 
+          - 5.3
           - 5.4
           - 5.5
           - 5.6
@@ -64,7 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: wyvox/action-setup-pnpm@v3
-      - name: 'TS: ${{ matrix.tsVersion }}, eslint-plugin-ts: ${{ matrix.eslintTsVersion }}'
+      - name: "TS: ${{ matrix.tsVersion }}, eslint-plugin-ts: ${{ matrix.eslintTsVersion }}"
         run: |-
           function sponge() {
             local line;
@@ -83,8 +83,6 @@ jobs:
       - run: pnpm test
       - run: pnpm --filter '*' test:check
       - run: pnpm --filter '*' test:fix
-
-
 
   test_eslint-plugin-ember:
     name: "eslint-plugin-ember"
@@ -105,4 +103,3 @@ jobs:
       - uses: wyvox/action-setup-pnpm@v3
       - name: Lint
         run: pnpm lint
-
