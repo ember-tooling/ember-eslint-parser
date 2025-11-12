@@ -2,6 +2,23 @@
 
 ## Release (2025-11-12)
 
+* ember-eslint-parser 0.5.13 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#137](https://github.com/ember-tooling/ember-eslint-parser/pull/137) Fix ESM babel configs ([@ef4](https://github.com/ef4))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#147](https://github.com/ember-tooling/ember-eslint-parser/pull/147) Add test projects for the experimental worker ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#138](https://github.com/ember-tooling/ember-eslint-parser/pull/138) Upgrade pnpm, re-roll lockfile ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 2
+- Edward Faulkner ([@ef4](https://github.com/ef4))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
+## Release (2025-11-12)
+
 * ember-eslint-parser 0.5.12 (patch)
 
 #### :bug: Bug Fix

@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.5.11",
-      "newVersion": "0.5.12",
+      "oldVersion": "0.5.12",
+      "newVersion": "0.5.13",
       "tagName": "latest",
       "constraints": [
         {
@@ -18,5 +18,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2025-11-12)\n\n* ember-eslint-parser 0.5.12 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#144](https://github.com/ember-tooling/ember-eslint-parser/pull/144) Fix eslint for imports with .gts extension, Cleanup parserOptions for typescript-eslint canary ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#144](https://github.com/ember-tooling/ember-eslint-parser/pull/144) Fix eslint for imports with .gts extension, Cleanup parserOptions for typescript-eslint canary ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 1\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2025-11-12)\n\n* ember-eslint-parser 0.5.13 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#137](https://github.com/ember-tooling/ember-eslint-parser/pull/137) Fix ESM babel configs ([@ef4](https://github.com/ef4))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#147](https://github.com/ember-tooling/ember-eslint-parser/pull/147) Add test projects for the experimental worker ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#138](https://github.com/ember-tooling/ember-eslint-parser/pull/138) Upgrade pnpm, re-roll lockfile ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Edward Faulkner ([@ef4](https://github.com/ef4))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }
