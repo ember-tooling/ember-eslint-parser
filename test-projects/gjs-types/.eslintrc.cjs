@@ -18,7 +18,7 @@ const manifest = require(manifestPath);
 const isV8 = manifest.version[0] > 8;
 
 if (isV8) {
-  parserOptions.project = undefined;
+  delete parserOptions.project;
 } 
 
 module.exports = {
