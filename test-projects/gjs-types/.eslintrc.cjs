@@ -2,6 +2,7 @@
 
 const path = require('path');
 
+const typeAwareRules = {};
 const parserOptions = {};
 if (process.env.PROJECT_SERVICE) {
   parserOptions.projectService = {
@@ -21,15 +22,22 @@ if (isV8) {
   delete parserOptions.project;
 } 
 
+if (parserOptions.projectService || parserOptions.project) {
+  Object.assign(typeAwareRules, {
+    '@typescript-eslint/no-unsafe-assignment': 'error',
+    '@typescript-eslint/no-unsafe-member-access': 'error',
+    '@typescript-eslint/no-unsafe-call': 'error'
+  });
+}
+
+
 module.exports = {
   root: true,
   parserOptions,
   rules: {
     'no-use-before-define': ['error'],
     'no-unused-vars': ['error'],
-    '@typescript-eslint/no-unsafe-assignment': 'error',
-    '@typescript-eslint/no-unsafe-member-access': 'error',
-    '@typescript-eslint/no-unsafe-call': 'error'
+    ...typeAwareRules,
   },
   overrides: [
     {
