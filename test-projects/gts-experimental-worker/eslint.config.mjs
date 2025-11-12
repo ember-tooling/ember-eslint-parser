@@ -18,6 +18,13 @@ import ember from 'eslint-plugin-ember/recommended';
 
 import babelParser from '@babel/eslint-parser/experimental-worker';
 
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const manifestPath = require.resolve('@typescript-eslint/parser/package.json');
+const manifest = require(manifestPath);
+const isV8 = parseInt(manifest.version[0]) >= 8;
+
 const parserOptions = {
   esm: {
     js: {
@@ -25,7 +32,7 @@ const parserOptions = {
       ecmaVersion: 'latest',
     },
     ts: {
-      projectService: true,
+      ...(isV8 ? { projectService: true } : { project: true }),
       tsconfigRootDir: import.meta.dirname,
     },
   },
