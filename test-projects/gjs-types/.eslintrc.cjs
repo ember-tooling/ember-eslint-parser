@@ -3,15 +3,23 @@
 const path = require('path');
 
 const parserOptions = {};
-if (process.env.PROJECT_SERVICE) {
+// if (process.env.PROJECT_SERVICE) {
   parserOptions.projectService = {
-    defaultProject: process.env.DEFAULT_PROJECT || 'tsconfig.json',
+    defaultProject: process.env.DEFAULT_PROJECT || process.env.PROJECT || 'tsconfig.json',
     allowDefaultProject: process.env.ALLOW_DEFAULT_PROJECT === 'true' ? ['**/*.js'] : []
   };
-}
+// }
 
 parserOptions.tsconfigRootDir = process.env.TSCONFIG_ROOT_DIR || __dirname;
 parserOptions.project = process.env.PROJECT === undefined ? true : process.env.PROJECT;
+
+const manifestPath = require.resolve('@typescript-eslint/parser/package.json');
+const manifest = require(manifestPath);
+const isV8 = parseInt(manifest.version[0]) >= 8;
+
+if (isV8) {
+  delete parserOptions.project;
+}
 
 module.exports = {
   root: true,

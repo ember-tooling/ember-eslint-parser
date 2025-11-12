@@ -1,9 +1,13 @@
 'use strict';
 
+const manifestPath = require.resolve('@typescript-eslint/parser/package.json');
+const manifest = require(manifestPath);
+const isV8 = parseInt(manifest.version[0]) >= 8;
+
 module.exports = {
   root: true,
   parserOptions: {
-    project: true,
+    ...(isV8 ? {} : { project: true }),
     projectService: true,
     tsconfigRootDir: __dirname
   },

@@ -21,6 +21,13 @@ import n from 'eslint-plugin-n';
 import globals from 'globals';
 import ts from 'typescript-eslint';
 
+
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const manifestPath = require.resolve('@typescript-eslint/parser/package.json');
+const manifest = require(manifestPath);
+const isV8 = parseInt(manifest.version[0]) >= 8;
+
 const parserOptions = {
   esm: {
     js: {
@@ -29,7 +36,7 @@ const parserOptions = {
     },
     ts: {
       projectService: true,
-      project: true,
+      ...(isV8 ? {} : { project: true }),
       tsconfigRootDir: import.meta.dirname,
     },
   },
