@@ -2,10 +2,7 @@
 
 const parserOptions = {};
 if (process.env.PROJECT_SERVICE) {
-  parserOptions.projectService = {
-    defaultProject: process.env.DEFAULT_PROJECT || 'tsconfig.json',
-    allowDefaultProject: process.env.ALLOW_DEFAULT_PROJECT === 'true' ? ['**/*.js'] : []
-  };
+  parserOptions.projectService = true;
 }
 
 parserOptions.tsconfigRootDir = process.env.TSCONFIG_ROOT_DIR || __dirname;

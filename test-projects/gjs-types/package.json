@@ -8,7 +8,6 @@
     "test:check:with-allow-js": "eslint . --max-warnings=0",
     "test:check:without-allow-gjs": "ALLOW_GJS=false pnpm run _:lint-with-error",
     "test:check:project-service": "PROJECT_SERVICE=true eslint . --max-warnings=0",
-    "test:check:project-service:alternate": "PROJECT_SERVICE=true DEFAULT_PROJECT=tsconfig.nojs.json pnpm run _:lint-with-error",
     "test:check:project": "PROJECT=tsconfig.json TSCONFIG_ROOT_DIR=$(pwd) eslint . --max-warnings=0",
     "test:check:project:alternate": "PROJECT=tsconfig.nojs.json pnpm run _:lint-with-error",
     "test:check:allow-gjs-false": "ALLOW_GJS=false pnpm run _:lint-with-error",
