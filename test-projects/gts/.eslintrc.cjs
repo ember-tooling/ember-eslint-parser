@@ -4,6 +4,7 @@ module.exports = {
   root: true,
   parserOptions: {
     project: true,
+    projectService: true,
     tsconfigRootDir: __dirname
   },
   rules: {
@@ -11,6 +12,12 @@ module.exports = {
     'no-unused-vars': ['error'],
   },
   overrides: [
+    {
+      files: ['src-fixable/**/*'],
+      rules: {
+        'arrow-body-style':["error", "always"],
+      },
+    },
     {
       files: ['**/*.{js,ts}'],
       plugins: ['ember'],
