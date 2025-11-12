@@ -2,7 +2,7 @@
   "name": "@test-project/gts-experimental-worker",
   "private": true,
   "scripts": {
-    "test:check": "eslint src --max-warnings=0",
+    "test:check": "eslint src --max-warnings=0 | grep -q '27:9  error  '",
     "test:fix": "eslint ./src-fixable --fix --max-warnings=0",
     "types": "tsc --noEmit"
   },
