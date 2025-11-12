@@ -159,7 +159,7 @@ module.exports = {
 
     let result = null;
     const filePath = options.filePath;
-    if (options.project) {
+    if (options.project || options.projectService) {
       jsCode = replaceExtensions(jsCode);
     }
 
