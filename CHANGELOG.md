@@ -1,5 +1,20 @@
 # Changelog
 
+## Release (2025-11-12)
+
+* ember-eslint-parser 0.5.12 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#144](https://github.com/ember-tooling/ember-eslint-parser/pull/144) Fix eslint for imports with .gts extension, Cleanup parserOptions for typescript-eslint canary ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#144](https://github.com/ember-tooling/ember-eslint-parser/pull/144) Fix eslint for imports with .gts extension, Cleanup parserOptions for typescript-eslint canary ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 1
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2025-08-05)
 
 * ember-eslint-parser 0.5.11 (patch)
