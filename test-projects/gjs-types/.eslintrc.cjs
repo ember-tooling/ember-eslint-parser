@@ -1,7 +1,5 @@
 'use strict';
 
-const path = require('path');
-
 const parserOptions = {};
 if (process.env.PROJECT_SERVICE) {
   parserOptions.projectService = {
@@ -15,11 +13,11 @@ parserOptions.project = process.env.PROJECT === undefined ? true : process.env.P
 
 const manifestPath = require.resolve('@typescript-eslint/parser/package.json');
 const manifest = require(manifestPath);
-const isV8 = manifest.version[0] > 8;
+const isV8 = parseInt(manifest.version[0]) >= 8;
 
 if (isV8) {
-  parserOptions.project = undefined;
-} 
+  delete parserOptions.project;
+}
 
 module.exports = {
   root: true,
