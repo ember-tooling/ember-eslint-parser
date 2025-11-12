@@ -1,5 +1,5 @@
 const tsconfigUtils = require('@typescript-eslint/tsconfig-utils');
-const babelParser = require('@babel/eslint-parser');
+const babelParser = require('@babel/eslint-parser/experimental-worker');
 const { registerParsedFile } = require('../preprocessor/noop');
 const {
   patchTs,
