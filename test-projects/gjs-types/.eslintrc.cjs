@@ -1,9 +1,8 @@
 'use strict';
 
-const parserOptions = {};
-if (process.env.PROJECT_SERVICE) {
-  parserOptions.projectService = true;
-}
+const parserOptions = {
+  projectService: true,
+};
 
 parserOptions.tsconfigRootDir = process.env.TSCONFIG_ROOT_DIR || __dirname;
 parserOptions.project = process.env.PROJECT === undefined ? true : process.env.PROJECT;
