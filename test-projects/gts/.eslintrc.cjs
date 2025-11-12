@@ -7,8 +7,7 @@ const isV8 = parseInt(manifest.version[0]) >= 8;
 module.exports = {
   root: true,
   parserOptions: {
-    ...(isV8 ? {} : { project: true }),
-    projectService: true,
+    ...(isV8 ? { projectService: true } : { project: true }),
     tsconfigRootDir: __dirname
   },
   rules: {
