@@ -11,6 +11,14 @@ if (process.env.PROJECT_SERVICE) {
 parserOptions.tsconfigRootDir = process.env.TSCONFIG_ROOT_DIR || __dirname;
 parserOptions.project = process.env.PROJECT === undefined ? true : process.env.PROJECT;
 
+const manifestPath = require.resolve('@typescript-eslint/parser/package.json');
+const manifest = require(manifestPath);
+const isV8 = parseInt(manifest.version[0]) >= 8;
+
+if (isV8 && parserOptions.projectService) {
+  delete parserOptions.projectService;
+}
+
 module.exports = {
   root: true,
   parserOptions,
