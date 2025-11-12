@@ -8,8 +8,8 @@
     "test:fix": "eslint --fix --format compact . | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.4",
+    "@typescript-eslint/parser": "^8.46.4",
     "ember-eslint-parser": "workspace:^",
     "eslint": "^8.0.1",
     "eslint-plugin-ember": "^12.0.0",
