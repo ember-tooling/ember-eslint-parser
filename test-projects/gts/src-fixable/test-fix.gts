@@ -1,2 +1,2 @@
-const Bar = () => <template></template>;
+const Bar = () => {return <template></template>};
 export default Bar
