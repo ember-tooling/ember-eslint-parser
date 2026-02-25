@@ -184,5 +184,33 @@ describe('hbs-parser', () => {
       expect(fixed).toBe(true);
       expect(output).toBe('<input />');
     });
+
+    it('reports unused disable directive when eslint-disable-next-line suppresses nothing', () => {
+      const code =
+        '{{! eslint-disable-next-line no-restricted-syntax }}\n<div>No issues here</div>';
+
+      const messages = linter.verify(
+        code,
+        {
+          parser: 'ember-eslint-parser/hbs',
+          reportUnusedDisableDirectives: true,
+          rules: {
+            'no-restricted-syntax': [
+              'error',
+              {
+                selector: "GlimmerElementNode[name='Input']",
+                message: 'Do not use <Input>.',
+              },
+            ],
+          },
+        },
+        { filename: 'test.hbs' }
+      );
+
+      expect(messages).toHaveLength(1);
+      expect(messages[0].ruleId).toBeNull();
+      expect(messages[0].message).toContain('Unused eslint-disable directive');
+      expect(messages[0].message).toContain('no-restricted-syntax');
+    });
   });
 });
