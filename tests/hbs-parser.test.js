@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { parseForESLint } from '../src/parser/hbs-parser.js';
 import { traverse } from '../src/parser/transforms.js';
-import { SourceCode } from 'eslint';
+import { Linter, SourceCode } from 'eslint';
 import { visitorKeys as glimmerVisitorKeys } from '@glimmer/syntax';
 
 describe('hbs-parser', () => {
@@ -114,6 +114,72 @@ describe('hbs-parser', () => {
       const r = parseForESLint('', { filePath: 'empty.hbs' });
       expect(r.ast.type).toBe('Program');
       expect(r.ast.body[0].body).toHaveLength(0);
+    });
+  });
+
+  describe('lint rules', () => {
+    let linter;
+
+    beforeAll(() => {
+      linter = new Linter();
+      linter.defineParser('ember-eslint-parser/hbs', { parseForESLint });
+    });
+
+    it('reports an error for <Input> via no-restricted-syntax', () => {
+      const messages = linter.verify(
+        '<Input @value={{this.val}} />',
+        {
+          parser: 'ember-eslint-parser/hbs',
+          rules: {
+            'no-restricted-syntax': [
+              'error',
+              {
+                selector: "GlimmerElementNode[name='Input']",
+                message: 'Do not use <Input>; use a native <input> element instead.',
+              },
+            ],
+          },
+        },
+        { filename: 'test.hbs' }
+      );
+
+      expect(messages).toHaveLength(1);
+      expect(messages[0].ruleId).toBe('no-restricted-syntax');
+      expect(messages[0].severity).toBe(2);
+      expect(messages[0].message).toContain('<Input>');
+    });
+
+    it('autofixes <Input> to <input /> via a custom fixable rule', () => {
+      linter.defineRule('no-input-component', {
+        meta: { fixable: 'code' },
+        create(context) {
+          return {
+            GlimmerElementNode(node) {
+              if (node.name === 'Input') {
+                context.report({
+                  node,
+                  message: 'Use native <input> instead of <Input>.',
+                  fix(fixer) {
+                    return fixer.replaceText(node, '<input />');
+                  },
+                });
+              }
+            },
+          };
+        },
+      });
+
+      const { fixed, output } = linter.verifyAndFix(
+        '<Input @value={{this.val}} />',
+        {
+          parser: 'ember-eslint-parser/hbs',
+          rules: { 'no-input-component': 'error' },
+        },
+        { filename: 'test.hbs' }
+      );
+
+      expect(fixed).toBe(true);
+      expect(output).toBe('<input />');
     });
   });
 });

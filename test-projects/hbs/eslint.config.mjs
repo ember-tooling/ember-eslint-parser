@@ -20,14 +20,5 @@ export default [
     languageOptions: {
       parser: hbsParser,
     },
-    rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: "GlimmerElementNode[name='Input']",
-          message: "Do not use <Input>; use a native <input> element instead.",
-        },
-      ],
-    },
   },
 ];
