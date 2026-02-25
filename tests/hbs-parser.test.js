@@ -160,6 +160,9 @@ describe('hbs-parser', () => {
                   node,
                   message: 'Use native <input> instead of <Input>.',
                   fix(fixer) {
+                    // NOTE: this fix is intentionally simplistic and would be destructive in real
+                    // use (it drops all attributes). The actual fix here isn't important — we're
+                    // just verifying that the parser correctly supports node replacement via fixer.
                     return fixer.replaceText(node, '<input />');
                   },
                 });
