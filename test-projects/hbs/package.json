@@ -2,7 +2,7 @@
   "name": "@test-project/hbs",
   "private": true,
   "scripts": {
-    "test:check": "eslint src --max-warnings=0"
+    "test:check": "eslint src | grep -q '1:1  error  Do not use <Input>'"
   },
   "devDependencies": {
     "ember-eslint-parser": "workspace:^",
