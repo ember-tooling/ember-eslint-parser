@@ -113,13 +113,31 @@ function registerNodeInScope(node, scope, variable) {
 }
 
 /**
+ * Builds the complete Glimmer visitor keys map with "Glimmer" prefix and
+ * additional keys needed for traversal (blockParamNodes, parts, etc).
+ * @return {object}
+ */
+function buildGlimmerVisitorKeys() {
+  const keys = {};
+  for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
+    keys[`Glimmer${k}`] = [...v];
+  }
+  if (!keys.GlimmerElementNode.includes('blockParamNodes')) {
+    keys.GlimmerElementNode.push('blockParamNodes', 'parts');
+  }
+  keys.GlimmerProgram = ['body', 'blockParamNodes'];
+  keys.GlimmerTemplate = ['body'];
+  return keys;
+}
+
+/**
  * traverses all nodes using the {visitorKeys} calling the callback function, visitor
  * @param visitorKeys
  * @param node
  * @param visitor
  */
 function traverse(visitorKeys, node, visitor) {
-  const allVisitorKeys = visitorKeys;
+  const allVisitorKeys = { ...visitorKeys, ...buildGlimmerVisitorKeys() };
   const queue = [];
 
   queue.push({
@@ -137,17 +155,7 @@ function traverse(visitorKeys, node, visitor) {
 
     if (!currentPath.node) continue;
 
-    const visitorKeys = [...(allVisitorKeys[currentPath.node.type] || [])];
-    if (currentPath.node.type === 'GlimmerElementNode') {
-      if (!visitorKeys.includes('blockParamNodes')) {
-        visitorKeys.push('blockParamNodes', 'parts');
-      }
-    }
-    if (currentPath.node.type === 'GlimmerProgram') {
-      if (!visitorKeys.includes('blockParamNodes')) {
-        visitorKeys.push('blockParamNodes');
-      }
-    }
+    const visitorKeys = allVisitorKeys[currentPath.node.type];
     if (!visitorKeys) {
       continue;
     }
@@ -727,3 +735,4 @@ module.exports.transformForLint = function transformForLint(code, fileName) {
 module.exports.traverse = traverse;
 module.exports.tokenize = tokenize;
 module.exports.processGlimmerTemplate = processGlimmerTemplate;
+module.exports.buildGlimmerVisitorKeys = buildGlimmerVisitorKeys;

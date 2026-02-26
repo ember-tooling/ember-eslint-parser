@@ -42,6 +42,7 @@ describe('hbs-parser', () => {
       expectedVisitorKeys[`Glimmer${k}`] = [...v];
     }
     expectedVisitorKeys.GlimmerTemplate = ['body'];
+    expectedVisitorKeys.GlimmerProgram = ['body', 'blockParamNodes'];
     if (!expectedVisitorKeys.GlimmerElementNode.includes('blockParamNodes')) {
       expectedVisitorKeys.GlimmerElementNode.push('blockParamNodes', 'parts');
     }

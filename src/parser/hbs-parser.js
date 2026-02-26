@@ -1,7 +1,6 @@
 const eslintScope = require('eslint-scope');
 const DocumentLines = require('../utils/document');
-const { visitorKeys: glimmerVisitorKeys } = require('@glimmer/syntax');
-const { processGlimmerTemplate } = require('./transforms');
+const { processGlimmerTemplate, buildGlimmerVisitorKeys } = require('./transforms');
 
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers
@@ -64,15 +63,8 @@ module.exports = {
       },
     };
 
-    // Build visitor keys: Program + all Glimmer node types prefixed
-    const visitorKeys = { Program: ['body'] };
-    for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
-      visitorKeys[`Glimmer${k}`] = [...v];
-    }
-    if (!visitorKeys.GlimmerElementNode.includes('blockParamNodes')) {
-      visitorKeys.GlimmerElementNode.push('blockParamNodes', 'parts');
-    }
-    visitorKeys.GlimmerTemplate = ['body'];
+    // Build visitor keys: Program + all Glimmer node types
+    const visitorKeys = { Program: ['body'], ...buildGlimmerVisitorKeys() };
 
     // Create an empty scope manager.
     // For HBS, all locals are assumed to be defined at runtime,
