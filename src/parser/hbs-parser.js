@@ -30,7 +30,6 @@ module.exports = {
       result = processGlimmerTemplate({
         templateContent: code,
         codeLines,
-        offset: 0,
         templateRange: [0, code.length],
       });
     } catch (e) {
