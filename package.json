@@ -59,16 +59,20 @@
   },
   "peerDependencies": {
     "@babel/core": "^7.23.6",
+    "@glint/ember-tsc": ">= 1.1.0",
     "@typescript-eslint/parser": "*"
   },
   "peerDependenciesMeta": {
+    "@glint/ember-tsc": {
+      "optional": true
+    },
     "@typescript-eslint/parser": {
       "optional": true
     }
   },
   "packageManager": "pnpm@10.21.0",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=22.12.0"
   },
   "pnpm": {
     "overrides": {
