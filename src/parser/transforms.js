@@ -1,7 +1,7 @@
 const ContentTag = require('content-tag');
 const glimmer = require('@glimmer/syntax');
+const { visitorKeys: glimmerVisitorKeys } = glimmer;
 const DocumentLines = require('../utils/document');
-const { visitorKeys: glimmerVisitorKeys } = require('@glimmer/syntax');
 const { Reference, Scope, Variable, Definition } = require('eslint-scope');
 const htmlTags = require('html-tags');
 const svgTags = require('svg-tags');
@@ -113,13 +113,31 @@ function registerNodeInScope(node, scope, variable) {
 }
 
 /**
+ * Builds the complete Glimmer visitor keys map with "Glimmer" prefix and
+ * additional keys needed for traversal (blockParamNodes, parts, etc).
+ * @return {object}
+ */
+function buildGlimmerVisitorKeys() {
+  const keys = {};
+  for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
+    keys[`Glimmer${k}`] = [...v];
+  }
+  if (!keys.GlimmerElementNode.includes('blockParamNodes')) {
+    keys.GlimmerElementNode.push('blockParamNodes', 'parts');
+  }
+  keys.GlimmerProgram = ['body', 'blockParamNodes'];
+  keys.GlimmerTemplate = ['body'];
+  return keys;
+}
+
+/**
  * traverses all nodes using the {visitorKeys} calling the callback function, visitor
  * @param visitorKeys
  * @param node
  * @param visitor
  */
 function traverse(visitorKeys, node, visitor) {
-  const allVisitorKeys = visitorKeys;
+  const allVisitorKeys = { ...visitorKeys, ...buildGlimmerVisitorKeys() };
   const queue = [];
 
   queue.push({
@@ -137,17 +155,7 @@ function traverse(visitorKeys, node, visitor) {
 
     if (!currentPath.node) continue;
 
-    const visitorKeys = [...(allVisitorKeys[currentPath.node.type] || [])];
-    if (currentPath.node.type === 'GlimmerElementNode') {
-      if (!visitorKeys.includes('blockParamNodes')) {
-        visitorKeys.push('blockParamNodes', 'parts');
-      }
-    }
-    if (currentPath.node.type === 'GlimmerProgram') {
-      if (!visitorKeys.includes('blockParamNodes')) {
-        visitorKeys.push('blockParamNodes');
-      }
-    }
+    const visitorKeys = allVisitorKeys[currentPath.node.type];
     if (!visitorKeys) {
       continue;
     }
@@ -243,6 +251,187 @@ function tokenize(template, doc, startOffset) {
 }
 
 /**
+ * Traverses a Glimmer AST, sets parent references, and categorizes nodes.
+ * @param {object} ast
+ * @return {{ allNodes: object[], comments: object[], textNodes: object[], emptyTextNodes: object[] }}
+ */
+function collectNodes(ast) {
+  const allNodes = [];
+  const comments = [];
+  const textNodes = [];
+  const emptyTextNodes = [];
+
+  glimmer.traverse(ast, {
+    All(node, path) {
+      node.parent = path.parentNode;
+      allNodes.push(node);
+      if (node.type === 'CommentStatement' || node.type === 'MustacheCommentStatement') {
+        comments.push(node);
+      }
+      if (node.type === 'TextNode') {
+        node.value = node.chars;
+        if (node.value.trim().length !== 0 || (node.parent && node.parent.type === 'AttrNode')) {
+          textNodes.push(node);
+        } else {
+          emptyTextNodes.push(node);
+        }
+      }
+    },
+  });
+
+  return { allNodes, comments, textNodes, emptyTextNodes };
+}
+
+/**
+ * Removes nodes from their parent's children/body/parts arrays.
+ * @param {object[]} nodes
+ */
+function removeFromParent(nodes) {
+  for (const node of nodes) {
+    const children =
+      (node.parent && (node.parent.children || node.parent.body || node.parent.parts)) || [];
+    const idx = children.indexOf(node);
+    if (idx >= 0) {
+      children.splice(idx, 1);
+    }
+  }
+}
+
+/**
+ * Builds the final token stream by filtering out tokens covered by comments
+ * or text nodes, then merging text nodes back in sorted order.
+ * @param {object[]} rawTokens
+ * @param {object[]} comments
+ * @param {object[]} textNodes
+ * @return {object[]}
+ */
+function buildTokenStream(rawTokens, comments, textNodes) {
+  let tokens = rawTokens.filter(
+    (t) => !comments.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
+  );
+  tokens = tokens.filter(
+    (t) => !textNodes.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
+  );
+
+  const sortedTextNodes = [...textNodes];
+  let currentTextNode = sortedTextNodes.pop();
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    const t = tokens[i];
+    while (currentTextNode && t.range[0] < currentTextNode.range[0]) {
+      tokens.splice(i + 1, 0, currentTextNode);
+      currentTextNode = sortedTextNodes.pop();
+    }
+  }
+  if (currentTextNode) {
+    tokens.unshift(currentTextNode);
+  }
+
+  return tokens;
+}
+
+/**
+ * Parses a Glimmer template and produces a processed AST ready for ESLint.
+ * Shared between hbs-parser (standalone .hbs files) and gjs/gts parser (embedded templates).
+ *
+ * @param {object} options
+ * @param {string} options.templateContent - The template string to parse with glimmer
+ * @param {DocumentLines} options.codeLines - DocumentLines for the full source file
+ * @param {[number, number]} options.templateRange - Range [start, end] for the Template root node
+ * @param {string} [options.tokenSource] - String to tokenize (defaults to templateContent)
+ * @return {{ ast: object, comments: object[] }}
+ */
+function processGlimmerTemplate({ templateContent, codeLines, templateRange, tokenSource }) {
+  const offset = templateRange[0];
+  const docLines = new DocumentLines(templateContent);
+
+  /** Convert a Glimmer loc to a file-level [start, end] range */
+  const toFileRange = (loc) => [
+    offset + docLines.positionToOffset(loc.start),
+    offset + docLines.positionToOffset(loc.end),
+  ];
+  /** Convert a file-level range to a file-level loc */
+  const toFileLoc = (range) => ({
+    start: codeLines.offsetToPosition(range[0]),
+    end: codeLines.offsetToPosition(range[1]),
+  });
+
+  const ast = glimmer.preprocess(templateContent, { mode: 'codemod' });
+  const { allNodes, comments, textNodes, emptyTextNodes } = collectNodes(ast);
+
+  // Fix ranges, locs, and prefix types with "Glimmer"
+  for (const n of allNodes) {
+    if (n.type === 'PathExpression') {
+      n.head.range = toFileRange(n.head.loc);
+      n.head.loc = toFileLoc(n.head.range);
+    }
+
+    n.range = n.type === 'Template' ? [...templateRange] : toFileRange(n.loc);
+    n.start = n.range[0];
+    n.end = n.range[1];
+    n.loc = toFileLoc(n.range);
+
+    if (n.type === 'ElementNode') {
+      n.name = n.tag;
+      n.parts = [n.path.head].map((p) => {
+        const range = toFileRange(p.loc);
+        return {
+          ...p,
+          name: p.original,
+          parent: n,
+          type: 'GlimmerElementNodePart',
+          range,
+          loc: toFileLoc(range),
+        };
+      });
+    }
+
+    if ('blockParams' in n) {
+      n.params = (n.params || []).map((p) => {
+        const range = toFileRange(p.loc);
+        return {
+          ...p,
+          type: 'BlockParam',
+          name: p.original,
+          parent: n,
+          range,
+          loc: toFileLoc(range),
+        };
+      });
+    }
+
+    n.type = `Glimmer${n.type}`;
+  }
+
+  // Clean up AST structure
+  removeFromParent(emptyTextNodes);
+  removeFromParent(comments);
+  for (const comment of comments) {
+    comment.type = 'Block';
+  }
+
+  // Nullify empty hashes
+  for (const n of allNodes) {
+    if (
+      ['GlimmerMustacheStatement', 'GlimmerBlockStatement', 'GlimmerSubExpression'].includes(n.type)
+    ) {
+      if (n.hash && n.hash.pairs && n.hash.pairs.length === 0) {
+        n.hash = null;
+      }
+    }
+  }
+
+  // Build final token stream
+  ast.tokens = buildTokenStream(
+    tokenize(tokenSource || templateContent, codeLines, offset),
+    comments,
+    textNodes
+  );
+  ast.contents = templateContent;
+
+  return { ast, comments };
+}
+
+/**
  * Preprocesses the template info, parsing the template content to Glimmer AST,
  * fixing the offsets and locations of all nodes
  * also calculates the block params locations & ranges
@@ -257,164 +446,34 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
     templateRange: [r.range.start, r.range.end],
     utf16Range: [byteToCharIndex(code, r.range.start), byteToCharIndex(code, r.range.end)],
   }));
-  const templateVisitorKeys = {};
   const codeLines = new DocumentLines(code);
-  const comments = [];
+  const allComments = [];
+  const templateVisitorKeys = {};
+
   for (const tpl of templateInfos) {
-    const currentComments = [];
-    const textNodes = [];
-    const emptyTextNodes = [];
     const range = tpl.utf16Range;
-    const offset = range[0];
     const template = code.slice(...range);
-    const docLines = new DocumentLines(template);
-    const ast = glimmer.preprocess(template, { mode: 'codemod' });
-    ast.tokens = tokenize(sliceByteRange(code, ...tpl.templateRange), codeLines, tpl.utf16Range[0]);
-    const allNodes = [];
-    glimmer.traverse(ast, {
-      All(node, path) {
-        const n = node;
-        n.parent = path.parentNode;
-        allNodes.push(node);
-        if (node.type === 'CommentStatement' || node.type === 'MustacheCommentStatement') {
-          comments.push(node);
-          currentComments.push(node);
-        }
-        if (node.type === 'TextNode') {
-          n.value = node.chars;
-          // empty text nodes are not allowed, it's empty if its only whitespace or line terminators
-          // it's okay for AttrNodes
-          if (n.value.trim().length !== 0 || n.parent.type === 'AttrNode') {
-            textNodes.push(node);
-          } else {
-            emptyTextNodes.push(node);
-          }
-        }
-      },
+
+    const { ast, comments } = processGlimmerTemplate({
+      templateContent: template,
+      codeLines,
+      templateRange: [...tpl.utf16Range],
+      tokenSource: sliceByteRange(code, ...tpl.templateRange),
     });
+
     ast.content = template;
-    const allNodeTypes = new Set();
-    for (const n of allNodes) {
-      if (n.type === 'PathExpression') {
-        n.head.range = [
-          offset + docLines.positionToOffset(n.head.loc.start),
-          offset + docLines.positionToOffset(n.head.loc.end),
-        ];
-        n.head.loc = {
-          start: codeLines.offsetToPosition(n.head.range[0]),
-          end: codeLines.offsetToPosition(n.head.range[1]),
-        };
-      }
-      n.range =
-        n.type === 'Template'
-          ? [...tpl.utf16Range]
-          : [
-              offset + docLines.positionToOffset(n.loc.start),
-              offset + docLines.positionToOffset(n.loc.end),
-            ];
-      n.start = n.range[0];
-      n.end = n.range[1];
-      n.loc = {
-        start: codeLines.offsetToPosition(n.range[0]),
-        end: codeLines.offsetToPosition(n.range[1]),
-      };
-      if (n.type === 'Template') {
-        n.loc.start = codeLines.offsetToPosition(tpl.utf16Range[0]);
-        n.loc.end = codeLines.offsetToPosition(tpl.utf16Range[1]);
-      }
-
-      if (n.type === 'ElementNode') {
-        n.name = n.tag;
-        n.parts = [n.path.head].map((p) => {
-          const range = [
-            offset + docLines.positionToOffset(p.loc.start),
-            offset + docLines.positionToOffset(p.loc.end),
-          ];
-          const loc = {
-            start: codeLines.offsetToPosition(range[0]),
-            end: codeLines.offsetToPosition(range[1]),
-          };
-          return {
-            ...p,
-            name: p.original,
-            parent: n,
-            type: 'GlimmerElementNodePart',
-            range,
-            loc,
-          };
-        });
-      }
-
-      if ('blockParams' in n) {
-        n.params = (n.params || []).map((p) => {
-          const range = [
-            offset + docLines.positionToOffset(p.loc.start),
-            offset + docLines.positionToOffset(p.loc.end),
-          ];
-          const loc = {
-            start: codeLines.offsetToPosition(range[0]),
-            end: codeLines.offsetToPosition(range[1]),
-          };
-          return {
-            ...p,
-            type: 'BlockParam',
-            name: p.original,
-            parent: n,
-            range,
-            loc,
-          };
-        });
-      }
-      n.type = `Glimmer${n.type}`;
-      allNodeTypes.add(n.type);
-    }
-
-    // ast should not contains empty text nodes
-    for (const node of emptyTextNodes) {
-      const children = node.parent.children || node.parent.body || node.parent.parts;
-      const idx = children.indexOf(node);
-      children.splice(idx, 1);
-    }
-
-    // ast should not contain comment nodes
-    for (const comment of currentComments) {
-      const parentBody = comment.parent.body || comment.parent.children;
-      const idx = parentBody.indexOf(comment);
-      if (idx >= 0) {
-        parentBody.splice(idx, 1);
-      }
-      // comment type can be a block comment or a line comment
-      // mark comments as always block comment, this works for eslint in all cases
-      comment.type = 'Block';
-    }
-    // tokens should not contain tokens of comments
-    ast.tokens = ast.tokens.filter(
-      (t) => !comments.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
-    );
-    // tokens should not contain tokens of text nodes, but represent the whole node
-    // remove existing tokens
-    ast.tokens = ast.tokens.filter(
-      (t) => !textNodes.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
-    );
-    // merge in text nodes
-    let currentTextNode = textNodes.pop();
-    for (let i = ast.tokens.length - 1; i >= 0; i--) {
-      const t = ast.tokens[i];
-      while (currentTextNode && t.range[0] < currentTextNode.range[0]) {
-        ast.tokens.splice(i + 1, 0, currentTextNode);
-        currentTextNode = textNodes.pop();
-      }
-    }
-    ast.contents = template;
+    allComments.push(...comments);
     tpl.ast = ast;
   }
+
   for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
     templateVisitorKeys[`Glimmer${k}`] = [...v];
   }
+
   return {
     templateVisitorKeys,
     templateInfos,
-    comments,
+    comments: allComments,
   };
 };
 
@@ -557,21 +616,6 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
     return null;
   });
 
-  traverse(visitorKeys, result.ast, (path) => {
-    const node = path.node;
-    if (!node) return null;
-
-    if (
-      ['GlimmerMustacheStatement', 'GlimmerBlockStatement', 'GlimmerSubExpression'].includes(
-        node.type
-      )
-    ) {
-      if (node.hash && node.hash.pairs.length === 0) {
-        node.hash = null;
-      }
-    }
-  });
-
   if (counter !== templateInfos.length) {
     throw new Error('failed to process all templates');
   }
@@ -690,3 +734,5 @@ module.exports.transformForLint = function transformForLint(code, fileName) {
 
 module.exports.traverse = traverse;
 module.exports.tokenize = tokenize;
+module.exports.processGlimmerTemplate = processGlimmerTemplate;
+module.exports.buildGlimmerVisitorKeys = buildGlimmerVisitorKeys;
