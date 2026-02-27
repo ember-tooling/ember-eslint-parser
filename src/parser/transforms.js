@@ -251,12 +251,14 @@ function tokenize(template, doc, startOffset) {
  * @param code
  * @return {{templateVisitorKeys: {}, comments: *[], templateInfos: {templateRange: *, range: *, replacedRange: *}[]}}
  */
-module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(info, code) {
-  const templateInfos = info.templateInfos.map((r) => ({
-    range: [r.contentRange.start, r.contentRange.end],
-    templateRange: [r.range.start, r.range.end],
-    utf16Range: [byteToCharIndex(code, r.range.start), byteToCharIndex(code, r.range.end)],
-  }));
+/**
+ * Shared Glimmer template processing logic.
+ * Takes normalized template infos (with utf16Range already computed) and processes them.
+ * @param {Array<{range: number[], templateRange: number[], utf16Range: number[]}>} templateInfos
+ * @param {string} code - original source code
+ * @param {Function} getTokenSource - function(tpl) returning the string to tokenize
+ */
+function processGlimmerTemplates(templateInfos, code, getTokenSource) {
   const templateVisitorKeys = {};
   const codeLines = new DocumentLines(code);
   const comments = [];
@@ -269,7 +271,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
     const template = code.slice(...range);
     const docLines = new DocumentLines(template);
     const ast = glimmer.preprocess(template, { mode: 'codemod' });
-    ast.tokens = tokenize(sliceByteRange(code, ...tpl.templateRange), codeLines, tpl.utf16Range[0]);
+    ast.tokens = tokenize(getTokenSource(tpl), codeLines, tpl.utf16Range[0]);
     const allNodes = [];
     glimmer.traverse(ast, {
       All(node, path) {
@@ -282,8 +284,6 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
         }
         if (node.type === 'TextNode') {
           n.value = node.chars;
-          // empty text nodes are not allowed, it's empty if its only whitespace or line terminators
-          // it's okay for AttrNodes
           if (n.value.trim().length !== 0 || n.parent.type === 'AttrNode') {
             textNodes.push(node);
           } else {
@@ -383,20 +383,14 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
       if (idx >= 0) {
         parentBody.splice(idx, 1);
       }
-      // comment type can be a block comment or a line comment
-      // mark comments as always block comment, this works for eslint in all cases
       comment.type = 'Block';
     }
-    // tokens should not contain tokens of comments
     ast.tokens = ast.tokens.filter(
       (t) => !comments.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
     );
-    // tokens should not contain tokens of text nodes, but represent the whole node
-    // remove existing tokens
     ast.tokens = ast.tokens.filter(
       (t) => !textNodes.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
     );
-    // merge in text nodes
     let currentTextNode = textNodes.pop();
     for (let i = ast.tokens.length - 1; i >= 0; i--) {
       const t = ast.tokens[i];
@@ -416,6 +410,35 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
     templateInfos,
     comments,
   };
+}
+
+module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(info, code) {
+  const templateInfos = info.templateInfos.map((r) => ({
+    range: [r.contentRange.start, r.contentRange.end],
+    templateRange: [r.range.start, r.range.end],
+    utf16Range: [byteToCharIndex(code, r.range.start), byteToCharIndex(code, r.range.end)],
+  }));
+  return processGlimmerTemplates(templateInfos, code, (tpl) =>
+    sliceByteRange(code, ...tpl.templateRange)
+  );
+};
+
+/**
+ * Variant of preprocessGlimmerTemplates for the Glint path.
+ * Template infos already have character (UTF-16) offsets — no byte→char conversion needed.
+ * @param {Array<{ range: [number, number], contentRange: [number, number] }>} glintTemplateInfos
+ * @param {string} code - original source code
+ */
+module.exports.preprocessGlimmerTemplatesFromCharOffsets = function preprocessGlimmerTemplatesFromCharOffsets(
+  glintTemplateInfos,
+  code
+) {
+  const templateInfos = glintTemplateInfos.map((r) => ({
+    range: [...r.contentRange],
+    templateRange: [...r.range],
+    utf16Range: [...r.range],
+  }));
+  return processGlimmerTemplates(templateInfos, code, (tpl) => code.slice(...tpl.templateRange));
 };
 
 /**
@@ -429,8 +452,11 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
  * @param preprocessedResult
  * @param visitorKeys
  */
-module.exports.convertAst = function convertAst(result, preprocessedResult, visitorKeys) {
+module.exports.convertAst = function convertAst(result, preprocessedResult, visitorKeys, options) {
   const templateInfos = preprocessedResult.templateInfos;
+  const matchByRangeOnly = options?.matchByRangeOnly || false;
+  // Track which templates have been matched to avoid double-matching
+  const matchedTemplates = new Set();
   let counter = 0;
   result.ast.comments.push(...preprocessedResult.comments);
 
@@ -445,25 +471,29 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
     const node = path.node;
     if (!node) return null;
 
-    if (
+    const typeMatches = matchByRangeOnly || (
       node.type === 'ExpressionStatement' ||
       node.type === 'StaticBlock' ||
       node.type === 'TemplateLiteral' ||
       node.type === 'ExportDefaultDeclaration'
-    ) {
+    );
+
+    if (typeMatches) {
       let range = node.range;
-      if (node.type === 'ExportDefaultDeclaration') {
+      if (node.type === 'ExportDefaultDeclaration' && node.declaration) {
         range = [node.declaration.range[0], node.declaration.range[1]];
       }
 
       const template = templateInfos.find(
         (t) =>
+          !matchedTemplates.has(t) &&
           t.utf16Range[0] === range[0] &&
           (t.utf16Range[1] === range[1] || t.utf16Range[1] === range[1] + 1)
       );
       if (!template) {
         return null;
       }
+      matchedTemplates.add(template);
       counter++;
       const ast = template.ast;
       Object.assign(node, ast);

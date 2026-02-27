@@ -3,13 +3,13 @@ const { transformForLint } = require('./transforms');
 const { replaceRange } = require('./transforms');
 const { isGlintAvailable, getGlintConfig, glintRewriteModule } = require('./glint-utils');
 
-let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs;
+let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs, ts;
 
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
   // eslint-disable-next-line n/no-unpublished-require
   const tsPath = require.resolve('typescript', { paths: [parserPath] });
-  const ts = require(tsPath);
+  ts = require(tsPath);
   typescriptParser = require('@typescript-eslint/parser');
   patchTs = function patchTs(options = {}) {
     if (isPatched) return { allowGjs };
@@ -165,4 +165,5 @@ module.exports = {
   replaceExtensions,
   syncMtsGtsSourceFiles,
   typescriptParser,
+  ts,
 };
