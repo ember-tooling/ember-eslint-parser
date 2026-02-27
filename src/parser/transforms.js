@@ -503,6 +503,38 @@ export function preprocessGlimmerTemplates(info, code) {
 }
 
 /**
+ * Variant of preprocessGlimmerTemplates for the Glint path.
+ * Template infos already have character (UTF-16) offsets — no byte→char conversion needed.
+ * @param {Array<{ range: [number, number], contentRange: [number, number] }>} glintTemplateInfos
+ * @param {string} code - original source code
+ */
+export function preprocessGlimmerTemplatesFromCharOffsets(glintTemplateInfos, code) {
+  const codeLines = new DocumentLines(code);
+  const allComments = [];
+  const templateInfos = glintTemplateInfos.map((r) => ({
+    utf16Range: [...r.range],
+  }));
+
+  for (const tpl of templateInfos) {
+    const template = code.slice(...tpl.utf16Range);
+    const { ast, comments } = processGlimmerTemplate({
+      templateContent: template,
+      codeLines,
+      templateRange: [...tpl.utf16Range],
+    });
+    ast.content = template;
+    allComments.push(...comments);
+    tpl.ast = ast;
+  }
+
+  return {
+    templateVisitorKeys: buildGlimmerVisitorKeys(),
+    templateInfos,
+    comments: allComments,
+  };
+}
+
+/**
  * traverses the AST and replaces the transformed template parts with the Glimmer
  * AST.
  * This also creates the scopes for the Glimmer Blocks and registers the block params
@@ -513,8 +545,11 @@ export function preprocessGlimmerTemplates(info, code) {
  * @param preprocessedResult
  * @param visitorKeys
  */
-export function convertAst(result, preprocessedResult, visitorKeys) {
+export function convertAst(result, preprocessedResult, visitorKeys, options) {
   const templateInfos = preprocessedResult.templateInfos;
+  const matchByRangeOnly = options?.matchByRangeOnly || false;
+  // Track which templates have been matched to avoid double-matching
+  const matchedTemplates = new Set();
   let counter = 0;
   result.ast.comments.push(...preprocessedResult.comments);
 
@@ -532,14 +567,16 @@ export function convertAst(result, preprocessedResult, visitorKeys) {
     const node = path.node;
     if (!node) return null;
 
-    if (
+    const typeMatches = matchByRangeOnly || (
       node.type === 'ExpressionStatement' ||
       node.type === 'StaticBlock' ||
       node.type === 'TemplateLiteral' ||
       node.type === 'ExportDefaultDeclaration'
-    ) {
+    );
+
+    if (typeMatches) {
       let range = node.range;
-      if (node.type === 'ExportDefaultDeclaration') {
+      if (node.type === 'ExportDefaultDeclaration' && node.declaration) {
         range = [node.declaration.range[0], node.declaration.range[1]];
       }
 
@@ -550,6 +587,7 @@ export function convertAst(result, preprocessedResult, visitorKeys) {
       ) {
         return null;
       }
+      matchedTemplates.add(template);
       counter++;
       const ast = template.ast;
       Object.assign(node, ast);

@@ -5,13 +5,13 @@ import { isGlintAvailable, getGlintConfig, glintRewriteModule } from './glint-ut
 
 const require = createRequire(import.meta.url);
 
-let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs;
+let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs, ts;
 
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
   // eslint-disable-next-line n/no-unpublished-require
   const tsPath = require.resolve('typescript', { paths: [parserPath] });
-  const ts = require(tsPath);
+  ts = require(tsPath);
   typescriptParser = require('@typescript-eslint/parser');
   patchTs = function patchTs(options = {}) {
     if (isPatched) return { allowGjs };
@@ -182,4 +182,4 @@ try {
   syncMtsGtsSourceFiles = () => null;
 }
 
-export { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser };
+export { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, ts };
