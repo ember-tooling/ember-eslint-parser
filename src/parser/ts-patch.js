@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { transformForLint, replaceRange } from './transforms.js';
+import { isGlintAvailable, getGlintConfig, glintRewriteModule } from './glint-utils.js';
 
 const require = createRequire(import.meta.url);
 
@@ -52,11 +53,28 @@ try {
           content = fs.readFileSync(fileName).toString();
         }
         if (fileName.endsWith('.gts') || (allowGjs && fileName.endsWith('.gjs'))) {
-          try {
-            content = transformForLint(content).output;
-          } catch (e) {
-            console.error('failed to transformForLint for gts/gjs processing');
-            console.error(e);
+          let transformed = false;
+          if (isGlintAvailable()) {
+            try {
+              const config = getGlintConfig(fileName);
+              if (config) {
+                const result = glintRewriteModule(content, fileName, ts, config);
+                if (result) {
+                  content = result.transformedContents;
+                  transformed = true;
+                }
+              }
+            } catch (e) {
+              // Glint transform failed, fall through to transformForLint
+            }
+          }
+          if (!transformed) {
+            try {
+              content = transformForLint(content).output;
+            } catch (e) {
+              console.error('failed to transformForLint for gts/gjs processing');
+              console.error(e);
+            }
           }
         }
         if (
