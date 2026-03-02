@@ -243,15 +243,6 @@ function tokenize(template, doc, startOffset) {
 }
 
 /**
- * Preprocesses the template info, parsing the template content to Glimmer AST,
- * fixing the offsets and locations of all nodes
- * also calculates the block params locations & ranges
- * and adding it to the info
- * @param info
- * @param code
- * @return {{templateVisitorKeys: {}, comments: *[], templateInfos: {templateRange: *, range: *, replacedRange: *}[]}}
- */
-/**
  * Shared Glimmer template processing logic.
  * Takes normalized template infos (with utf16Range already computed) and processes them.
  * @param {Array<{range: number[], templateRange: number[], utf16Range: number[]}>} templateInfos
@@ -284,6 +275,8 @@ function processGlimmerTemplates(templateInfos, code, getTokenSource) {
         }
         if (node.type === 'TextNode') {
           n.value = node.chars;
+          // empty text nodes are not allowed, it's empty if its only whitespace or line terminators
+          // it's okay for AttrNodes
           if (n.value.trim().length !== 0 || n.parent.type === 'AttrNode') {
             textNodes.push(node);
           } else {
@@ -383,14 +376,20 @@ function processGlimmerTemplates(templateInfos, code, getTokenSource) {
       if (idx >= 0) {
         parentBody.splice(idx, 1);
       }
+      // comment type can be a block comment or a line comment
+      // mark comments as always block comment, this works for eslint in all cases
       comment.type = 'Block';
     }
+    // tokens should not contain tokens of comments
     ast.tokens = ast.tokens.filter(
       (t) => !comments.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
     );
+    // tokens should not contain tokens of text nodes, but represent the whole node
+    // remove existing tokens
     ast.tokens = ast.tokens.filter(
       (t) => !textNodes.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
     );
+    // merge in text nodes
     let currentTextNode = textNodes.pop();
     for (let i = ast.tokens.length - 1; i >= 0; i--) {
       const t = ast.tokens[i];
@@ -463,6 +462,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
   for (const ti of templateInfos) {
     const firstIdx = result.ast.tokens.findIndex((t) => t.range[0] === ti.utf16Range[0]);
     const lastIdx = result.ast.tokens.findIndex((t) => t.range[1] === ti.utf16Range[1]);
+    if (firstIdx === -1 || lastIdx === -1) continue;
     result.ast.tokens.splice(firstIdx, lastIdx - firstIdx + 1, ...ti.ast.tokens);
   }
 
@@ -471,12 +471,17 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
     const node = path.node;
     if (!node) return null;
 
-    const typeMatches = matchByRangeOnly || (
-      node.type === 'ExpressionStatement' ||
-      node.type === 'StaticBlock' ||
-      node.type === 'TemplateLiteral' ||
-      node.type === 'ExportDefaultDeclaration'
-    );
+    // Glint produces CallExpression for expression templates and StaticBlock for
+    // class-member templates (vs TemplateLiteral from transformForLint).
+    const typeMatches = matchByRangeOnly
+      ? (node.type === 'ExpressionStatement' ||
+         node.type === 'CallExpression' ||
+         node.type === 'StaticBlock' ||
+         node.type === 'ExportDefaultDeclaration')
+      : (node.type === 'ExpressionStatement' ||
+         node.type === 'StaticBlock' ||
+         node.type === 'TemplateLiteral' ||
+         node.type === 'ExportDefaultDeclaration');
 
     if (typeMatches) {
       let range = node.range;
