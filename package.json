@@ -11,6 +11,7 @@
   "author": "",
   "exports": {
     ".": "./src/parser/gjs-gts-parser.js",
+    "./hbs": "./src/parser/hbs-parser.js",
     "./noop": "./src/preprocessor/noop.js"
   },
   "main": "src/parser/gjs-gts-parser.js",

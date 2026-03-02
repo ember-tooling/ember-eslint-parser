@@ -1,0 +1,11 @@
+{
+  "name": "@test-project/hbs",
+  "private": true,
+  "scripts": {
+    "test:check": "eslint src --max-warnings=0 --report-unused-disable-directives"
+  },
+  "devDependencies": {
+    "ember-eslint-parser": "workspace:^",
+    "eslint": "^9.0.0"
+  }
+}

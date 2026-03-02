@@ -1,0 +1,7 @@
+<h1>Hello, {{name}}!</h1>
+
+{{#let (service "router") as |router|}}
+  <nav>
+    <a href={{router.currentURL}}>Home</a>
+  </nav>
+{{/let}}
