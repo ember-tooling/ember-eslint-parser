@@ -1,5 +1,22 @@
 # Changelog
 
+## Release (2026-03-02)
+
+* ember-eslint-parser 0.6.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#149](https://github.com/ember-tooling/ember-eslint-parser/pull/149) Create hbs parser integration ([@Copilot](https://github.com/apps/copilot-swe-agent))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#152](https://github.com/ember-tooling/ember-eslint-parser/pull/152) Update release-plan ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#150](https://github.com/ember-tooling/ember-eslint-parser/pull/150) Refactor transforms.js ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 2
+- Copilot [Bot] ([@copilot-swe-agent](https://github.com/apps/copilot-swe-agent))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2025-11-12)
 
 * ember-eslint-parser 0.5.13 (patch)
