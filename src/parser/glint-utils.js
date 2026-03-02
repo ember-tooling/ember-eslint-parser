@@ -65,10 +65,15 @@ function glintRewriteModule(code, filePath, ts, config) {
  */
 function buildTemplateInfoFromGlint(transformedModule, originalFileName) {
   const result = [];
+  const seen = new Set();
   for (const span of transformedModule.correlatedSpans) {
     if (!span.glimmerAstMapping) continue;
 
     const fullStart = span.originalStart;
+    // Deduplicate: multiple spans can map to the same original template
+    if (seen.has(fullStart)) continue;
+    seen.add(fullStart);
+
     const fullEnd = span.originalStart + span.originalLength;
 
     // Use findTemplateAtOriginalOffset to get content bounds (excludes <template> tags)

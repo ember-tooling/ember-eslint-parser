@@ -181,7 +181,6 @@ function parseWithGlint(code, options, transformedModule, allowGjsWasSet, actual
 
   // Preprocess Glimmer templates (parse to Glimmer AST with correct positions)
   const preprocessedResult = preprocessGlimmerTemplatesFromCharOffsets(glintTemplateInfos, code);
-  preprocessedResult.code = code;
   const { templateVisitorKeys } = preprocessedResult;
   const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
   result.isTypescript = true;

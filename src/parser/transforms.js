@@ -556,6 +556,7 @@ export function convertAst(result, preprocessedResult, visitorKeys, options) {
   for (const ti of templateInfos) {
     const firstIdx = result.ast.tokens.findIndex((t) => t.range[0] === ti.utf16Range[0]);
     const lastIdx = result.ast.tokens.findIndex((t) => t.range[1] === ti.utf16Range[1]);
+    if (firstIdx === -1 || lastIdx === -1) continue;
     result.ast.tokens.splice(firstIdx, lastIdx - firstIdx + 1, ...ti.ast.tokens);
   }
 
@@ -567,12 +568,17 @@ export function convertAst(result, preprocessedResult, visitorKeys, options) {
     const node = path.node;
     if (!node) return null;
 
-    const typeMatches = matchByRangeOnly || (
-      node.type === 'ExpressionStatement' ||
-      node.type === 'StaticBlock' ||
-      node.type === 'TemplateLiteral' ||
-      node.type === 'ExportDefaultDeclaration'
-    );
+    // Glint produces CallExpression for expression templates and StaticBlock for
+    // class-member templates (vs TemplateLiteral from transformForLint).
+    const typeMatches = matchByRangeOnly
+      ? (node.type === 'ExpressionStatement' ||
+         node.type === 'CallExpression' ||
+         node.type === 'StaticBlock' ||
+         node.type === 'ExportDefaultDeclaration')
+      : (node.type === 'ExpressionStatement' ||
+         node.type === 'StaticBlock' ||
+         node.type === 'TemplateLiteral' ||
+         node.type === 'ExportDefaultDeclaration');
 
     if (typeMatches) {
       let range = node.range;

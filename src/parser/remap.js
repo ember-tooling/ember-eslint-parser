@@ -72,19 +72,17 @@ function remapOffset(correlatedSpans, templateSpans, transformedOffset) {
 
 /**
  * Walk the AST and remap all positions from transformed-space to original-space.
- * Collects template nodes (whose range falls entirely within a template span)
- * for later replacement with Glimmer AST.
+ * Nodes entirely inside a template span are skipped (replaced by Glimmer AST later).
  *
  * @param {object} ast - the parsed AST (mutated in-place)
  * @param {object} visitorKeys - ESLint visitor keys
  * @param {Array} correlatedSpans
  * @param {string} originalCode - original source code
- * @returns {{ templateNodes: Map }}
+ * @returns {{ templateSpans: Array }}
  */
 function remapAstPositions(ast, visitorKeys, correlatedSpans, originalCode) {
   const templateSpans = getTemplateSpans(correlatedSpans);
   const originalDoc = new DocumentLines(originalCode);
-  const templateNodes = new Map(); // templateSpan -> shallowest node
 
   function remapNode(node) {
     if (!node || typeof node !== 'object' || !node.range) return;
@@ -92,19 +90,9 @@ function remapAstPositions(ast, visitorKeys, correlatedSpans, originalCode) {
     const startOriginal = remapOffset(correlatedSpans, templateSpans, node.range[0]);
     const endOriginal = remapOffset(correlatedSpans, templateSpans, node.range[1]);
 
-    // If both endpoints are inside a template span, this is a template node
+    // If both endpoints are inside a template span, skip — will be replaced
     if (startOriginal === null && endOriginal === null) {
-      // Find which template span contains this node
-      for (const tpl of templateSpans) {
-        if (node.range[0] >= tpl.transformedStart && node.range[1] <= tpl.transformedEnd) {
-          if (!templateNodes.has(tpl)) {
-            templateNodes.set(tpl, []);
-          }
-          templateNodes.get(tpl).push(node);
-          break;
-        }
-      }
-      return; // don't remap — will be replaced
+      return;
     }
 
     // Remap positions. If one end is null (crosses boundary), use the template boundary.
@@ -166,7 +154,7 @@ function remapAstPositions(ast, visitorKeys, correlatedSpans, originalCode) {
     }
   }
 
-  return { templateNodes, templateSpans };
+  return { templateSpans };
 }
 
 /**
