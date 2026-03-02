@@ -5,7 +5,7 @@
     "test:check": "eslint src --max-warnings=0 --report-unused-disable-directives"
   },
   "devDependencies": {
-    "ember-eslint-parser": "workspace:^",
+    "ember-eslint-parser": "workspace:*",
     "eslint": "^9.0.0"
   }
 }
