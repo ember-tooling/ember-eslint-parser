@@ -3,9 +3,9 @@ const glimmer = require('@glimmer/syntax');
 const { visitorKeys: glimmerVisitorKeys } = glimmer;
 const DocumentLines = require('../utils/document');
 const { Reference, Scope, Variable, Definition } = require('eslint-scope');
-const htmlTags = require('html-tags');
+const htmlTags = require('html-tags').default;
 const svgTags = require('svg-tags');
-const mathMLTags = require('mathml-tag-names');
+const mathMLTags = require('mathml-tag-names').mathmlTagNames;
 
 let TypescriptScope = null;
 try {
@@ -442,9 +442,9 @@ function processGlimmerTemplate({ templateContent, codeLines, templateRange, tok
  */
 module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(info, code) {
   const templateInfos = info.templateInfos.map((r) => ({
-    range: [r.contentRange.start, r.contentRange.end],
-    templateRange: [r.range.start, r.range.end],
-    utf16Range: [byteToCharIndex(code, r.range.start), byteToCharIndex(code, r.range.end)],
+    range: [r.contentRange.startByte, r.contentRange.endByte],
+    templateRange: [r.range.startByte, r.range.endByte],
+    utf16Range: [byteToCharIndex(code, r.range.startByte), byteToCharIndex(code, r.range.endByte)],
   }));
   const codeLines = new DocumentLines(code);
   const allComments = [];
@@ -669,20 +669,36 @@ module.exports.transformForLint = function transformForLint(code, fileName) {
    *   tagName: 'template';
    *   contents: string;
    *   range: {
-   *     start: number;
-   *     end: number;
+   *     startByte: number;
+   *     endByte: number;
+   *     startChar: number;
+   *     endChar: number;
+   *     startUtf16Codepoint: number;
+   *     endUtf16Codepoint: number;
    *   };
    *   contentRange: {
-   *     start: number;
-   *     end: number;
+   *     startByte: number;
+   *     endByte: number;
+   *     startChar: number;
+   *     endChar: number;
+   *     startUtf16Codepoint: number;
+   *     endUtf16Codepoint: number;
    *   };
    *   startRange: {
-   *     end: number;
-   *     start: number;
+   *     startByte: number;
+   *     endByte: number;
+   *     startChar: number;
+   *     endChar: number;
+   *     startUtf16Codepoint: number;
+   *     endUtf16Codepoint: number;
    *   };
    *   endRange: {
-   *     start: number;
-   *     end: number;
+   *     startByte: number;
+   *     endByte: number;
+   *     startChar: number;
+   *     endChar: number;
+   *     startUtf16Codepoint: number;
+   *     endUtf16Codepoint: number;
    *   };
    * }[]}
    */
@@ -709,17 +725,17 @@ module.exports.transformForLint = function transformForLint(code, fileName) {
   for (const tplInfo of result.reverse()) {
     const content = tplInfo.contents.replace(/`/g, '\\`').replace(/\$/g, '\\$');
     if (tplInfo.type === 'class-member') {
-      const tplLength = tplInfo.range.end - tplInfo.range.start;
+      const tplLength = tplInfo.range.endByte - tplInfo.range.startByte;
       const spaces = tplLength - byteLength(content) - 'static{`'.length - '`}'.length;
       const total = content + ' '.repeat(spaces);
       const replacementCode = `static{\`${total}\`}`;
-      jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
+      jsCode = replaceRange(jsCode, tplInfo.range.startByte, tplInfo.range.endByte, replacementCode);
     } else {
-      const tplLength = tplInfo.range.end - tplInfo.range.start;
+      const tplLength = tplInfo.range.endByte - tplInfo.range.startByte;
       const spaces = tplLength - byteLength(content) - '`'.length - '`'.length;
       const total = content + ' '.repeat(spaces);
       const replacementCode = `\`${total}\``;
-      jsCode = replaceRange(jsCode, tplInfo.range.start, tplInfo.range.end, replacementCode);
+      jsCode = replaceRange(jsCode, tplInfo.range.startByte, tplInfo.range.endByte, replacementCode);
     }
   }
   /* istanbul ignore next */
