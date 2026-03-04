@@ -729,13 +729,23 @@ module.exports.transformForLint = function transformForLint(code, fileName) {
       const spaces = tplLength - byteLength(content) - 'static{`'.length - '`}'.length;
       const total = content + ' '.repeat(spaces);
       const replacementCode = `static{\`${total}\`}`;
-      jsCode = replaceRange(jsCode, tplInfo.range.startByte, tplInfo.range.endByte, replacementCode);
+      jsCode = replaceRange(
+        jsCode,
+        tplInfo.range.startByte,
+        tplInfo.range.endByte,
+        replacementCode
+      );
     } else {
       const tplLength = tplInfo.range.endByte - tplInfo.range.startByte;
       const spaces = tplLength - byteLength(content) - '`'.length - '`'.length;
       const total = content + ' '.repeat(spaces);
       const replacementCode = `\`${total}\``;
-      jsCode = replaceRange(jsCode, tplInfo.range.startByte, tplInfo.range.endByte, replacementCode);
+      jsCode = replaceRange(
+        jsCode,
+        tplInfo.range.startByte,
+        tplInfo.range.endByte,
+        replacementCode
+      );
     }
   }
   /* istanbul ignore next */
