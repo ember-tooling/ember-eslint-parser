@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "minor",
-      "oldVersion": "0.5.13",
-      "newVersion": "0.6.0",
+      "oldVersion": "0.6.0",
+      "newVersion": "0.7.0",
       "tagName": "latest",
       "constraints": [
         {
@@ -18,5 +18,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-03-02)\n\n* ember-eslint-parser 0.6.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#149](https://github.com/ember-tooling/ember-eslint-parser/pull/149) Create hbs parser integration ([@Copilot](https://github.com/apps/copilot-swe-agent))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#152](https://github.com/ember-tooling/ember-eslint-parser/pull/152) Update release-plan ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#150](https://github.com/ember-tooling/ember-eslint-parser/pull/150) Refactor transforms.js ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 2\n- Copilot [Bot] ([@copilot-swe-agent](https://github.com/apps/copilot-swe-agent))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2026-03-04)\n\n* ember-eslint-parser 0.7.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#153](https://github.com/ember-tooling/ember-eslint-parser/pull/153) Update dependencies ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#154](https://github.com/ember-tooling/ember-eslint-parser/pull/154) Fix API compatibility with content-tag v4, html-tags v5, and mathml-tag-names v4 ([@Copilot](https://github.com/apps/copilot-swe-agent))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#155](https://github.com/ember-tooling/ember-eslint-parser/pull/155) Add CI job to run tests on minimum supported Node.js version (v20) ([@Copilot](https://github.com/apps/copilot-swe-agent))\n\n#### Committers: 2\n- Copilot [Bot] ([@copilot-swe-agent](https://github.com/apps/copilot-swe-agent))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }

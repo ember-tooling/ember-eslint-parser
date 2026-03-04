@@ -1,5 +1,22 @@
 # Changelog
 
+## Release (2026-03-04)
+
+* ember-eslint-parser 0.7.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#153](https://github.com/ember-tooling/ember-eslint-parser/pull/153) Update dependencies ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#154](https://github.com/ember-tooling/ember-eslint-parser/pull/154) Fix API compatibility with content-tag v4, html-tags v5, and mathml-tag-names v4 ([@Copilot](https://github.com/apps/copilot-swe-agent))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#155](https://github.com/ember-tooling/ember-eslint-parser/pull/155) Add CI job to run tests on minimum supported Node.js version (v20) ([@Copilot](https://github.com/apps/copilot-swe-agent))
+
+#### Committers: 2
+- Copilot [Bot] ([@copilot-swe-agent](https://github.com/apps/copilot-swe-agent))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2026-03-02)
 
 * ember-eslint-parser 0.6.0 (minor)
