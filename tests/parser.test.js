@@ -2758,7 +2758,6 @@ export const NotFound = <template>
   });
 });
 
-
 describe('replaceExtensions', () => {
   it('replaces .gts extension in static imports', () => {
     const code = `import MyComponent from './dynamic.gts';`;

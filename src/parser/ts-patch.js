@@ -81,9 +81,17 @@ try {
     const sourceFile = ts.createSourceFile('__x__.ts', code, ts.ScriptTarget.Latest);
     const length = jsCode.length;
     function visit(node) {
-      if (node.kind === ts.SyntaxKind.ImportDeclaration && node.moduleSpecifier.text.endsWith('.gts')) {
+      if (
+        node.kind === ts.SyntaxKind.ImportDeclaration &&
+        node.moduleSpecifier.text.endsWith('.gts')
+      ) {
         const value = node.moduleSpecifier.text.replace(/\.gts$/, '.mts');
-        jsCode = replaceRange(jsCode, node.moduleSpecifier.pos + 2, node.moduleSpecifier.end - 1, value);
+        jsCode = replaceRange(
+          jsCode,
+          node.moduleSpecifier.pos + 2,
+          node.moduleSpecifier.end - 1,
+          value
+        );
       }
       if (
         node.kind === ts.SyntaxKind.CallExpression &&
