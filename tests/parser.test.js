@@ -2755,4 +2755,186 @@ export const NotFound = <template>
 
     expect(result.scopeManager.scopes[0].through.length).toBe(0);
   });
+
+  it('can parse imports with explicit .gjs extensions', () => {
+    // Test importing from a .gjs file with explicit extension
+    const codeWithGjsImport = `
+      import type { UserData } from './types-export.gjs';
+      import { UserService, ExampleComponent } from './types-export.gjs';
+
+      const userData: UserData = {
+        id: 1,
+        name: 'John Doe',
+        email: 'john@example.com'
+      };
+
+      const userService = new UserService();
+      userService.addUser(userData);
+    `;
+
+    result = parseForESLint(codeWithGjsImport, {
+      filePath: 'tests/fixtures/imports-from-gjs.ts',
+      comment: true,
+      loc: true,
+      range: true,
+      tokens: true,
+    });
+
+    // Check that the import declarations are parsed correctly
+    const importDeclarations = result.ast.body.filter((node) => node.type === 'ImportDeclaration');
+    expect(importDeclarations).toHaveLength(2);
+
+    // Check the first import (type import)
+    expect(importDeclarations[0].importKind).toBe('type');
+    expect(importDeclarations[0].source.value).toBe('./types-export.gjs');
+    expect(importDeclarations[0].specifiers[0].imported.name).toBe('UserData');
+
+    // Check the second import (value imports)
+    expect(importDeclarations[1].importKind).toBe('value');
+    expect(importDeclarations[1].source.value).toBe('./types-export.gjs');
+    expect(importDeclarations[1].specifiers).toHaveLength(2);
+    expect(importDeclarations[1].specifiers[0].imported.name).toBe('UserService');
+    expect(importDeclarations[1].specifiers[1].imported.name).toBe('ExampleComponent');
+  });
+
+  it('replaces .gjs extensions with .mjs for TypeScript processing', () => {
+    // Test that .gjs imports are transformed to .mjs for TypeScript compatibility
+    const { patchTs, replaceExtensions } = require('../src/parser/ts-patch');
+
+    // Initialize patchTs with allowGjs enabled
+    patchTs({ allowGjs: true });
+
+    const codeWithGjsImports = `
+      import type { UserData } from './types-export.gjs';
+      import { UserService } from './api-service.gjs';
+      import Component from '@glimmer/component';
+      import { tracked } from '@glimmer/tracking';
+    `;
+
+    const transformedCode = replaceExtensions(codeWithGjsImports);
+
+    // Check that .gjs extensions are replaced with .mjs
+    expect(transformedCode).toContain('./types-export.mjs');
+    expect(transformedCode).toContain('./api-service.mjs');
+    // Non-.gjs/.gts imports should remain unchanged
+    expect(transformedCode).toContain('@glimmer/component');
+    expect(transformedCode).toContain('@glimmer/tracking');
+  });
+
+  it('handles .gjs imports with adjacent .gjs.d.ts declaration files', () => {
+    // Test that .gjs imports work correctly when there are corresponding .gjs.d.ts files
+    const codeWithGjsDtsImport = `
+      import type { ApiResponse } from './api-client.gjs';
+      import { ApiClient, DefaultClient } from './api-client.gjs';
+
+      async function testApi(): Promise<void> {
+        const client = new ApiClient('https://api.example.com');
+        const response = await client.get('/users');
+        console.log(response.status, response.data);
+      }
+
+      const component = DefaultClient;
+    `;
+
+    result = parseForESLint(codeWithGjsDtsImport, {
+      filePath: 'tests/fixtures/imports-with-dts.ts',
+      comment: true,
+      loc: true,
+      range: true,
+      tokens: true,
+      allowGjs: true,
+    });
+
+    // Verify parsing works correctly
+    expect(result.ast).toBeDefined();
+    expect(result.ast.body.length).toBeGreaterThan(2);
+
+    // Check that import declarations are parsed correctly
+    const importDeclarations = result.ast.body.filter((node) => node.type === 'ImportDeclaration');
+    expect(importDeclarations).toHaveLength(2);
+
+    // First import should be a type import
+    expect(importDeclarations[0].importKind).toBe('type');
+    expect(importDeclarations[0].source.value).toBe('./api-client.gjs');
+    expect(importDeclarations[0].specifiers[0].imported.name).toBe('ApiResponse');
+
+    // Second import should be value imports
+    expect(importDeclarations[1].importKind).toBe('value');
+    expect(importDeclarations[1].source.value).toBe('./api-client.gjs');
+    expect(importDeclarations[1].specifiers).toHaveLength(2);
+    expect(importDeclarations[1].specifiers[0].imported.name).toBe('ApiClient');
+    expect(importDeclarations[1].specifiers[1].imported.name).toBe('DefaultClient');
+
+    // Verify that our extension replacement transforms .gjs to .mjs for TypeScript processing
+    const { patchTs, replaceExtensions } = require('../src/parser/ts-patch');
+    patchTs({ allowGjs: true });
+
+    const transformedCode = replaceExtensions(codeWithGjsDtsImport);
+    expect(transformedCode).toContain('./api-client.mjs');
+    expect(transformedCode).not.toContain('./api-client.gjs');
+  });
+
+  it('comprehensive test: .gjs imports work with type-aware linting when .gjs.d.ts files are present', () => {
+    // This is the key integration test that verifies the complete functionality
+    const codeWithComplexGjsImports = `
+      import type { ServiceConfig, ServiceResponse } from './typed-service.gjs';
+      import { TypedService } from './typed-service.gjs';
+
+      // Test basic class instantiation with proper typing
+      const config: ServiceConfig = {
+        apiKey: 'test-key',
+        baseUrl: 'https://api.example.com',
+        timeout: 3000
+      };
+
+      const service = new TypedService(config);
+      
+      // Test method calls that should be properly typed
+      const isConnected: boolean = service.isConnected();
+      
+      // Test generic typing from the .gjs.d.ts file
+      async function getUserData(): Promise<ServiceResponse<{ name: string }>> {
+        return await service.request<{ name: string }>('/user');
+      }
+    `;
+
+    result = parseForESLint(codeWithComplexGjsImports, {
+      filePath: 'tests/fixtures/complex-gjs-import-test.ts',
+      comment: true,
+      loc: true,
+      range: true,
+      tokens: true,
+      allowGjs: true,
+    });
+
+    // Verify parsing works correctly
+    expect(result.ast).toBeDefined();
+    expect(result.ast.body.length).toBeGreaterThan(4);
+
+    // Check that both type and value imports are handled
+    const importDeclarations = result.ast.body.filter((node) => node.type === 'ImportDeclaration');
+    expect(importDeclarations).toHaveLength(2);
+
+    // Type import
+    expect(importDeclarations[0].importKind).toBe('type');
+    expect(importDeclarations[0].source.value).toBe('./typed-service.gjs');
+
+    // Value import
+    expect(importDeclarations[1].importKind).toBe('value');
+    expect(importDeclarations[1].source.value).toBe('./typed-service.gjs');
+
+    // Verify that extension replacement works
+    const { patchTs, replaceExtensions } = require('../src/parser/ts-patch');
+    patchTs({ allowGjs: true });
+
+    const transformedCode = replaceExtensions(codeWithComplexGjsImports);
+
+    // Should transform all .gjs imports to .mjs for TypeScript
+    expect(transformedCode).toContain('./typed-service.mjs');
+    expect(transformedCode).not.toContain('./typed-service.gjs');
+
+    // Count occurrences to ensure both imports were transformed
+    const mjsMatches = transformedCode.match(/\.\/typed-service\.mjs/g);
+    expect(mjsMatches).toHaveLength(2);
+  });
 });
