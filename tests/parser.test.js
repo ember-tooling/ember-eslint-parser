@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
+import { replaceExtensions } from '../src/parser/ts-patch.js';
 import { traverse } from '../src/parser/transforms.js';
 import { SourceCode } from 'eslint';
 import { visitorKeys as tsVisitors } from '@typescript-eslint/visitor-keys';
@@ -2754,5 +2755,32 @@ export const NotFound = <template>
     );
 
     expect(result.scopeManager.scopes[0].through.length).toBe(0);
+  });
+});
+
+
+describe('replaceExtensions', () => {
+  it('replaces .gts extension in static imports', () => {
+    const code = `import MyComponent from './dynamic.gts';`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(`import MyComponent from './dynamic.mts';`);
+  });
+
+  it('replaces .gts extension in dynamic imports', () => {
+    const code = `const component = await import('./dynamic.gts');`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(`const component = await import('./dynamic.mts');`);
+  });
+
+  it('replaces .gts extension in dynamic imports inside functions', () => {
+    const code = `async function load() { return import('./my-component.gts'); }`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(`async function load() { return import('./my-component.mts'); }`);
+  });
+
+  it('does not replace non-.gts extensions in dynamic imports', () => {
+    const code = `const component = await import('./dynamic.ts');`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(`const component = await import('./dynamic.ts');`);
   });
 });

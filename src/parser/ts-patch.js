@@ -80,12 +80,24 @@ try {
     let jsCode = code;
     const sourceFile = ts.createSourceFile('__x__.ts', code, ts.ScriptTarget.Latest);
     const length = jsCode.length;
-    for (const b of sourceFile.statements) {
-      if (b.kind === ts.SyntaxKind.ImportDeclaration && b.moduleSpecifier.text.endsWith('.gts')) {
-        const value = b.moduleSpecifier.text.replace(/\.gts$/, '.mts');
-        jsCode = replaceRange(jsCode, b.moduleSpecifier.pos + 2, b.moduleSpecifier.end - 1, value);
+    function visit(node) {
+      if (node.kind === ts.SyntaxKind.ImportDeclaration && node.moduleSpecifier.text.endsWith('.gts')) {
+        const value = node.moduleSpecifier.text.replace(/\.gts$/, '.mts');
+        jsCode = replaceRange(jsCode, node.moduleSpecifier.pos + 2, node.moduleSpecifier.end - 1, value);
       }
+      if (
+        node.kind === ts.SyntaxKind.CallExpression &&
+        node.expression.kind === ts.SyntaxKind.ImportKeyword
+      ) {
+        const arg = node.arguments[0];
+        if (arg && arg.kind === ts.SyntaxKind.StringLiteral && arg.text.endsWith('.gts')) {
+          const value = arg.text.replace(/\.gts$/, '.mts');
+          jsCode = replaceRange(jsCode, arg.getStart(sourceFile) + 1, arg.end - 1, value); // +1/-1 to skip surrounding quotes
+        }
+      }
+      ts.forEachChild(node, visit);
     }
+    visit(sourceFile);
     if (length !== jsCode.length) {
       throw new Error('bad replacement');
     }
