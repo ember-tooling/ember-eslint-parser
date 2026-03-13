@@ -115,9 +115,12 @@ function registerNodeInScope(node, scope, variable) {
 /**
  * Builds the complete Glimmer visitor keys map with "Glimmer" prefix and
  * additional keys needed for traversal (blockParamNodes, parts, etc).
+ * Result is cached since glimmerVisitorKeys is a constant.
  * @return {object}
  */
+let _cachedGlimmerVisitorKeys = null;
 function buildGlimmerVisitorKeys() {
+  if (_cachedGlimmerVisitorKeys) return _cachedGlimmerVisitorKeys;
   const keys = {};
   for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
     keys[`Glimmer${k}`] = [...v];
@@ -127,6 +130,7 @@ function buildGlimmerVisitorKeys() {
   }
   keys.GlimmerProgram = ['body', 'blockParamNodes'];
   keys.GlimmerTemplate = ['body'];
+  _cachedGlimmerVisitorKeys = keys;
   return keys;
 }
 
@@ -170,7 +174,7 @@ function traverse(visitorKeys, node, visitor) {
           queue.push({
             node: item,
             parent: currentPath.node,
-            context: Object.assign({}, currentPath.context),
+            context: currentPath.context,
             parentKey: visitorKey,
             parentPath: currentPath,
           });
@@ -179,7 +183,7 @@ function traverse(visitorKeys, node, visitor) {
         queue.push({
           node: child,
           parent: currentPath.node,
-          context: Object.assign({}, currentPath.context),
+          context: currentPath.context,
           parentKey: visitorKey,
           parentPath: currentPath,
         });
@@ -200,8 +204,14 @@ function isAlphaNumeric(code) {
   );
 }
 
-function isWhiteSpace(code) {
-  return code === ' ' || code === '\t' || code === '\r' || code === '\n' || code === '\v';
+function isWhiteSpaceCode(code) {
+  return (
+    code === 32 /* space */ ||
+    code === 9 /* tab */ ||
+    code === 13 /* carriageReturn */ ||
+    code === 10 /* lineFeed */ ||
+    code === 11 /* verticalTab */
+  );
 }
 
 /**
@@ -229,12 +239,13 @@ function tokenize(template, doc, startOffset) {
     };
     tokens.push(t);
   }
-  for (const [i, c] of [...template].entries()) {
-    if (isAlphaNumeric(c.codePointAt(0))) {
+  for (let i = 0; i < template.length; i++) {
+    const code = template.charCodeAt(i);
+    if (isAlphaNumeric(code)) {
       if (current.length === 0) {
         start = i;
       }
-      current += c;
+      current += template[i];
     } else {
       let range = [startOffset + start, startOffset + i];
       if (current.length > 0) {
@@ -242,8 +253,8 @@ function tokenize(template, doc, startOffset) {
         current = '';
       }
       range = [startOffset + i, startOffset + i + 1];
-      if (!isWhiteSpace(c)) {
-        pushToken(c, 'Punctuator', range);
+      if (!isWhiteSpaceCode(code)) {
+        pushToken(template[i], 'Punctuator', range);
       }
     }
   }
@@ -306,27 +317,55 @@ function removeFromParent(nodes) {
  * @return {object[]}
  */
 function buildTokenStream(rawTokens, comments, textNodes) {
-  let tokens = rawTokens.filter(
-    (t) => !comments.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
-  );
-  tokens = tokens.filter(
-    (t) => !textNodes.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
-  );
+  // Build sorted interval arrays for O(log n) exclusion checks
+  const commentIntervals = comments.map((c) => c.range).sort((a, b) => a[0] - b[0]);
+  const textNodeIntervals = textNodes.map((t) => t.range).sort((a, b) => a[0] - b[0]);
 
-  const sortedTextNodes = [...textNodes];
-  let currentTextNode = sortedTextNodes.pop();
-  for (let i = tokens.length - 1; i >= 0; i--) {
-    const t = tokens[i];
-    while (currentTextNode && t.range[0] < currentTextNode.range[0]) {
-      tokens.splice(i + 1, 0, currentTextNode);
-      currentTextNode = sortedTextNodes.pop();
+  /**
+   * Binary-search: is the token's range fully covered by any interval in `intervals`?
+   * Intervals must be sorted by start offset.
+   * @param {number[]} tokenRange
+   * @param {number[][]} intervals
+   */
+  function isCovered(tokenRange, intervals) {
+    let lo = 0;
+    let hi = intervals.length - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const iv = intervals[mid];
+      if (iv[0] <= tokenRange[0] && iv[1] >= tokenRange[1]) {
+        return true;
+      }
+      if (iv[0] > tokenRange[0]) {
+        hi = mid - 1;
+      } else {
+        lo = mid + 1;
+      }
     }
-  }
-  if (currentTextNode) {
-    tokens.unshift(currentTextNode);
+    return false;
   }
 
-  return tokens;
+  // Single-pass filter: drop tokens covered by a comment or text node
+  const filteredTokens = rawTokens.filter(
+    (t) => !isCovered(t.range, commentIntervals) && !isCovered(t.range, textNodeIntervals)
+  );
+
+  // Merge text nodes (already sorted by position from the AST) into filteredTokens
+  // using a single linear merge pass instead of repeated splice calls.
+  const sortedTextNodes = [...textNodes].sort((a, b) => a.range[0] - b.range[0]);
+  const result = [];
+  let ti = 0;
+  for (const token of filteredTokens) {
+    while (ti < sortedTextNodes.length && sortedTextNodes[ti].range[0] < token.range[0]) {
+      result.push(sortedTextNodes[ti++]);
+    }
+    result.push(token);
+  }
+  while (ti < sortedTextNodes.length) {
+    result.push(sortedTextNodes[ti++]);
+  }
+
+  return result;
 }
 
 /**
