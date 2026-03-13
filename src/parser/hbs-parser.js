@@ -2,6 +2,9 @@ const eslintScope = require('eslint-scope');
 const DocumentLines = require('../utils/document');
 const { processGlimmerTemplate, buildGlimmerVisitorKeys } = require('./transforms');
 
+// Constant: Program + all Glimmer node types. Computed once at module load.
+const hbsVisitorKeys = { Program: ['body'], ...buildGlimmerVisitorKeys() };
+
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers
  * for Handlebars (.hbs) template files.
@@ -64,7 +67,7 @@ module.exports = {
     };
 
     // Build visitor keys: Program + all Glimmer node types
-    const visitorKeys = { Program: ['body'], ...buildGlimmerVisitorKeys() };
+    const visitorKeys = hbsVisitorKeys;
 
     // Create an empty scope manager.
     // For HBS, all locals are assumed to be defined at runtime,

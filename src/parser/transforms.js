@@ -261,7 +261,10 @@ function tokenize(template, doc, startOffset) {
     }
   }
   if (wordStart >= 0) {
-    pushToken(template.slice(wordStart), 'word', [startOffset + wordStart, startOffset + template.length]);
+    pushToken(template.slice(wordStart), 'word', [
+      startOffset + wordStart,
+      startOffset + template.length,
+    ]);
   }
   return tokens;
 }
@@ -493,7 +496,6 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
   }));
   const codeLines = new DocumentLines(code);
   const allComments = [];
-  const templateVisitorKeys = {};
 
   for (const tpl of templateInfos) {
     const range = tpl.utf16Range;
@@ -511,12 +513,8 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
     tpl.ast = ast;
   }
 
-  for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
-    templateVisitorKeys[`Glimmer${k}`] = [...v];
-  }
-
   return {
-    templateVisitorKeys,
+    templateVisitorKeys: buildGlimmerVisitorKeys(),
     templateInfos,
     comments: allComments,
   };
@@ -617,7 +615,9 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       const registerUndef =
         isUpperCase(n.name[0]) ||
         node.name.includes('.') ||
-        (!htmlTagsSet.has(node.name) && !svgTagsSet.has(node.name) && !mathMLTagsSet.has(node.name));
+        (!htmlTagsSet.has(node.name) &&
+          !svgTagsSet.has(node.name) &&
+          !mathMLTagsSet.has(node.name));
 
       if (!ignore && (variable || registerUndef)) {
         registerNodeInScope(n, scope, variable);

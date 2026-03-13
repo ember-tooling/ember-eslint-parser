@@ -61,7 +61,11 @@ function computeLineStarts(text) {
       }
       result.push(lineStart);
       lineStart = pos;
-    } else if (ch === 10 /* lineFeed */ || ch === 8232 /* lineSeparator */ || ch === 8233 /* paragraphSeparator */) {
+    } else if (
+      ch === 10 /* lineFeed */ ||
+      ch === 8232 /* lineSeparator */ ||
+      ch === 8233 /* paragraphSeparator */
+    ) {
       result.push(lineStart);
       lineStart = pos;
     }
