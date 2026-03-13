@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "@babel/eslint-parser": "^7.28.6",
-    "@glimmer/env": "^0.1.7",
     "@glimmer/syntax": ">= 0.92.0",
     "@typescript-eslint/tsconfig-utils": "^8.38.0",
     "content-tag": "^4.1.0",
