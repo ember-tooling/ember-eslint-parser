@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+/* eslint-disable n/no-process-exit */
 /**
  * Benchmark comparison script.
  *
@@ -44,11 +44,9 @@ function hasUncommittedChanges() {
 }
 
 function runBench(outputFile) {
-  const result = spawnSync(
-    'pnpm',
-    ['vitest', 'bench', '--outputJson', outputFile, '--run'],
-    { stdio: 'inherit' },
-  );
+  const result = spawnSync('pnpm', ['vitest', 'bench', '--outputJson', outputFile, '--run'], {
+    stdio: 'inherit',
+  });
   if (result.status !== 0) {
     console.error('\n❌  Benchmark run failed.');
     process.exit(1);
@@ -162,11 +160,11 @@ const ruler = '─'.repeat(COL.name + COL.base + COL.current + COL.delta);
 
 console.log(`\n${'─'.repeat(ruler.length)}`);
 console.log(
-  `  Benchmark comparison: ${styleText('cyan', CURRENT_BRANCH)} vs ${styleText('cyan', BASE_BRANCH)}`,
+  `  Benchmark comparison: ${styleText('cyan', CURRENT_BRANCH)} vs ${styleText('cyan', BASE_BRANCH)}`
 );
 console.log(`${'─'.repeat(ruler.length)}`);
 console.log(
-  styleText('bold', line('Benchmark', `${BASE_BRANCH} (hz)`, `${CURRENT_BRANCH} (hz)`, 'Δ')),
+  styleText('bold', line('Benchmark', `${BASE_BRANCH} (hz)`, `${CURRENT_BRANCH} (hz)`, 'Δ'))
 );
 console.log(ruler);
 
@@ -199,5 +197,5 @@ console.log(
     styleText('red', '■') +
     ' ≤ −5%  slower   ' +
     styleText('yellow', '■') +
-    ' within ±5%  similar\n',
+    ' within ±5%  similar\n'
 );
