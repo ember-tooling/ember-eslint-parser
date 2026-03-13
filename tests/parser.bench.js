@@ -41,8 +41,8 @@ const PARSE_OPTIONS = {
 // ---------------------------------------------------------------------------
 
 const BENCH_OPTIONS = {
-  time: 5000,          // run each benchmark for at least 5 s (default: 500 ms)
-  warmupTime: 1000,    // warmup for 1 s before measuring (default: 100 ms)
+  time: 5000, // run each benchmark for at least 5 s (default: 500 ms)
+  warmupTime: 1000, // warmup for 1 s before measuring (default: 100 ms)
   warmupIterations: 10, // warmup iteration count (default: 5)
 };
 
@@ -51,43 +51,79 @@ const BENCH_OPTIONS = {
 // ---------------------------------------------------------------------------
 
 describe('gts parser', () => {
-  bench('small file', () => {
-    parseGjsGts(SMALL_GTS, { ...PARSE_OPTIONS, filePath: 'small.gts' });
-  }, BENCH_OPTIONS);
+  bench(
+    'small file',
+    () => {
+      parseGjsGts(SMALL_GTS, { ...PARSE_OPTIONS, filePath: 'small.gts' });
+    },
+    BENCH_OPTIONS
+  );
 
-  bench('medium file', () => {
-    parseGjsGts(MEDIUM_GTS, { ...PARSE_OPTIONS, filePath: 'medium.gts' });
-  }, BENCH_OPTIONS);
+  bench(
+    'medium file',
+    () => {
+      parseGjsGts(MEDIUM_GTS, { ...PARSE_OPTIONS, filePath: 'medium.gts' });
+    },
+    BENCH_OPTIONS
+  );
 
-  bench('large file', () => {
-    parseGjsGts(LARGE_GTS, { ...PARSE_OPTIONS, filePath: 'large.gts' });
-  }, BENCH_OPTIONS);
+  bench(
+    'large file',
+    () => {
+      parseGjsGts(LARGE_GTS, { ...PARSE_OPTIONS, filePath: 'large.gts' });
+    },
+    BENCH_OPTIONS
+  );
 });
 
 describe('gjs parser', () => {
-  bench('small file', () => {
-    parseGjsGts(SMALL_GJS, { ...PARSE_OPTIONS, filePath: 'small.gjs' });
-  }, BENCH_OPTIONS);
+  bench(
+    'small file',
+    () => {
+      parseGjsGts(SMALL_GJS, { ...PARSE_OPTIONS, filePath: 'small.gjs' });
+    },
+    BENCH_OPTIONS
+  );
 
-  bench('medium file', () => {
-    parseGjsGts(MEDIUM_GJS, { ...PARSE_OPTIONS, filePath: 'medium.gjs' });
-  }, BENCH_OPTIONS);
+  bench(
+    'medium file',
+    () => {
+      parseGjsGts(MEDIUM_GJS, { ...PARSE_OPTIONS, filePath: 'medium.gjs' });
+    },
+    BENCH_OPTIONS
+  );
 
-  bench('large file', () => {
-    parseGjsGts(LARGE_GJS, { ...PARSE_OPTIONS, filePath: 'large.gjs' });
-  }, BENCH_OPTIONS);
+  bench(
+    'large file',
+    () => {
+      parseGjsGts(LARGE_GJS, { ...PARSE_OPTIONS, filePath: 'large.gjs' });
+    },
+    BENCH_OPTIONS
+  );
 });
 
 describe('hbs parser', () => {
-  bench('small file', () => {
-    parseHbs(SMALL_HBS, { ...PARSE_OPTIONS, filePath: 'small.hbs' });
-  }, BENCH_OPTIONS);
+  bench(
+    'small file',
+    () => {
+      parseHbs(SMALL_HBS, { ...PARSE_OPTIONS, filePath: 'small.hbs' });
+    },
+    BENCH_OPTIONS
+  );
 
-  bench('medium file', () => {
-    parseHbs(MEDIUM_HBS, { ...PARSE_OPTIONS, filePath: 'medium.hbs' });
-  }, BENCH_OPTIONS);
+  bench(
+    'medium file',
+    () => {
+      parseHbs(MEDIUM_HBS, { ...PARSE_OPTIONS, filePath: 'medium.hbs' });
+    },
+    BENCH_OPTIONS
+  );
 
-  bench('large file', () => {
-    parseHbs(LARGE_HBS, { ...PARSE_OPTIONS, filePath: 'large.hbs' });
-  }, BENCH_OPTIONS);
+  bench(
+    'large file',
+    () => {
+      parseHbs(LARGE_HBS, { ...PARSE_OPTIONS, filePath: 'large.hbs' });
+    },
+    BENCH_OPTIONS
+  );
 });
