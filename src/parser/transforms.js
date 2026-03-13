@@ -3,9 +3,9 @@ const glimmer = require('@glimmer/syntax');
 const { visitorKeys: glimmerVisitorKeys } = glimmer;
 const DocumentLines = require('../utils/document');
 const { Reference, Scope, Variable, Definition } = require('eslint-scope');
-const htmlTags = require('html-tags').default;
-const svgTags = require('svg-tags');
-const mathMLTags = require('mathml-tag-names').mathmlTagNames;
+const htmlTagsSet = new Set(require('html-tags').default);
+const svgTagsSet = new Set(require('svg-tags'));
+const mathMLTagsSet = new Set(require('mathml-tag-names').mathmlTagNames);
 
 let TypescriptScope = null;
 try {
@@ -67,27 +67,33 @@ function findParentScope(scopeManager, nodePath) {
  * tries to find the variable names {name} in any parent scope
  * if the variable is not found it just returns the nearest scope,
  * so that it's usage can be registered.
+ *
+ * Also returns the nearest scope (equivalent to findParentScope) in one pass,
+ * avoiding the redundant second traversal that findParentScope would perform.
  * @param scopeManager
  * @param nodePath
  * @param name
  * @return {{scope: null, variable: *}|{scope: (*|null)}}
  */
 function findVarInParentScopes(scopeManager, nodePath, name) {
-  let scope = null;
+  let defScope = null;
+  let currentScope = null;
   let path = nodePath;
   while (path) {
-    scope = scopeManager.acquire(path.node, true);
-    if (scope && scope.set.has(name)) {
-      break;
+    const s = scopeManager.acquire(path.node, true);
+    if (s) {
+      if (!currentScope) currentScope = s;
+      if (s.set.has(name)) {
+        defScope = s;
+        break;
+      }
     }
     path = path.parentPath;
   }
-  const currentScope = findParentScope(scopeManager, nodePath);
-  if (!scope) {
+  if (!defScope) {
     return { scope: currentScope };
   }
-
-  return { scope: currentScope, variable: scope.set.get(name) };
+  return { scope: currentScope, variable: defScope.set.get(name) };
 }
 
 /**
@@ -223,8 +229,7 @@ function isWhiteSpaceCode(code) {
  */
 function tokenize(template, doc, startOffset) {
   const tokens = [];
-  let current = '';
-  let start = 0;
+  let wordStart = -1;
   function pushToken(value, type, range) {
     const t = {
       type,
@@ -242,21 +247,21 @@ function tokenize(template, doc, startOffset) {
   for (let i = 0; i < template.length; i++) {
     const code = template.charCodeAt(i);
     if (isAlphaNumeric(code)) {
-      if (current.length === 0) {
-        start = i;
+      if (wordStart < 0) {
+        wordStart = i;
       }
-      current += template[i];
     } else {
-      let range = [startOffset + start, startOffset + i];
-      if (current.length > 0) {
-        pushToken(current, 'word', range);
-        current = '';
+      if (wordStart >= 0) {
+        pushToken(template.slice(wordStart, i), 'word', [startOffset + wordStart, startOffset + i]);
+        wordStart = -1;
       }
-      range = [startOffset + i, startOffset + i + 1];
       if (!isWhiteSpaceCode(code)) {
-        pushToken(template[i], 'Punctuator', range);
+        pushToken(template[i], 'Punctuator', [startOffset + i, startOffset + i + 1]);
       }
     }
+  }
+  if (wordStart >= 0) {
+    pushToken(template.slice(wordStart), 'word', [startOffset + wordStart, startOffset + template.length]);
   }
   return tokens;
 }
@@ -438,6 +443,18 @@ function processGlimmerTemplate({ templateContent, codeLines, templateRange, tok
       });
     }
 
+    // Nullify empty hashes before the type is renamed
+    if (
+      (n.type === 'MustacheStatement' ||
+        n.type === 'BlockStatement' ||
+        n.type === 'SubExpression') &&
+      n.hash &&
+      n.hash.pairs &&
+      n.hash.pairs.length === 0
+    ) {
+      n.hash = null;
+    }
+
     n.type = `Glimmer${n.type}`;
   }
 
@@ -446,17 +463,6 @@ function processGlimmerTemplate({ templateContent, codeLines, templateRange, tok
   removeFromParent(comments);
   for (const comment of comments) {
     comment.type = 'Block';
-  }
-
-  // Nullify empty hashes
-  for (const n of allNodes) {
-    if (
-      ['GlimmerMustacheStatement', 'GlimmerBlockStatement', 'GlimmerSubExpression'].includes(n.type)
-    ) {
-      if (n.hash && n.hash.pairs && n.hash.pairs.length === 0) {
-        n.hash = null;
-      }
-    }
   }
 
   // Build final token stream
@@ -538,6 +544,9 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
     result.ast.tokens.splice(firstIdx, lastIdx - firstIdx + 1, ...ti.ast.tokens);
   }
 
+  // Build a Map keyed by range start for O(1) lookup during traversal
+  const templateInfoByStart = new Map(templateInfos.map((t) => [t.utf16Range[0], t]));
+
   // eslint-disable-next-line complexity
   traverse(visitorKeys, result.ast, (path) => {
     const node = path.node;
@@ -554,12 +563,11 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
         range = [node.declaration.range[0], node.declaration.range[1]];
       }
 
-      const template = templateInfos.find(
-        (t) =>
-          t.utf16Range[0] === range[0] &&
-          (t.utf16Range[1] === range[1] || t.utf16Range[1] === range[1] + 1)
-      );
-      if (!template) {
+      const template = templateInfoByStart.get(range[0]);
+      if (
+        !template ||
+        (template.utf16Range[1] !== range[1] && template.utf16Range[1] !== range[1] + 1)
+      ) {
         return null;
       }
       counter++;
@@ -609,9 +617,7 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       const registerUndef =
         isUpperCase(n.name[0]) ||
         node.name.includes('.') ||
-        (!htmlTags.includes(node.name) &&
-          !svgTags.includes(node.name) &&
-          !mathMLTags.includes(node.name));
+        (!htmlTagsSet.has(node.name) && !svgTagsSet.has(node.name) && !mathMLTagsSet.has(node.name));
 
       if (!ignore && (variable || registerUndef)) {
         registerNodeInScope(n, scope, variable);
