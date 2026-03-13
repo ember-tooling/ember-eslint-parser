@@ -100,7 +100,12 @@ try {
         const arg = node.arguments[0];
         if (arg && arg.kind === ts.SyntaxKind.StringLiteral && arg.text.endsWith('.gts')) {
           const value = arg.text.replace(/\.gts$/, '.mts');
-          jsCode = replaceRange(jsCode, charToByteIndex(code, arg.getStart(sourceFile) + 1), charToByteIndex(code, arg.end - 1), value); // +1/-1 to skip surrounding quotes
+          jsCode = replaceRange(
+            jsCode,
+            charToByteIndex(code, arg.getStart(sourceFile) + 1),
+            charToByteIndex(code, arg.end - 1),
+            value
+          ); // +1/-1 to skip surrounding quotes
         }
       }
       ts.forEachChild(node, visit);
