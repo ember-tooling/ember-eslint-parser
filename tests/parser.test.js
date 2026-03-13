@@ -2791,4 +2791,34 @@ describe('replaceExtensions', () => {
     const result = replaceExtensions(code);
     expect(result).toBe(`const component = await import('./dynamic.ts');`);
   });
+
+  it('replaces .gts extension when preceded by non-ASCII characters (em-dash)', () => {
+    // Em-dash "—" is 3 bytes in UTF-8 but 1 character in UTF-16.
+    // TypeScript AST positions are character offsets, but replaceRange uses
+    // sliceByteRange (byte offsets), so the replacement is corrupted.
+    const code = `// description — with em-dash\nimport MyComponent from './dynamic.gts';`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(`// description — with em-dash\nimport MyComponent from './dynamic.mts';`);
+  });
+
+  it('replaces .gts extension when preceded by emoji', () => {
+    // "❤️" contains multi-byte characters that cause byte/char offset divergence.
+    const code = `// ❤️\nimport MyComponent from './dynamic.gts';`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(`// ❤️\nimport MyComponent from './dynamic.mts';`);
+  });
+
+  it('replaces .gts extension in dynamic import when preceded by non-ASCII characters', () => {
+    const code = `// café naïve résumé\nconst component = await import('./dynamic.gts');`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(`// café naïve résumé\nconst component = await import('./dynamic.mts');`);
+  });
+
+  it('replaces .gts extension with import type when preceded by non-ASCII characters', () => {
+    const code = `// description — with em-dash\nimport type { Foo } from './other-component.gts';`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(
+      `// description — with em-dash\nimport type { Foo } from './other-component.mts';`
+    );
+  });
 });
