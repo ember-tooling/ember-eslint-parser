@@ -1,0 +1,47 @@
+<nav class="sidebar">
+  <h2>Navigation</h2>
+  <ul>
+    {{#each @items as |item|}}
+      <li class={{if item.active "active"}}>
+        <a href={{item.url}}>{{item.label}}</a>
+        {{#if item.children}}
+          <ul class="submenu">
+            {{#each item.children as |child|}}
+              <li><a href={{child.url}}>{{child.label}}</a></li>
+            {{/each}}
+          </ul>
+        {{/if}}
+      </li>
+    {{/each}}
+  </ul>
+</nav>
+
+<main class="content">
+  {{#if @isLoading}}
+    <p class="loading">Loading…</p>
+  {{else if @error}}
+    <div class="error-banner">
+      <strong>Error:</strong> {{@error.message}}
+      <button type="button" {{on "click" @onRetry}}>Retry</button>
+    </div>
+  {{else}}
+    {{#each @posts as |post|}}
+      <article class="post">
+        <h2>{{post.title}}</h2>
+        <p class="meta">
+          By {{post.author.name}}
+          {{#if post.publishedAt}}· {{post.publishedAt}}{{/if}}
+        </p>
+        <p>{{post.excerpt}}</p>
+        <ul class="tags">
+          {{#each post.tags as |tag|}}
+            <li class="tag">{{tag}}</li>
+          {{/each}}
+        </ul>
+        <a href={{post.url}} class="read-more">Read more →</a>
+      </article>
+    {{else}}
+      <p class="empty">No posts found.</p>
+    {{/each}}
+  {{/if}}
+</main>

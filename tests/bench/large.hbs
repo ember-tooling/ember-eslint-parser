@@ -1,0 +1,242 @@
+<div class="app-layout">
+  <header class="app-header">
+    <a href="/" class="logo">{{@appName}}</a>
+    <nav class="primary-nav">
+      {{#each @navItems as |item|}}
+        <a
+          href={{item.url}}
+          class="nav-link {{if item.active 'nav-link--active'}}"
+        >
+          {{item.label}}
+          {{#if item.badge}}
+            <span class="badge">{{item.badge}}</span>
+          {{/if}}
+        </a>
+      {{/each}}
+    </nav>
+    <div class="header-actions">
+      {{#if @currentUser}}
+        <div class="user-menu">
+          <button type="button" {{on "click" @onOpenUserMenu}}>
+            <img
+              src={{@currentUser.avatarUrl}}
+              alt={{@currentUser.name}}
+              class="avatar"
+            />
+            {{@currentUser.name}}
+          </button>
+          {{#if @isUserMenuOpen}}
+            <ul class="dropdown">
+              <li><a href="/profile">Profile</a></li>
+              <li><a href="/settings">Settings</a></li>
+              <li>
+                <button type="button" {{on "click" @onSignOut}}>Sign out</button>
+              </li>
+            </ul>
+          {{/if}}
+        </div>
+      {{else}}
+        <a href="/login" class="btn btn--primary">Log in</a>
+        <a href="/register" class="btn">Register</a>
+      {{/if}}
+    </div>
+  </header>
+
+  <div class="app-body">
+    <aside class="sidebar">
+      <section class="sidebar__section">
+        <h3>Categories</h3>
+        <ul>
+          {{#each @categories as |cat|}}
+            <li class={{if (eq @selectedCategory cat.id) "active"}}>
+              <a href={{cat.url}}>
+                {{cat.name}}
+                <span class="count">({{cat.count}})</span>
+              </a>
+            </li>
+          {{/each}}
+        </ul>
+      </section>
+
+      <section class="sidebar__section">
+        <h3>Tags</h3>
+        <div class="tag-cloud">
+          {{#each @popularTags as |tag|}}
+            <a
+              href={{tag.url}}
+              class="tag tag--{{tag.size}}"
+            >
+              {{tag.name}}
+            </a>
+          {{/each}}
+        </div>
+      </section>
+
+      <section class="sidebar__section">
+        <h3>Recent Activity</h3>
+        <ul class="activity-feed">
+          {{#each @recentActivity as |activity|}}
+            <li class="activity-item">
+              <img
+                src={{activity.actor.avatarUrl}}
+                alt={{activity.actor.name}}
+                class="avatar avatar--sm"
+              />
+              <div class="activity-item__body">
+                <strong>{{activity.actor.name}}</strong>
+                {{activity.verb}}
+                <a href={{activity.target.url}}>{{activity.target.label}}</a>
+              </div>
+              <time class="activity-item__time">{{activity.createdAt}}</time>
+            </li>
+          {{/each}}
+        </ul>
+      </section>
+    </aside>
+
+    <main class="main-content">
+      <div class="toolbar">
+        <input
+          type="search"
+          class="search-input"
+          placeholder="Search…"
+          value={{@searchQuery}}
+          {{on "input" @onSearch}}
+        />
+        <div class="toolbar__actions">
+          <button
+            type="button"
+            class="btn btn--sm {{if (eq @viewMode 'grid') 'btn--active'}}"
+            {{on "click" (fn @setViewMode "grid")}}
+          >
+            Grid
+          </button>
+          <button
+            type="button"
+            class="btn btn--sm {{if (eq @viewMode 'list') 'btn--active'}}"
+            {{on "click" (fn @setViewMode "list")}}
+          >
+            List
+          </button>
+        </div>
+        <div class="sort-control">
+          <label for="sort-select">Sort by</label>
+          <select
+            id="sort-select"
+            {{on "change" @onSortChange}}
+          >
+            {{#each @sortOptions as |opt|}}
+              <option
+                value={{opt.value}}
+                selected={{eq @currentSort opt.value}}
+              >
+                {{opt.label}}
+              </option>
+            {{/each}}
+          </select>
+        </div>
+      </div>
+
+      {{#if @isLoading}}
+        <div class="loading-overlay">
+          <span class="spinner" aria-label="Loading…"></span>
+        </div>
+      {{else if @error}}
+        <div class="error-banner" role="alert">
+          <strong>Something went wrong:</strong> {{@error.message}}
+          <button type="button" {{on "click" @onRetry}}>Try again</button>
+        </div>
+      {{else}}
+        <div class="items-container items-container--{{@viewMode}}">
+          {{#each @items as |item|}}
+            <div class="item-card">
+              {{#if item.coverUrl}}
+                <img src={{item.coverUrl}} alt={{item.title}} class="item-card__cover" />
+              {{/if}}
+              <div class="item-card__body">
+                <h2 class="item-card__title">
+                  <a href={{item.url}}>{{item.title}}</a>
+                </h2>
+                <p class="item-card__meta">
+                  <img
+                    src={{item.author.avatarUrl}}
+                    alt={{item.author.name}}
+                    class="avatar avatar--xs"
+                  />
+                  {{item.author.name}}
+                  {{#if item.publishedAt}}
+                    · <time>{{item.publishedAt}}</time>
+                  {{else}}
+                    · <em>Draft</em>
+                  {{/if}}
+                </p>
+                <p class="item-card__excerpt">{{item.excerpt}}</p>
+                <ul class="item-card__tags">
+                  {{#each item.tags as |tag|}}
+                    <li class="tag">{{tag}}</li>
+                  {{/each}}
+                </ul>
+              </div>
+              <div class="item-card__footer">
+                <span class="stat">
+                  {{item.likeCount}} likes
+                </span>
+                <span class="stat">
+                  {{item.commentCount}} comments
+                </span>
+                {{#if @currentUser}}
+                  <button
+                    type="button"
+                    class="btn btn--icon {{if item.isLiked 'btn--liked'}}"
+                    {{on "click" (fn @onLike item.id)}}
+                    aria-label={{if item.isLiked "Unlike" "Like"}}
+                  >
+                    ♥
+                  </button>
+                {{/if}}
+              </div>
+            </div>
+          {{else}}
+            <p class="empty-state">
+              No results found for <strong>{{@searchQuery}}</strong>.
+              <button type="button" {{on "click" @onClearSearch}}>Clear search</button>
+            </p>
+          {{/each}}
+        </div>
+
+        {{#if @pagination}}
+          <nav class="pagination" aria-label="Pagination">
+            <button
+              type="button"
+              class="btn btn--sm"
+              disabled={{@pagination.isFirstPage}}
+              {{on "click" @onPrevPage}}
+            >
+              ← Previous
+            </button>
+            <span class="pagination__info">
+              Page {{@pagination.currentPage}} of {{@pagination.totalPages}}
+            </span>
+            <button
+              type="button"
+              class="btn btn--sm"
+              disabled={{@pagination.isLastPage}}
+              {{on "click" @onNextPage}}
+            >
+              Next →
+            </button>
+          </nav>
+        {{/if}}
+      {{/if}}
+    </main>
+  </div>
+
+  <footer class="app-footer">
+    <p>© {{@year}} {{@appName}}. All rights reserved.</p>
+    <nav class="footer-nav">
+      {{#each @footerLinks as |link|}}
+        <a href={{link.url}}>{{link.label}}</a>
+      {{/each}}
+    </nav>
+  </footer>
+</div>
