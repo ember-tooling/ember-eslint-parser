@@ -3,9 +3,9 @@ const glimmer = require('@glimmer/syntax');
 const { visitorKeys: glimmerVisitorKeys } = glimmer;
 const DocumentLines = require('../utils/document');
 const { Reference, Scope, Variable, Definition } = require('eslint-scope');
-const htmlTags = require('html-tags').default;
-const svgTags = require('svg-tags');
-const mathMLTags = require('mathml-tag-names').mathmlTagNames;
+const htmlTagsSet = new Set(require('html-tags').default);
+const svgTagsSet = new Set(require('svg-tags'));
+const mathMLTagsSet = new Set(require('mathml-tag-names').mathmlTagNames);
 
 let TypescriptScope = null;
 try {
@@ -67,27 +67,33 @@ function findParentScope(scopeManager, nodePath) {
  * tries to find the variable names {name} in any parent scope
  * if the variable is not found it just returns the nearest scope,
  * so that it's usage can be registered.
+ *
+ * Also returns the nearest scope (equivalent to findParentScope) in one pass,
+ * avoiding the redundant second traversal that findParentScope would perform.
  * @param scopeManager
  * @param nodePath
  * @param name
  * @return {{scope: null, variable: *}|{scope: (*|null)}}
  */
 function findVarInParentScopes(scopeManager, nodePath, name) {
-  let scope = null;
+  let defScope = null;
+  let currentScope = null;
   let path = nodePath;
   while (path) {
-    scope = scopeManager.acquire(path.node, true);
-    if (scope && scope.set.has(name)) {
-      break;
+    const s = scopeManager.acquire(path.node, true);
+    if (s) {
+      if (!currentScope) currentScope = s;
+      if (s.set.has(name)) {
+        defScope = s;
+        break;
+      }
     }
     path = path.parentPath;
   }
-  const currentScope = findParentScope(scopeManager, nodePath);
-  if (!scope) {
+  if (!defScope) {
     return { scope: currentScope };
   }
-
-  return { scope: currentScope, variable: scope.set.get(name) };
+  return { scope: currentScope, variable: defScope.set.get(name) };
 }
 
 /**
@@ -115,9 +121,12 @@ function registerNodeInScope(node, scope, variable) {
 /**
  * Builds the complete Glimmer visitor keys map with "Glimmer" prefix and
  * additional keys needed for traversal (blockParamNodes, parts, etc).
+ * Result is cached since glimmerVisitorKeys is a constant.
  * @return {object}
  */
+let _cachedGlimmerVisitorKeys = null;
 function buildGlimmerVisitorKeys() {
+  if (_cachedGlimmerVisitorKeys) return _cachedGlimmerVisitorKeys;
   const keys = {};
   for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
     keys[`Glimmer${k}`] = [...v];
@@ -127,6 +136,7 @@ function buildGlimmerVisitorKeys() {
   }
   keys.GlimmerProgram = ['body', 'blockParamNodes'];
   keys.GlimmerTemplate = ['body'];
+  _cachedGlimmerVisitorKeys = keys;
   return keys;
 }
 
@@ -170,7 +180,7 @@ function traverse(visitorKeys, node, visitor) {
           queue.push({
             node: item,
             parent: currentPath.node,
-            context: Object.assign({}, currentPath.context),
+            context: currentPath.context,
             parentKey: visitorKey,
             parentPath: currentPath,
           });
@@ -179,7 +189,7 @@ function traverse(visitorKeys, node, visitor) {
         queue.push({
           node: child,
           parent: currentPath.node,
-          context: Object.assign({}, currentPath.context),
+          context: currentPath.context,
           parentKey: visitorKey,
           parentPath: currentPath,
         });
@@ -200,8 +210,14 @@ function isAlphaNumeric(code) {
   );
 }
 
-function isWhiteSpace(code) {
-  return code === ' ' || code === '\t' || code === '\r' || code === '\n' || code === '\v';
+function isWhiteSpaceCode(code) {
+  return (
+    code === 32 /* space */ ||
+    code === 9 /* tab */ ||
+    code === 13 /* carriageReturn */ ||
+    code === 10 /* lineFeed */ ||
+    code === 11 /* verticalTab */
+  );
 }
 
 /**
@@ -213,8 +229,7 @@ function isWhiteSpace(code) {
  */
 function tokenize(template, doc, startOffset) {
   const tokens = [];
-  let current = '';
-  let start = 0;
+  let wordStart = -1;
   function pushToken(value, type, range) {
     const t = {
       type,
@@ -229,23 +244,27 @@ function tokenize(template, doc, startOffset) {
     };
     tokens.push(t);
   }
-  for (const [i, c] of [...template].entries()) {
-    if (isAlphaNumeric(c.codePointAt(0))) {
-      if (current.length === 0) {
-        start = i;
+  for (let i = 0; i < template.length; i++) {
+    const code = template.charCodeAt(i);
+    if (isAlphaNumeric(code)) {
+      if (wordStart < 0) {
+        wordStart = i;
       }
-      current += c;
     } else {
-      let range = [startOffset + start, startOffset + i];
-      if (current.length > 0) {
-        pushToken(current, 'word', range);
-        current = '';
+      if (wordStart >= 0) {
+        pushToken(template.slice(wordStart, i), 'word', [startOffset + wordStart, startOffset + i]);
+        wordStart = -1;
       }
-      range = [startOffset + i, startOffset + i + 1];
-      if (!isWhiteSpace(c)) {
-        pushToken(c, 'Punctuator', range);
+      if (!isWhiteSpaceCode(code)) {
+        pushToken(template[i], 'Punctuator', [startOffset + i, startOffset + i + 1]);
       }
     }
+  }
+  if (wordStart >= 0) {
+    pushToken(template.slice(wordStart), 'word', [
+      startOffset + wordStart,
+      startOffset + template.length,
+    ]);
   }
   return tokens;
 }
@@ -306,27 +325,55 @@ function removeFromParent(nodes) {
  * @return {object[]}
  */
 function buildTokenStream(rawTokens, comments, textNodes) {
-  let tokens = rawTokens.filter(
-    (t) => !comments.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
-  );
-  tokens = tokens.filter(
-    (t) => !textNodes.some((c) => c.range[0] <= t.range[0] && c.range[1] >= t.range[1])
-  );
+  // Build sorted interval arrays for O(log n) exclusion checks
+  const commentIntervals = comments.map((c) => c.range).sort((a, b) => a[0] - b[0]);
+  const textNodeIntervals = textNodes.map((t) => t.range).sort((a, b) => a[0] - b[0]);
 
-  const sortedTextNodes = [...textNodes];
-  let currentTextNode = sortedTextNodes.pop();
-  for (let i = tokens.length - 1; i >= 0; i--) {
-    const t = tokens[i];
-    while (currentTextNode && t.range[0] < currentTextNode.range[0]) {
-      tokens.splice(i + 1, 0, currentTextNode);
-      currentTextNode = sortedTextNodes.pop();
+  /**
+   * Binary-search: is the token's range fully covered by any interval in `intervals`?
+   * Intervals must be sorted by start offset.
+   * @param {number[]} tokenRange
+   * @param {number[][]} intervals
+   */
+  function isCovered(tokenRange, intervals) {
+    let lo = 0;
+    let hi = intervals.length - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      const iv = intervals[mid];
+      if (iv[0] <= tokenRange[0] && iv[1] >= tokenRange[1]) {
+        return true;
+      }
+      if (iv[0] > tokenRange[0]) {
+        hi = mid - 1;
+      } else {
+        lo = mid + 1;
+      }
     }
-  }
-  if (currentTextNode) {
-    tokens.unshift(currentTextNode);
+    return false;
   }
 
-  return tokens;
+  // Single-pass filter: drop tokens covered by a comment or text node
+  const filteredTokens = rawTokens.filter(
+    (t) => !isCovered(t.range, commentIntervals) && !isCovered(t.range, textNodeIntervals)
+  );
+
+  // Merge text nodes (already sorted by position from the AST) into filteredTokens
+  // using a single linear merge pass instead of repeated splice calls.
+  const sortedTextNodes = [...textNodes].sort((a, b) => a.range[0] - b.range[0]);
+  const result = [];
+  let ti = 0;
+  for (const token of filteredTokens) {
+    while (ti < sortedTextNodes.length && sortedTextNodes[ti].range[0] < token.range[0]) {
+      result.push(sortedTextNodes[ti++]);
+    }
+    result.push(token);
+  }
+  while (ti < sortedTextNodes.length) {
+    result.push(sortedTextNodes[ti++]);
+  }
+
+  return result;
 }
 
 /**
@@ -399,6 +446,18 @@ function processGlimmerTemplate({ templateContent, codeLines, templateRange, tok
       });
     }
 
+    // Nullify empty hashes before the type is renamed
+    if (
+      (n.type === 'MustacheStatement' ||
+        n.type === 'BlockStatement' ||
+        n.type === 'SubExpression') &&
+      n.hash &&
+      n.hash.pairs &&
+      n.hash.pairs.length === 0
+    ) {
+      n.hash = null;
+    }
+
     n.type = `Glimmer${n.type}`;
   }
 
@@ -407,17 +466,6 @@ function processGlimmerTemplate({ templateContent, codeLines, templateRange, tok
   removeFromParent(comments);
   for (const comment of comments) {
     comment.type = 'Block';
-  }
-
-  // Nullify empty hashes
-  for (const n of allNodes) {
-    if (
-      ['GlimmerMustacheStatement', 'GlimmerBlockStatement', 'GlimmerSubExpression'].includes(n.type)
-    ) {
-      if (n.hash && n.hash.pairs && n.hash.pairs.length === 0) {
-        n.hash = null;
-      }
-    }
   }
 
   // Build final token stream
@@ -448,7 +496,6 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
   }));
   const codeLines = new DocumentLines(code);
   const allComments = [];
-  const templateVisitorKeys = {};
 
   for (const tpl of templateInfos) {
     const range = tpl.utf16Range;
@@ -466,12 +513,8 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
     tpl.ast = ast;
   }
 
-  for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
-    templateVisitorKeys[`Glimmer${k}`] = [...v];
-  }
-
   return {
-    templateVisitorKeys,
+    templateVisitorKeys: buildGlimmerVisitorKeys(),
     templateInfos,
     comments: allComments,
   };
@@ -499,6 +542,9 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
     result.ast.tokens.splice(firstIdx, lastIdx - firstIdx + 1, ...ti.ast.tokens);
   }
 
+  // Build a Map keyed by range start for O(1) lookup during traversal
+  const templateInfoByStart = new Map(templateInfos.map((t) => [t.utf16Range[0], t]));
+
   // eslint-disable-next-line complexity
   traverse(visitorKeys, result.ast, (path) => {
     const node = path.node;
@@ -515,12 +561,11 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
         range = [node.declaration.range[0], node.declaration.range[1]];
       }
 
-      const template = templateInfos.find(
-        (t) =>
-          t.utf16Range[0] === range[0] &&
-          (t.utf16Range[1] === range[1] || t.utf16Range[1] === range[1] + 1)
-      );
-      if (!template) {
+      const template = templateInfoByStart.get(range[0]);
+      if (
+        !template ||
+        (template.utf16Range[1] !== range[1] && template.utf16Range[1] !== range[1] + 1)
+      ) {
         return null;
       }
       counter++;
@@ -570,9 +615,9 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
       const registerUndef =
         isUpperCase(n.name[0]) ||
         node.name.includes('.') ||
-        (!htmlTags.includes(node.name) &&
-          !svgTags.includes(node.name) &&
-          !mathMLTags.includes(node.name));
+        (!htmlTagsSet.has(node.name) &&
+          !svgTagsSet.has(node.name) &&
+          !mathMLTagsSet.has(node.name));
 
       if (!ignore && (variable || registerUndef)) {
         registerNodeInScope(n, scope, variable);

@@ -28,12 +28,20 @@ class DocumentLines {
    */
   offsetToPosition(position) {
     const lineStarts = this.lineStarts;
-    let line = 0;
-    while (line + 1 < lineStarts.length && lineStarts[line + 1] <= position) {
-      line++;
+    let lo = 0;
+    let hi = lineStarts.length - 1;
+    // Upper-biased midpoint is required here: we want the *rightmost* line whose
+    // start is ≤ position. With a lower-biased mid, when lo + 1 === hi and the
+    // condition is true, mid === lo and lo never advances, causing an infinite loop.
+    while (lo < hi) {
+      const mid = (lo + hi + 1) >> 1;
+      if (lineStarts[mid] <= position) {
+        lo = mid;
+      } else {
+        hi = mid - 1;
+      }
     }
-    const column = position - lineStarts[line];
-    return { line: line + 1, column };
+    return { line: lo + 1, column: position - lineStarts[lo] };
   }
 }
 
@@ -46,27 +54,20 @@ function computeLineStarts(text) {
   let pos = 0;
   let lineStart = 0;
   while (pos < text.length) {
-    const ch = text.codePointAt(pos);
-    pos++;
-    switch (ch) {
-      case 13 /* carriageReturn */: {
-        if (text.codePointAt(pos) === 10 /* lineFeed */) {
-          pos++;
-        }
+    const ch = text.charCodeAt(pos++);
+    if (ch === 13 /* carriageReturn */) {
+      if (text.charCodeAt(pos) === 10 /* lineFeed */) {
+        pos++;
       }
-      // falls through
-      case 10 /* lineFeed */: {
-        result.push(lineStart);
-        lineStart = pos;
-        break;
-      }
-      default: {
-        if (ch > 127 /* maxAsciiCharacter */ && isLineBreak(ch)) {
-          result.push(lineStart);
-          lineStart = pos;
-        }
-        break;
-      }
+      result.push(lineStart);
+      lineStart = pos;
+    } else if (
+      ch === 10 /* lineFeed */ ||
+      ch === 8232 /* lineSeparator */ ||
+      ch === 8233 /* paragraphSeparator */
+    ) {
+      result.push(lineStart);
+      lineStart = pos;
     }
   }
   result.push(lineStart);

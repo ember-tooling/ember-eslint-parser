@@ -25,6 +25,7 @@
     "lint:js:fix": "eslint . --fix --max-warnings=0",
     "lint:package": "pnpm publint",
     "bench": "vitest bench",
+    "bench:compare": "node scripts/bench-compare.mjs",
     "test": "vitest run"
   },
   "dependencies": {

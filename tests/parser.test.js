@@ -58,6 +58,15 @@ export const NotFound = <template>
     for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
       visitorKeys[`Glimmer${k}`] = [...v];
     }
+    // buildGlimmerVisitorKeys() also adds blockParamNodes/parts to GlimmerElementNode
+    // and adds GlimmerProgram / GlimmerTemplate keys for full traversal support.
+    visitorKeys.GlimmerElementNode = [
+      ...(visitorKeys.GlimmerElementNode || []),
+      'blockParamNodes',
+      'parts',
+    ];
+    visitorKeys.GlimmerProgram = ['body', 'blockParamNodes'];
+    visitorKeys.GlimmerTemplate = ['body'];
     expect(result.visitorKeys).toStrictEqual(visitorKeys);
   });
 
