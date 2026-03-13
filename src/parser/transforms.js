@@ -40,6 +40,10 @@ function byteToCharIndex(str, byteOffset) {
   return buf.slice(0, byteOffset).toString().length;
 }
 
+function charToByteIndex(str, charOffset) {
+  return getBuffer(str.slice(0, charOffset)).length;
+}
+
 function byteLength(str) {
   return getBuffer(str).length;
 }
@@ -670,6 +674,7 @@ const replaceRange = function replaceRange(s, start, end, substitute) {
   return sliceByteRange(s, 0, start) + substitute + sliceByteRange(s, end);
 };
 module.exports.replaceRange = replaceRange;
+module.exports.charToByteIndex = charToByteIndex;
 
 const processor = new ContentTag.Preprocessor();
 

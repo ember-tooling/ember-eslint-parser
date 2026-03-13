@@ -2817,6 +2817,8 @@ describe('replaceExtensions', () => {
   it('replaces .gts extension with import type when preceded by non-ASCII characters', () => {
     const code = `// description — with em-dash\nimport type { Foo } from './other-component.gts';`;
     const result = replaceExtensions(code);
-    expect(result).toBe(`// description — with em-dash\nimport type { Foo } from './other-component.mts';`);
+    expect(result).toBe(
+      `// description — with em-dash\nimport type { Foo } from './other-component.mts';`
+    );
   });
 });
