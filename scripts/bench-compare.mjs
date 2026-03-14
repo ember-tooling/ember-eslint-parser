@@ -128,6 +128,7 @@ function colorize(pct) {
   const num = Number.parseFloat(pct);
   if (num >= 5) return styleText('green', pct);
   if (num <= -5) return styleText('red', pct);
+  if (Math.abs(num) < 1) return styleText('white', pct);
   return styleText('yellow', pct);
 }
 
@@ -258,7 +259,9 @@ console.log(
     styleText('red', '■') +
     ' ≤ −5%  slower   ' +
     styleText('yellow', '■') +
-    ' within ±5%  similar\n'
+    ' within ±5%  similar   ' +
+    styleText('white', '■') +
+    ' within ±1%  unchanged\n'
 );
 
 const jsonOutputPath = process.env.BENCH_JSON_OUTPUT;

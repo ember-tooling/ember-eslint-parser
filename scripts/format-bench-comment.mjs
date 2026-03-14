@@ -43,14 +43,14 @@ if (benchData) {
   function fmtDelta(r) {
     if (r.note) return r.note;
     const num = parseFloat(r.delta);
-    const emoji = num >= 5 ? '🟢 ' : num <= -5 ? '🔴 ' : '🟡 ';
+    const emoji = num >= 5 ? '🟢 ' : num <= -5 ? '🔴 ' : Math.abs(num) < 1 ? '⚪ ' : '🟡 ';
     return emoji + r.delta;
   }
 
   function deltaSymbol(r) {
     if (r.note) return '❓';
     const num = parseFloat(r.delta);
-    return num >= 5 ? '🟢' : num <= -5 ? '🔴' : '🟡';
+    return num >= 5 ? '🟢' : num <= -5 ? '🔴' : Math.abs(num) < 1 ? '⚪' : '🟡';
   }
 
   function parseKey(key) {
@@ -99,7 +99,8 @@ if (benchData) {
     })
     .join('\n');
 
-  const legend = '🟢 ≥ +5% faster &nbsp; 🔴 ≤ −5% slower &nbsp; 🟡 within ±5% similar';
+  const legend =
+    '🟢 ≥ +5% faster &nbsp; 🔴 ≤ −5% slower &nbsp; 🟡 within ±5% similar &nbsp; ⚪ within ±1% unchanged';
   const methodology = iterations > 1 ? `\n_Median of ${iterations} runs per branch._` : '';
 
   body = [
