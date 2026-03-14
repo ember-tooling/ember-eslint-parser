@@ -1,0 +1,78 @@
+name: Benchmark Comparison
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: bench-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  bench-compare:
+    name: "Benchmark Comparison"
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Full history so the script can checkout main for baseline benchmarks.
+          fetch-depth: 0
+          # Check out as a named branch (not detached HEAD) so the script can
+          # read the branch name and restore it after switching to main.
+          ref: ${{ github.head_ref }}
+
+      - uses: wyvox/action-setup-pnpm@v3
+
+      - name: Run benchmark comparison
+        # Strip ANSI color codes so the output is readable in a PR comment.
+        run: pnpm bench:compare 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > bench-output.txt
+
+      - name: Post PR comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- bench-compare -->';
+
+            let output;
+            try {
+              output = fs.readFileSync('bench-output.txt', 'utf8').trim();
+            } catch {
+              output = '(no output — benchmark may have failed to start)';
+            }
+
+            const success = ${{ job.status == 'success' }};
+            const heading = success
+              ? '## 🏎️ Benchmark Comparison'
+              : '## ❌ Benchmark Comparison (failed)';
+
+            const body = `${marker}\n${heading}\n\n\`\`\`\n${output}\n\`\`\``;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
