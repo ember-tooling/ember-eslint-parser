@@ -15,7 +15,14 @@
  */
 
 import { execSync, spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
+import {
+  readFileSync,
+  writeFileSync,
+  unlinkSync,
+  existsSync,
+  cpSync,
+  mkdirSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { styleText } from 'node:util';
@@ -179,16 +186,33 @@ try {
   console.log(`\n🔧  Benchmarking current branch: \x1b[36m${CURRENT_BRANCH}\x1b[0m\n`);
   currentFiles = runBenchMultiple(tmpCurrentPrefix, ITERATIONS);
 
-  // ── 2. Switch to base branch ──────────────────────────────────────────────
+  // ── 2. Save bench files so both branches use identical config ────────────
+  const benchBackupDir = join(tmpdir(), 'bench-compare-backup');
+  mkdirSync(benchBackupDir, { recursive: true });
+  cpSync('tests/parser.bench.js', join(benchBackupDir, 'parser.bench.js'), { force: true });
+  if (existsSync('tests/bench')) {
+    cpSync('tests/bench', join(benchBackupDir, 'bench'), { recursive: true, force: true });
+  }
+
+  // ── 3. Switch to base branch ──────────────────────────────────────────────
   console.log(`\n🔀  Switching to base branch: \x1b[36m${BASE_BRANCH}\x1b[0m\n`);
   run(`git checkout ${BASE_BRANCH}`);
   run('pnpm install --frozen-lockfile');
 
-  // ── 3. Benchmark base branch ──────────────────────────────────────────────
+  // Overlay the current branch's bench files so both runs use the same config
+  console.log('📋  Using bench config from current branch for fair comparison…');
+  cpSync(join(benchBackupDir, 'parser.bench.js'), 'tests/parser.bench.js', { force: true });
+  if (existsSync(join(benchBackupDir, 'bench'))) {
+    cpSync(join(benchBackupDir, 'bench'), 'tests/bench', { recursive: true, force: true });
+  }
+
+  // ── 4. Benchmark base branch ──────────────────────────────────────────────
   console.log(`\n🔧  Benchmarking base branch: \x1b[36m${BASE_BRANCH}\x1b[0m\n`);
   baseFiles = runBenchMultiple(tmpBasePrefix, ITERATIONS);
 } finally {
-  // ── 4. Restore original branch ────────────────────────────────────────────
+  // ── 5. Restore original branch ────────────────────────────────────────────
+  // Discard the overlaid bench files before switching back
+  run('git checkout -- tests/');
   console.log(`\n🔀  Restoring branch: \x1b[36m${CURRENT_BRANCH}\x1b[0m\n`);
   run(`git checkout ${CURRENT_BRANCH}`);
   run('pnpm install --frozen-lockfile');
@@ -199,7 +223,7 @@ try {
   }
 }
 
-// ── 5. Compare ───────────────────────────────────────────────────────────────
+// ── 6. Compare ───────────────────────────────────────────────────────────────
 
 const currentResults =
   ITERATIONS > 1 ? loadMedianResults(currentFiles) : loadResults(currentFiles[0]);
