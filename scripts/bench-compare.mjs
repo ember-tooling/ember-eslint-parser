@@ -15,14 +15,7 @@
  */
 
 import { execSync, spawnSync } from 'node:child_process';
-import {
-  readFileSync,
-  writeFileSync,
-  unlinkSync,
-  existsSync,
-  cpSync,
-  mkdirSync,
-} from 'node:fs';
+import { readFileSync, writeFileSync, unlinkSync, existsSync, cpSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { styleText } from 'node:util';
