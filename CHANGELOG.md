@@ -1,5 +1,34 @@
 # Changelog
 
+## Release (2026-03-14)
+
+* ember-eslint-parser 0.8.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#173](https://github.com/ember-tooling/ember-eslint-parser/pull/173) Replace custom buffer management with content-tag v4 UTF-16 codepoint indices ([@Copilot](https://github.com/apps/copilot-swe-agent))
+  * [#162](https://github.com/ember-tooling/ember-eslint-parser/pull/162) perf: optimize ember-eslint-parser hot paths for faster `pnpm bench` results ([@Copilot](https://github.com/apps/copilot-swe-agent))
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#164](https://github.com/ember-tooling/ember-eslint-parser/pull/164) Add failing tests for #163: non-ASCII chars corrupt .gts imports ([@gitKrystan](https://github.com/gitKrystan))
+  * [#159](https://github.com/ember-tooling/ember-eslint-parser/pull/159) Fix dynamic imports of .gts components triggering `@typescript-eslint/no-unsafe-assignment` ([@Copilot](https://github.com/apps/copilot-swe-agent))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#165](https://github.com/ember-tooling/ember-eslint-parser/pull/165) CI bench ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#171](https://github.com/ember-tooling/ember-eslint-parser/pull/171) bench-compare: skip PR comment on fork PRs, write results to job summary ([@Copilot](https://github.com/apps/copilot-swe-agent))
+  * [#169](https://github.com/ember-tooling/ember-eslint-parser/pull/169) bench compare: separate summary tables by file type with file size and Δ symbol ([@Copilot](https://github.com/apps/copilot-swe-agent))
+  * [#168](https://github.com/ember-tooling/ember-eslint-parser/pull/168) Extract bench comment formatting into scripts/format-bench-comment.mjs ([@Copilot](https://github.com/apps/copilot-swe-agent))
+  * [#167](https://github.com/ember-tooling/ember-eslint-parser/pull/167) Fix bench-compare workflow: runner context unavailable at job-level env ([@Copilot](https://github.com/apps/copilot-swe-agent))
+  * [#166](https://github.com/ember-tooling/ember-eslint-parser/pull/166) CI bench: compact PR comment with delta-only view and expandable full results ([@Copilot](https://github.com/apps/copilot-swe-agent))
+  * [#161](https://github.com/ember-tooling/ember-eslint-parser/pull/161) Add vitest bench for parser performance measurement ([@Copilot](https://github.com/apps/copilot-swe-agent))
+
+#### Committers: 3
+- Copilot [Bot] ([@copilot-swe-agent](https://github.com/apps/copilot-swe-agent))
+- Krystan HuffMenne ([@gitKrystan](https://github.com/gitKrystan))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2026-03-04)
 
 * ember-eslint-parser 0.7.0 (minor)
