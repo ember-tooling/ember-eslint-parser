@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const { transformForLint } = require('./transforms');
-const { replaceRange, charToByteIndex } = require('./transforms');
+const { replaceRange } = require('./transforms');
 
 let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs;
 
@@ -88,8 +88,8 @@ try {
         const value = node.moduleSpecifier.text.replace(/\.gts$/, '.mts');
         jsCode = replaceRange(
           jsCode,
-          charToByteIndex(code, node.moduleSpecifier.pos + 2),
-          charToByteIndex(code, node.moduleSpecifier.end - 1),
+          node.moduleSpecifier.pos + 2,
+          node.moduleSpecifier.end - 1,
           value
         );
       }
@@ -102,8 +102,8 @@ try {
           const value = arg.text.replace(/\.gts$/, '.mts');
           jsCode = replaceRange(
             jsCode,
-            charToByteIndex(code, arg.getStart(sourceFile) + 1),
-            charToByteIndex(code, arg.end - 1),
+            arg.getStart(sourceFile) + 1,
+            arg.end - 1,
             value
           ); // +1/-1 to skip surrounding quotes
         }

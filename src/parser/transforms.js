@@ -19,35 +19,6 @@ try {
   // not available
 }
 
-const BufferMap = new Map();
-
-function getBuffer(str) {
-  let buf = BufferMap.get(str);
-  if (!buf) {
-    buf = Buffer.from(str);
-    BufferMap.set(str, buf);
-  }
-  return buf;
-}
-
-function sliceByteRange(str, a, b) {
-  const buf = getBuffer(str);
-  return buf.slice(a, b).toString();
-}
-
-function byteToCharIndex(str, byteOffset) {
-  const buf = getBuffer(str);
-  return buf.slice(0, byteOffset).toString().length;
-}
-
-function charToByteIndex(str, charOffset) {
-  return getBuffer(str.slice(0, charOffset)).length;
-}
-
-function byteLength(str) {
-  return getBuffer(str).length;
-}
-
 /**
  * finds the nearest node scope
  * @param scopeManager
@@ -494,22 +465,18 @@ function processGlimmerTemplate({ templateContent, codeLines, templateRange, tok
  */
 module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(info, code) {
   const templateInfos = info.templateInfos.map((r) => ({
-    range: [r.contentRange.startByte, r.contentRange.endByte],
-    templateRange: [r.range.startByte, r.range.endByte],
-    utf16Range: [byteToCharIndex(code, r.range.startByte), byteToCharIndex(code, r.range.endByte)],
+    utf16Range: [r.range.startUtf16Codepoint, r.range.endUtf16Codepoint],
   }));
   const codeLines = new DocumentLines(code);
   const allComments = [];
 
   for (const tpl of templateInfos) {
-    const range = tpl.utf16Range;
-    const template = code.slice(...range);
+    const template = code.slice(...tpl.utf16Range);
 
     const { ast, comments } = processGlimmerTemplate({
       templateContent: template,
       codeLines,
       templateRange: [...tpl.utf16Range],
-      tokenSource: sliceByteRange(code, ...tpl.templateRange),
     });
 
     ast.content = template;
@@ -671,10 +638,9 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
 };
 
 const replaceRange = function replaceRange(s, start, end, substitute) {
-  return sliceByteRange(s, 0, start) + substitute + sliceByteRange(s, end);
+  return s.slice(0, start) + substitute + s.slice(end);
 };
 module.exports.replaceRange = replaceRange;
-module.exports.charToByteIndex = charToByteIndex;
 
 const processor = new ContentTag.Preprocessor();
 
@@ -775,25 +741,25 @@ module.exports.transformForLint = function transformForLint(code, fileName) {
   for (const tplInfo of result.reverse()) {
     const content = tplInfo.contents.replace(/`/g, '\\`').replace(/\$/g, '\\$');
     if (tplInfo.type === 'class-member') {
-      const tplLength = tplInfo.range.endByte - tplInfo.range.startByte;
-      const spaces = tplLength - byteLength(content) - 'static{`'.length - '`}'.length;
+      const tplLength = tplInfo.range.endUtf16Codepoint - tplInfo.range.startUtf16Codepoint;
+      const spaces = tplLength - content.length - 'static{`'.length - '`}'.length;
       const total = content + ' '.repeat(spaces);
       const replacementCode = `static{\`${total}\`}`;
       jsCode = replaceRange(
         jsCode,
-        tplInfo.range.startByte,
-        tplInfo.range.endByte,
+        tplInfo.range.startUtf16Codepoint,
+        tplInfo.range.endUtf16Codepoint,
         replacementCode
       );
     } else {
-      const tplLength = tplInfo.range.endByte - tplInfo.range.startByte;
-      const spaces = tplLength - byteLength(content) - '`'.length - '`'.length;
+      const tplLength = tplInfo.range.endUtf16Codepoint - tplInfo.range.startUtf16Codepoint;
+      const spaces = tplLength - content.length - '`'.length - '`'.length;
       const total = content + ' '.repeat(spaces);
       const replacementCode = `\`${total}\``;
       jsCode = replaceRange(
         jsCode,
-        tplInfo.range.startByte,
-        tplInfo.range.endByte,
+        tplInfo.range.startUtf16Codepoint,
+        tplInfo.range.endUtf16Codepoint,
         replacementCode
       );
     }
