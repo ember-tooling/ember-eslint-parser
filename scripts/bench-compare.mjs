@@ -36,6 +36,21 @@ function run(cmd, opts = {}) {
   return execSync(cmd, { stdio: 'inherit', ...opts });
 }
 
+/**
+ * Resolve a branch name to a commit SHA. Tries `origin/<branch>` first (for CI
+ * where only the PR branch is checked out locally), then falls back to `<branch>`.
+ */
+function resolveRef(branch) {
+  for (const candidate of [`origin/${branch}`, branch]) {
+    try {
+      return execSync(`git rev-parse --verify ${candidate}`, { encoding: 'utf8' }).trim();
+    } catch {
+      // try next
+    }
+  }
+  throw new Error(`Could not resolve ref for branch "${branch}". Is it fetched?`);
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -44,6 +59,9 @@ const ROOT = process.cwd();
 const CONTROL_DIR = join(tmpdir(), `bench-control-${BASE_BRANCH}-${Date.now()}`);
 
 console.log(`\n🔧  Setting up control (${BASE_BRANCH}) in ${CONTROL_DIR}\n`);
+
+const BASE_REF = resolveRef(BASE_BRANCH);
+console.log(`   Resolved ${BASE_BRANCH} → ${BASE_REF.slice(0, 10)}\n`);
 
 // Clean up temp dir on exit
 function cleanup() {
@@ -63,9 +81,9 @@ try {
   // ── 1. Export base branch source to temp dir ─────────────────────────────
   mkdirSync(CONTROL_DIR, { recursive: true });
 
-  // Copy package manifests and source
+  // Copy package manifests and source (use resolved SHA for reliability)
   run(
-    `git archive ${BASE_BRANCH} -- package.json pnpm-lock.yaml pnpm-workspace.yaml src/ | tar -x -C "${CONTROL_DIR}"`
+    `git archive ${BASE_REF} -- package.json pnpm-lock.yaml pnpm-workspace.yaml src/ | tar -x -C "${CONTROL_DIR}"`
   );
 
   // ── 2. Install dependencies in control dir ───────────────────────────────
