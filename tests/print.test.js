@@ -167,9 +167,7 @@ describe('print', () => {
   });
 
   it('prints GlimmerMustacheCommentStatement ({{! }})', () => {
-    expect(print({ type: 'GlimmerMustacheCommentStatement', value: 'todo' })).toBe(
-      '{{! todo }}'
-    );
+    expect(print({ type: 'GlimmerMustacheCommentStatement', value: 'todo' })).toBe('{{! todo }}');
   });
 
   it('prints GlimmerElementModifierStatement', () => {
@@ -194,9 +192,7 @@ describe('print', () => {
   });
 
   it('prints GlimmerElementNodePart', () => {
-    expect(print({ type: 'GlimmerElementNodePart', original: 'MyComponent' })).toBe(
-      'MyComponent'
-    );
+    expect(print({ type: 'GlimmerElementNodePart', original: 'MyComponent' })).toBe('MyComponent');
   });
 
   // ── ESTree nodes ───────────────────────────────────────────────
@@ -264,15 +260,9 @@ describe('print', () => {
   });
 
   it('throws for JSX node types', () => {
-    expect(() => print({ type: 'JSXElement' })).toThrow(
-      "unsupported JSX node type 'JSXElement'"
-    );
-    expect(() => print({ type: 'JSXFragment' })).toThrow(
-      "unsupported JSX node type 'JSXFragment'"
-    );
-    expect(() => print({ type: 'JSXText' })).toThrow(
-      "unsupported JSX node type 'JSXText'"
-    );
+    expect(() => print({ type: 'JSXElement' })).toThrow("unsupported JSX node type 'JSXElement'");
+    expect(() => print({ type: 'JSXFragment' })).toThrow("unsupported JSX node type 'JSXFragment'");
+    expect(() => print({ type: 'JSXText' })).toThrow("unsupported JSX node type 'JSXText'");
   });
 
   // ── TypeScript nodes ───────────────────────────────────────────

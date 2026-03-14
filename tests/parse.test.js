@@ -60,9 +60,9 @@ describe('parse', () => {
       if (!node || typeof node !== 'object' || visited.has(node)) return;
       visited.add(node);
       if (node.type) {
-        expect(
-          !('parent' in node) || node.parent === null || typeof node.parent !== 'object'
-        ).toBe(true);
+        expect(!('parent' in node) || node.parent === null || typeof node.parent !== 'object').toBe(
+          true
+        );
       }
       for (const key of Object.keys(node)) {
         if (key === 'parent' || key === 'loc') continue;

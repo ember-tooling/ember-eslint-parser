@@ -135,9 +135,7 @@ function print(node) {
       return `...${print(node.argument)}`;
 
     case 'YieldExpression':
-      return node.delegate
-        ? `yield* ${print(node.argument)}`
-        : `yield ${print(node.argument)}`;
+      return node.delegate ? `yield* ${print(node.argument)}` : `yield ${print(node.argument)}`;
 
     case 'AwaitExpression':
       return `await ${print(node.argument)}`;
@@ -378,9 +376,7 @@ function print(node) {
         (_, i) => node.specifiers[i].type === 'ImportDefaultSpecifier'
       );
       const nsSpec = node.specifiers.find((s) => s.type === 'ImportNamespaceSpecifier');
-      const namedSpecs = node.specifiers
-        .filter((s) => s.type === 'ImportSpecifier')
-        .map(print);
+      const namedSpecs = node.specifiers.filter((s) => s.type === 'ImportSpecifier').map(print);
       const parts = [];
       if (defaultSpec) parts.push(defaultSpec);
       if (nsSpec) parts.push(print(nsSpec));
@@ -399,11 +395,6 @@ function print(node) {
 
     case 'ImportNamespaceSpecifier':
       return `* as ${print(node.local)}`;
-
-    case 'ImportExpression': {
-      const source = print(node.source);
-      return `import(${source})`;
-    }
 
     case 'ImportAttribute':
       return `${print(node.key)}: ${print(node.value)}`;
@@ -447,7 +438,9 @@ function print(node) {
     case 'JSXSpreadAttribute':
     case 'JSXSpreadChild':
     case 'JSXFragment':
-      throw new Error(`ember-eslint-parser print: unsupported JSX node type '${node.type}' (use Glimmer template nodes instead)`);
+      throw new Error(
+        `ember-eslint-parser print: unsupported JSX node type '${node.type}' (use Glimmer template nodes instead)`
+      );
 
     // ── TypeScript: type keywords ──────────────────────────────────
     case 'TSAnyKeyword':
@@ -751,7 +744,9 @@ function print(node) {
     case 'TSTypePredicate': {
       const asserts = node.asserts ? 'asserts ' : '';
       const name = print(node.parameterName);
-      const type = node.typeAnnotation ? ` is ${print(node.typeAnnotation).replace(/^: /, '')}` : '';
+      const type = node.typeAnnotation
+        ? ` is ${print(node.typeAnnotation).replace(/^: /, '')}`
+        : '';
       return `${asserts}${name}${type}`;
     }
 
