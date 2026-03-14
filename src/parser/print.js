@@ -1,8 +1,10 @@
 'use strict';
 
 /**
- * Recursive AST printer that handles ESTree, TypeScript, JSX, and
+ * Recursive AST printer that handles ESTree, TypeScript, and
  * Glimmer template node types.
+ *
+ * JSX nodes are not supported — Ember uses Glimmer templates instead.
  *
  * Tools like zmod use span-based patching (preserving the original source
  * for unchanged regions), so this printer is typically only invoked for
@@ -429,63 +431,23 @@ function print(node) {
       return local === exported ? local : `${local} as ${exported}`;
     }
 
-    // ── JSX ────────────────────────────────────────────────────────
-    case 'JSXElement': {
-      const open = print(node.openingElement);
-      const close = node.closingElement ? print(node.closingElement) : '';
-      const children = (node.children ?? []).map(print).join('');
-      return `${open}${children}${close}`;
-    }
-
-    case 'JSXOpeningElement': {
-      const name = print(node.name);
-      const attrs = (node.attributes ?? []).map(print).join(' ');
-      const attrStr = attrs ? ' ' + attrs : '';
-      return node.selfClosing ? `<${name}${attrStr} />` : `<${name}${attrStr}>`;
-    }
-
+    // ── JSX (unsupported — Ember uses Glimmer templates) ─────────
+    case 'JSXElement':
+    case 'JSXOpeningElement':
     case 'JSXClosingElement':
-      return `</${print(node.name)}>`;
-
     case 'JSXOpeningFragment':
-      return '<>';
-
     case 'JSXClosingFragment':
-      return '</>';
-
     case 'JSXIdentifier':
-      return node.name;
-
     case 'JSXNamespacedName':
-      return `${print(node.namespace)}:${print(node.name)}`;
-
     case 'JSXMemberExpression':
-      return `${print(node.object)}.${print(node.property)}`;
-
-    case 'JSXAttribute': {
-      const name = print(node.name);
-      return node.value ? `${name}=${print(node.value)}` : name;
-    }
-
+    case 'JSXAttribute':
     case 'JSXExpressionContainer':
-      return `{${print(node.expression)}}`;
-
     case 'JSXEmptyExpression':
-      return '';
-
     case 'JSXText':
-      return node.value ?? node.raw ?? '';
-
     case 'JSXSpreadAttribute':
-      return `{...${print(node.argument)}}`;
-
     case 'JSXSpreadChild':
-      return `{...${print(node.expression)}}`;
-
-    case 'JSXFragment': {
-      const children = (node.children ?? []).map(print).join('');
-      return `<>${children}</>`;
-    }
+    case 'JSXFragment':
+      throw new Error(`ember-eslint-parser print: JSX node type '${node.type}' is not supported — use Glimmer template nodes instead`);
 
     // ── TypeScript: type keywords ──────────────────────────────────
     case 'TSAnyKeyword':
@@ -902,7 +864,7 @@ function print(node) {
       return 'undefined';
 
     case 'GlimmerCommentStatement':
-      return `{{!-- ${node.value ?? ''} --}}`;
+      return `<!--${node.value ?? ''}-->`;
 
     case 'GlimmerMustacheCommentStatement':
       return `{{! ${node.value ?? ''} }}`;

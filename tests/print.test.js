@@ -162,11 +162,11 @@ describe('print', () => {
     expect(print({ type: 'GlimmerUndefinedLiteral' })).toBe('undefined');
   });
 
-  it('prints GlimmerCommentStatement', () => {
-    expect(print({ type: 'GlimmerCommentStatement', value: 'todo' })).toBe('{{!-- todo --}}');
+  it('prints GlimmerCommentStatement (HTML comment)', () => {
+    expect(print({ type: 'GlimmerCommentStatement', value: ' todo ' })).toBe('<!-- todo -->');
   });
 
-  it('prints GlimmerMustacheCommentStatement', () => {
+  it('prints GlimmerMustacheCommentStatement ({{! }})', () => {
     expect(print({ type: 'GlimmerMustacheCommentStatement', value: 'todo' })).toBe(
       '{{! todo }}'
     );
@@ -260,6 +260,18 @@ describe('print', () => {
   it('throws for unknown node types', () => {
     expect(() => print({ type: 'UnknownNodeType' })).toThrow(
       "ember-eslint-parser print: unsupported node type 'UnknownNodeType'"
+    );
+  });
+
+  it('throws for JSX node types', () => {
+    expect(() => print({ type: 'JSXElement' })).toThrow(
+      "JSX node type 'JSXElement' is not supported"
+    );
+    expect(() => print({ type: 'JSXFragment' })).toThrow(
+      "JSX node type 'JSXFragment' is not supported"
+    );
+    expect(() => print({ type: 'JSXText' })).toThrow(
+      "JSX node type 'JSXText' is not supported"
     );
   });
 

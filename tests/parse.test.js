@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parse } from '../src/parser/gjs-gts-parser.js';
+import { findNode, findAllNodes } from './helpers.js';
 
 describe('parse', () => {
   it('returns an AST with type Program', () => {
@@ -81,44 +82,6 @@ describe('parse', () => {
   it('parses Glimmer template nodes into the AST', () => {
     const source = `const Greeting = <template><h1>Hello {{@name}}</h1></template>;`;
     const ast = parse(source, { filePath: 'test.gjs' });
-
-    function findNode(node, type, visited = new Set()) {
-      if (!node || typeof node !== 'object' || visited.has(node)) return null;
-      visited.add(node);
-      if (node.type === type) return node;
-      for (const key of Object.keys(node)) {
-        if (key === 'loc') continue;
-        const val = node[key];
-        if (Array.isArray(val)) {
-          for (const item of val) {
-            const found = findNode(item, type, visited);
-            if (found) return found;
-          }
-        } else if (val && typeof val === 'object') {
-          const found = findNode(val, type, visited);
-          if (found) return found;
-        }
-      }
-      return null;
-    }
-
-    function findAllNodes(node, type, visited = new Set(), results = []) {
-      if (!node || typeof node !== 'object' || visited.has(node)) return results;
-      visited.add(node);
-      if (node.type === type) results.push(node);
-      for (const key of Object.keys(node)) {
-        if (key === 'loc') continue;
-        const val = node[key];
-        if (Array.isArray(val)) {
-          for (const item of val) {
-            findAllNodes(item, type, visited, results);
-          }
-        } else if (val && typeof val === 'object') {
-          findAllNodes(val, type, visited, results);
-        }
-      }
-      return results;
-    }
 
     const template = findNode(ast, 'GlimmerTemplate');
     expect(template).toBeTruthy();
