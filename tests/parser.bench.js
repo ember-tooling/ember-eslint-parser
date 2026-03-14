@@ -41,9 +41,9 @@ const PARSE_OPTIONS = {
 // ---------------------------------------------------------------------------
 
 const BENCH_OPTIONS = {
-  time: 5000, // run each benchmark for at least 5 s (default: 500 ms)
-  warmupTime: 1000, // warmup for 1 s before measuring (default: 100 ms)
-  warmupIterations: 10, // warmup iteration count (default: 5)
+  time: 1000,
+  warmupTime: 500,
+  warmupIterations: 5,
 };
 
 // ---------------------------------------------------------------------------
