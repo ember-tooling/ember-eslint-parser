@@ -101,7 +101,85 @@ if (benchData) {
 
   const legend =
     '🟢 ≥ +5% faster &nbsp; 🔴 ≤ −5% slower &nbsp; 🟡 within ±5% similar &nbsp; ⚪ within ±1% unchanged';
-  const methodology = iterations > 1 ? `\n_Median of ${iterations} runs per branch._` : '';
+  const methodology =
+    iterations > 1 ? `\n_Trimmed mean of ${iterations} runs per branch (min/max dropped)._` : '';
+
+  // Distribution box plots (only when multi-iteration with per-run data)
+  function pct(sorted, p) {
+    const idx = (p / 100) * (sorted.length - 1);
+    const lo = Math.floor(idx);
+    const hi = Math.ceil(idx);
+    if (lo === hi) return sorted[lo];
+    return sorted[lo] + (idx - lo) * (sorted[hi] - sorted[lo]);
+  }
+
+  function boxPlot(values, gMin, gMax, width) {
+    if (values.length < 2) return ' '.repeat(width);
+    const sorted = [...values].sort((a, b) => a - b);
+    const q1 = pct(sorted, 25);
+    const med = pct(sorted, 50);
+    const q3 = pct(sorted, 75);
+    const mn = sorted[0];
+    const mx = sorted[sorted.length - 1];
+    const range = gMax - gMin;
+    if (range === 0) {
+      const m = Math.floor(width / 2);
+      return ' '.repeat(m) + '│' + ' '.repeat(width - m - 1);
+    }
+    const pos = (v) => {
+      const p = ((v - gMin) / range) * (width - 1);
+      return Math.max(0, Math.min(width - 1, Math.round(p)));
+    };
+    const mnP = pos(mn);
+    const q1P = pos(q1);
+    const medP = pos(med);
+    const q3P = pos(q3);
+    const mxP = pos(mx);
+    let r = '';
+    for (let i = 0; i < width; i++) {
+      if (i === medP) r += '│';
+      else if (i === q1P && q1P < q3P) r += '[';
+      else if (i === q3P && q1P < q3P) r += ']';
+      else if (i > q1P && i < q3P) r += '█';
+      else if (i === mnP) r += '├';
+      else if (i === mxP) r += '┤';
+      else if ((i > mnP && i < q1P) || (i > q3P && i < mxP)) r += '─';
+      else r += ' ';
+    }
+    return r;
+  }
+
+  const hasDistribution = iterations > 1 && results.some((r) => r.baseHzValues?.length > 1);
+  let distributionSection = [];
+  if (hasDistribution) {
+    const PW = 40;
+    const plotLines = [];
+    for (const r of results) {
+      if (r.note || !r.baseHzValues?.length || !r.currentHzValues?.length) continue;
+      const allVals = [...r.baseHzValues, ...r.currentHzValues];
+      const gMin = Math.min(...allVals);
+      const gMax = Math.max(...allVals);
+      const bp = boxPlot(r.baseHzValues, gMin, gMax, PW);
+      const cp = boxPlot(r.currentHzValues, gMin, gMax, PW);
+      const bRange = `${fmtHz(Math.min(...r.baseHzValues))} – ${fmtHz(Math.max(...r.baseHzValues))}`;
+      const cRange = `${fmtHz(Math.min(...r.currentHzValues))} – ${fmtHz(Math.max(...r.currentHzValues))}`;
+      plotLines.push(r.key);
+      plotLines.push(`  ${base.padEnd(10)} ${bp}  ${bRange} hz`);
+      plotLines.push(`  ${branch.padEnd(10)} ${cp}  ${cRange} hz`);
+      plotLines.push('');
+    }
+    distributionSection = [
+      '',
+      '<details>',
+      '<summary>Distribution across runs (min ├──[Q1 █ median │ █ Q3]──┤ max)</summary>',
+      '',
+      '```',
+      ...plotLines,
+      '```',
+      '',
+      '</details>',
+    ];
+  }
 
   body = [
     marker,
@@ -119,6 +197,7 @@ if (benchData) {
     fullRows,
     '',
     '</details>',
+    ...distributionSection,
   ].join('\n');
 } else {
   body = `${marker}\n${heading}\n\n\`\`\`\n${rawOutput}\n\`\`\``;

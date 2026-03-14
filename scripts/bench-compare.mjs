@@ -10,8 +10,8 @@
  *
  * Options:
  *   --base <branch>       Branch to compare against (default: main)
- *   --iterations <n>      Number of benchmark runs per branch; the median hz
- *                          is used for comparison (default: 1)
+ *   --iterations <n>      Number of benchmark runs per branch; the trimmed
+ *                          mean hz is used for comparison (default: 1)
  */
 
 import { execSync, spawnSync } from 'node:child_process';
@@ -90,7 +90,7 @@ function loadResults(file) {
       const suiteName = (group.fullName ?? '').replace(/^.*?>\s*/, '');
       for (const bench of group.benchmarks ?? []) {
         const key = `${suiteName} > ${bench.name}`;
-        map.set(key, bench);
+        map.set(key, { hz: bench.hz, hzValues: [bench.hz] });
       }
     }
   }
@@ -108,12 +108,64 @@ function runBenchMultiple(outputPrefix, iterations) {
   return files;
 }
 
-function median(sorted) {
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+function trimmedMean(values) {
+  if (values.length <= 2) return values.reduce((a, b) => a + b, 0) / values.length;
+  const sorted = [...values].sort((a, b) => a - b);
+  const trimmed = sorted.slice(1, -1);
+  return trimmed.reduce((a, b) => a + b, 0) / trimmed.length;
 }
 
-function loadMedianResults(files) {
+function percentile(sorted, p) {
+  const idx = (p / 100) * (sorted.length - 1);
+  const low = Math.floor(idx);
+  const high = Math.ceil(idx);
+  if (low === high) return sorted[low];
+  return sorted[low] + (idx - low) * (sorted[high] - sorted[low]);
+}
+
+function asciiBoxPlot(values, globalMin, globalMax, width) {
+  if (values.length < 2) return ' '.repeat(width);
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const q1 = percentile(sorted, 25);
+  const med = percentile(sorted, 50);
+  const q3 = percentile(sorted, 75);
+  const min = sorted[0];
+  const max = sorted[sorted.length - 1];
+
+  const range = globalMax - globalMin;
+  if (range === 0) {
+    const mid = Math.floor(width / 2);
+    return ' '.repeat(mid) + '│' + ' '.repeat(width - mid - 1);
+  }
+
+  const pos = (v) => {
+    const p = ((v - globalMin) / range) * (width - 1);
+    return Math.max(0, Math.min(width - 1, Math.round(p)));
+  };
+
+  const minP = pos(min);
+  const q1P = pos(q1);
+  const medP = pos(med);
+  const q3P = pos(q3);
+  const maxP = pos(max);
+
+  let result = '';
+  for (let i = 0; i < width; i++) {
+    if (i === medP) result += '│';
+    else if (i === q1P && q1P < q3P) result += '[';
+    else if (i === q3P && q1P < q3P) result += ']';
+    else if (i > q1P && i < q3P) result += '█';
+    else if (i === minP) result += '├';
+    else if (i === maxP) result += '┤';
+    else if ((i > minP && i < q1P) || (i > q3P && i < maxP)) result += '─';
+    else result += ' ';
+  }
+
+  return result;
+}
+
+function loadAggregatedResults(files) {
   const allRuns = files.map((f) => loadResults(f));
 
   const allKeys = new Set();
@@ -131,7 +183,7 @@ function loadMedianResults(files) {
 
     if (hzValues.length === 0) continue;
 
-    map.set(key, { hz: median(hzValues) });
+    map.set(key, { hz: trimmedMean(hzValues), hzValues });
   }
   return map;
 }
@@ -162,7 +214,7 @@ const CURRENT_BRANCH = currentBranch();
 
 if (ITERATIONS > 1) {
   console.log(
-    `ℹ️  Running ${ITERATIONS} iterations per branch and comparing medians for stable results.`
+    `ℹ️  Running ${ITERATIONS} iterations per branch; trimmed mean (drop min/max) for stable results.`
   );
 }
 
@@ -242,8 +294,8 @@ try {
 // ── 6. Compare ───────────────────────────────────────────────────────────────
 
 const currentResults =
-  ITERATIONS > 1 ? loadMedianResults(currentFiles) : loadResults(currentFiles[0]);
-const baseResults = ITERATIONS > 1 ? loadMedianResults(baseFiles) : loadResults(baseFiles[0]);
+  ITERATIONS > 1 ? loadAggregatedResults(currentFiles) : loadResults(currentFiles[0]);
+const baseResults = ITERATIONS > 1 ? loadAggregatedResults(baseFiles) : loadResults(baseFiles[0]);
 
 const allKeys = new Set([...currentResults.keys(), ...baseResults.keys()]);
 
@@ -282,13 +334,29 @@ for (const key of [...allKeys].sort()) {
   if (!b || !c) {
     const note = !b ? '(missing in base)' : '(missing in current)';
     console.log(line(`  ${key}`, '-', '-', note));
-    benchResults.push({ key, baseHz: null, currentHz: null, delta: null, note });
+    benchResults.push({
+      key,
+      baseHz: null,
+      currentHz: null,
+      delta: null,
+      note,
+      baseHzValues: b?.hzValues ?? [],
+      currentHzValues: c?.hzValues ?? [],
+    });
     continue;
   }
 
   const pct = delta(c.hz, b.hz);
   console.log(line(`  ${key}`, fmt(b.hz), fmt(c.hz), colorize(pct)));
-  benchResults.push({ key, baseHz: b.hz, currentHz: c.hz, delta: pct, note: null });
+  benchResults.push({
+    key,
+    baseHz: b.hz,
+    currentHz: c.hz,
+    delta: pct,
+    note: null,
+    baseHzValues: b.hzValues,
+    currentHzValues: c.hzValues,
+  });
 }
 
 console.log(ruler);
@@ -303,6 +371,44 @@ console.log(
     styleText('white', '■') +
     ' within ±1%  unchanged\n'
 );
+
+// ── 7. Box plots (when multiple iterations) ──────────────────────────────────
+
+if (ITERATIONS > 1) {
+  const PLOT_WIDTH = 40;
+  console.log(styleText('bold', '  Distribution across runs (hz)'));
+  console.log('  Legend: min ├──[ Q1 ██ median │ ██ Q3 ]──┤ max');
+  console.log('');
+
+  let lastSuite2 = '';
+  for (const r of benchResults) {
+    if (r.note || !r.baseHzValues.length || !r.currentHzValues.length) continue;
+
+    const [suite] = r.key.split(' > ');
+    if (suite !== lastSuite2) {
+      if (lastSuite2) console.log('');
+      lastSuite2 = suite;
+    }
+
+    const allVals = [...r.baseHzValues, ...r.currentHzValues];
+    const gMin = Math.min(...allVals);
+    const gMax = Math.max(...allVals);
+
+    const basePlot = asciiBoxPlot(r.baseHzValues, gMin, gMax, PLOT_WIDTH);
+    const curPlot = asciiBoxPlot(r.currentHzValues, gMin, gMax, PLOT_WIDTH);
+
+    const bMin = fmt(Math.min(...r.baseHzValues));
+    const bMax = fmt(Math.max(...r.baseHzValues));
+    const cMin = fmt(Math.min(...r.currentHzValues));
+    const cMax = fmt(Math.max(...r.currentHzValues));
+
+    console.log(`  ${r.key}`);
+    console.log(`    ${'base:'.padEnd(10)} ${basePlot}  ${bMin} – ${bMax}`);
+    console.log(`    ${'current:'.padEnd(10)} ${curPlot}  ${cMin} – ${cMax}`);
+  }
+
+  console.log('');
+}
 
 const jsonOutputPath = process.env.BENCH_JSON_OUTPUT;
 if (jsonOutputPath) {
