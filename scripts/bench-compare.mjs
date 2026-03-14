@@ -42,11 +42,11 @@ function run(cmd, opts = {}) {
  */
 function resolveRef(branch) {
   for (const candidate of [`origin/${branch}`, branch]) {
-    try {
-      return execSync(`git rev-parse --verify ${candidate}`, { encoding: 'utf8' }).trim();
-    } catch {
-      // try next
-    }
+    const result = spawnSync('git', ['rev-parse', '--verify', candidate], {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    if (result.status === 0) return result.stdout.trim();
   }
   throw new Error(`Could not resolve ref for branch "${branch}". Is it fetched?`);
 }
