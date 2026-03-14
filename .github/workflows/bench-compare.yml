@@ -29,7 +29,13 @@ jobs:
 
       - name: Run benchmark comparison
         # Strip ANSI color codes so the output is readable in a PR comment.
-        run: pnpm bench:compare 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > bench-output.txt
+        # Write to RUNNER_TEMP (outside the repo) so the file is not seen as an
+        # untracked change by git — bench-compare.mjs stashes untracked files
+        # before switching branches, which would stash (and later restore) an
+        # empty copy of the file, discarding the real content.
+        run: |
+          set -o pipefail
+          pnpm bench:compare 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$RUNNER_TEMP/bench-output.txt"
 
       - name: Post PR comment
         if: always()
@@ -41,7 +47,7 @@ jobs:
 
             let output;
             try {
-              output = fs.readFileSync('bench-output.txt', 'utf8').trim();
+              output = fs.readFileSync(process.env.RUNNER_TEMP + '/bench-output.txt', 'utf8').trim();
             } catch {
               output = '(no output — benchmark may have failed to start)';
             }
