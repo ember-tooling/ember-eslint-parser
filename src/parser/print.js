@@ -23,7 +23,8 @@ function print(node) {
     case 'Literal':
     case 'StringLiteral':
       if (typeof node.value === 'string') {
-        const quote = node.extra?.raw?.[0] ?? node.raw?.[0] ?? '"';
+        const raw = node.extra?.raw ?? node.raw;
+        const quote = raw && (raw[0] === "'" || raw[0] === '"' || raw[0] === '`') ? raw[0] : '"';
         return `${quote}${node.value}${quote}`;
       }
       if (node.raw != null) return node.raw;

@@ -301,7 +301,7 @@ module.exports = {
     version: '*',
   },
 
+  parseForESLint,
   parse,
   print,
-  parseForESLint,
 };
