@@ -673,10 +673,10 @@ function print(node) {
     }
 
     case 'TSMappedType': {
-      const readonly = node.readonly === true ? 'readonly ' : node.readonly === '+' ? '+readonly ' : node.readonly === '-' ? '-readonly ' : '';
+      const readonly = printMappedModifier(node.readonly, 'readonly ');
       const param = print(node.typeParameter);
       const nameType = node.nameType ? ` as ${print(node.nameType)}` : '';
-      const optional = node.optional === true ? '?' : node.optional === '+' ? '+?' : node.optional === '-' ? '-?' : '';
+      const optional = printMappedModifier(node.optional, '?');
       const typeAnnotation = node.typeAnnotation ? `: ${print(node.typeAnnotation)}` : '';
       return `{ ${readonly}[${param}${nameType}]${optional}${typeAnnotation} }`;
     }
@@ -941,6 +941,20 @@ function printTypeAnnotated(name, node) {
   const optional = node.optional ? '?' : '';
   const typeAnnotation = node.typeAnnotation ? print(node.typeAnnotation) : '';
   return `${name}${optional}${typeAnnotation}`;
+}
+
+/**
+ * Prints a TSMappedType modifier (readonly or optional) which can be
+ * `true`, `'+'`, `'-'`, or falsy.
+ * @param {boolean|string|undefined} modifier
+ * @param {string} token - e.g. 'readonly ' or '?'
+ * @return {string}
+ */
+function printMappedModifier(modifier, token) {
+  if (modifier === true) return token;
+  if (modifier === '+') return `+${token}`;
+  if (modifier === '-') return `-${token}`;
+  return '';
 }
 
 module.exports = { print };
