@@ -212,7 +212,8 @@ try {
 } finally {
   // ── 5. Restore original branch ────────────────────────────────────────────
   // Discard the overlaid bench files before switching back
-  run('git checkout -- tests/');
+  run('git checkout -- tests/parser.bench.js');
+  if (existsSync('tests/bench')) run('git checkout -- tests/bench/');
   console.log(`\n🔀  Restoring branch: \x1b[36m${CURRENT_BRANCH}\x1b[0m\n`);
   run(`git checkout ${CURRENT_BRANCH}`);
   run('pnpm install --frozen-lockfile');
