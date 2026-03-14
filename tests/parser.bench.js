@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { bench, describe } from 'vitest';
+import { bench, describe, beforeAll } from 'vitest';
 import { parseForESLint as parseGjsGts } from '../src/parser/gjs-gts-parser.js';
 import { parseForESLint as parseHbs } from '../src/parser/hbs-parser.js';
 
@@ -51,6 +51,10 @@ const BENCH_OPTIONS = {
 // ---------------------------------------------------------------------------
 
 describe('gts parser', () => {
+  beforeAll(() => {
+    globalThis.gc?.();
+  });
+
   bench(
     'small file',
     () => {
@@ -77,6 +81,10 @@ describe('gts parser', () => {
 });
 
 describe('gjs parser', () => {
+  beforeAll(() => {
+    globalThis.gc?.();
+  });
+
   bench(
     'small file',
     () => {
@@ -103,6 +111,10 @@ describe('gjs parser', () => {
 });
 
 describe('hbs parser', () => {
+  beforeAll(() => {
+    globalThis.gc?.();
+  });
+
   bench(
     'small file',
     () => {

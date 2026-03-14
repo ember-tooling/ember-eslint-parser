@@ -32,6 +32,17 @@ const iterIdx = args.indexOf('--iterations');
 const ITERATIONS = iterIdx !== -1 ? Math.max(1, parseInt(args[iterIdx + 1], 10) || 1) : 1;
 
 // ---------------------------------------------------------------------------
+// Platform detection
+// ---------------------------------------------------------------------------
+
+const IS_LINUX = process.platform === 'linux';
+const HAS_TASKSET = IS_LINUX && spawnSync('which', ['taskset'], { stdio: 'pipe' }).status === 0;
+
+if (HAS_TASKSET) {
+  console.log('📌  CPU pinning enabled (taskset -c 0) for reduced context-switch variance.');
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -49,8 +60,19 @@ function hasUncommittedChanges() {
 }
 
 function runBench(outputFile) {
-  const result = spawnSync('pnpm', ['vitest', 'bench', '--outputJson', outputFile, '--run'], {
+  const benchArgs = ['vitest', 'bench', '--outputJson', outputFile, '--run'];
+
+  // Pin to a single CPU core on Linux to eliminate cross-core migration variance.
+  const cmd = HAS_TASKSET ? 'taskset' : 'pnpm';
+  const args = HAS_TASKSET ? ['-c', '0', 'pnpm', ...benchArgs] : benchArgs;
+
+  // Expose GC so the bench file can trigger manual collections between suites.
+  const existingNodeOpts = process.env.NODE_OPTIONS || '';
+  const nodeOptions = existingNodeOpts ? `${existingNodeOpts} --expose-gc` : '--expose-gc';
+
+  const result = spawnSync(cmd, args, {
     stdio: 'inherit',
+    env: { ...process.env, NODE_OPTIONS: nodeOptions },
   });
   if (result.status !== 0) {
     console.error('\n❌  Benchmark run failed.');
