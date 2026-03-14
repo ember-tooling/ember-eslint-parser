@@ -2,13 +2,17 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "minor",
-      "oldVersion": "0.6.0",
-      "newVersion": "0.7.0",
+      "oldVersion": "0.7.0",
+      "newVersion": "0.8.0",
       "tagName": "latest",
       "constraints": [
         {
           "impact": "minor",
           "reason": "Appears in changelog section :rocket: Enhancement"
+        },
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :bug: Bug Fix"
         },
         {
           "impact": "patch",
@@ -18,5 +22,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-03-04)\n\n* ember-eslint-parser 0.7.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#153](https://github.com/ember-tooling/ember-eslint-parser/pull/153) Update dependencies ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#154](https://github.com/ember-tooling/ember-eslint-parser/pull/154) Fix API compatibility with content-tag v4, html-tags v5, and mathml-tag-names v4 ([@Copilot](https://github.com/apps/copilot-swe-agent))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#155](https://github.com/ember-tooling/ember-eslint-parser/pull/155) Add CI job to run tests on minimum supported Node.js version (v20) ([@Copilot](https://github.com/apps/copilot-swe-agent))\n\n#### Committers: 2\n- Copilot [Bot] ([@copilot-swe-agent](https://github.com/apps/copilot-swe-agent))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2026-03-14)\n\n* ember-eslint-parser 0.8.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#173](https://github.com/ember-tooling/ember-eslint-parser/pull/173) Replace custom buffer management with content-tag v4 UTF-16 codepoint indices ([@Copilot](https://github.com/apps/copilot-swe-agent))\n  * [#162](https://github.com/ember-tooling/ember-eslint-parser/pull/162) perf: optimize ember-eslint-parser hot paths for faster `pnpm bench` results ([@Copilot](https://github.com/apps/copilot-swe-agent))\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#164](https://github.com/ember-tooling/ember-eslint-parser/pull/164) Add failing tests for #163: non-ASCII chars corrupt .gts imports ([@gitKrystan](https://github.com/gitKrystan))\n  * [#159](https://github.com/ember-tooling/ember-eslint-parser/pull/159) Fix dynamic imports of .gts components triggering `@typescript-eslint/no-unsafe-assignment` ([@Copilot](https://github.com/apps/copilot-swe-agent))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#165](https://github.com/ember-tooling/ember-eslint-parser/pull/165) CI bench ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#171](https://github.com/ember-tooling/ember-eslint-parser/pull/171) bench-compare: skip PR comment on fork PRs, write results to job summary ([@Copilot](https://github.com/apps/copilot-swe-agent))\n  * [#169](https://github.com/ember-tooling/ember-eslint-parser/pull/169) bench compare: separate summary tables by file type with file size and Δ symbol ([@Copilot](https://github.com/apps/copilot-swe-agent))\n  * [#168](https://github.com/ember-tooling/ember-eslint-parser/pull/168) Extract bench comment formatting into scripts/format-bench-comment.mjs ([@Copilot](https://github.com/apps/copilot-swe-agent))\n  * [#167](https://github.com/ember-tooling/ember-eslint-parser/pull/167) Fix bench-compare workflow: runner context unavailable at job-level env ([@Copilot](https://github.com/apps/copilot-swe-agent))\n  * [#166](https://github.com/ember-tooling/ember-eslint-parser/pull/166) CI bench: compact PR comment with delta-only view and expandable full results ([@Copilot](https://github.com/apps/copilot-swe-agent))\n  * [#161](https://github.com/ember-tooling/ember-eslint-parser/pull/161) Add vitest bench for parser performance measurement ([@Copilot](https://github.com/apps/copilot-swe-agent))\n\n#### Committers: 3\n- Copilot [Bot] ([@copilot-swe-agent](https://github.com/apps/copilot-swe-agent))\n- Krystan HuffMenne ([@gitKrystan](https://github.com/gitKrystan))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }
