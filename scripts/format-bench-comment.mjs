@@ -47,10 +47,32 @@ if (benchData) {
     return emoji + r.delta;
   }
 
-  // Delta-only table (shown in main comment)
-  const deltaHeader = `| Benchmark | Δ |`;
-  const deltaSep = `|-----------|---|`;
-  const deltaRows = results.map((r) => `| ${r.key} | ${fmtDelta(r)} |`).join('\n');
+  function deltaSymbol(r) {
+    if (r.note) return '❓';
+    const num = parseFloat(r.delta);
+    return num >= 5 ? '🟢' : num <= -5 ? '🔴' : '🟡';
+  }
+
+  function parseKey(key) {
+    // key format: "<type> parser > <size> file"
+    const separatorIndex = key.indexOf(' > ');
+    if (separatorIndex === -1) {
+      return { fileType: key, fileSize: '' };
+    }
+    const fileType = key.slice(0, separatorIndex).replace(/ parser$/, '').trim();
+    const fileSize = key.slice(separatorIndex + 3).replace(/ file$/, '').trim();
+    return { fileType, fileSize };
+  }
+
+  // 3-column summary table (shown in main comment): file type | file size | Δ
+  const deltaHeader = `| File Type | File Size | Δ |`;
+  const deltaSep = `|-----------|-----------|---|`;
+  const deltaRows = results
+    .map((r) => {
+      const { fileType, fileSize } = parseKey(r.key);
+      return `| ${fileType} | ${fileSize} | ${deltaSymbol(r)} |`;
+    })
+    .join('\n');
 
   // Full table (hidden in <details>)
   const fullHeader = `| Benchmark | ${base} (hz) | ${branch} (hz) | Δ |`;
