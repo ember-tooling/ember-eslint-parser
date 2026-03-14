@@ -59,8 +59,14 @@ if (benchData) {
     if (separatorIndex === -1) {
       return { fileType: key, fileSize: '' };
     }
-    const fileType = key.slice(0, separatorIndex).replace(/ parser$/, '').trim();
-    const fileSize = key.slice(separatorIndex + 3).replace(/ file$/, '').trim();
+    const fileType = key
+      .slice(0, separatorIndex)
+      .replace(/ parser$/, '')
+      .trim();
+    const fileSize = key
+      .slice(separatorIndex + 3)
+      .replace(/ file$/, '')
+      .trim();
     return { fileType, fileSize };
   }
 
