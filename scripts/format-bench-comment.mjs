@@ -30,9 +30,7 @@ try {
 }
 
 const success = process.env.BENCH_JOB_SUCCESS === 'true';
-const heading = success
-  ? '## 🏎️ Benchmark Comparison'
-  : '## ❌ Benchmark Comparison (failed)';
+const heading = success ? '## 🏎️ Benchmark Comparison' : '## ❌ Benchmark Comparison (failed)';
 
 let body;
 if (benchData) {
