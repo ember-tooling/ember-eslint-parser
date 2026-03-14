@@ -47,10 +47,46 @@ if (benchData) {
     return emoji + r.delta;
   }
 
-  // Delta-only table (shown in main comment)
-  const deltaHeader = `| Benchmark | Δ |`;
-  const deltaSep = `|-----------|---|`;
-  const deltaRows = results.map((r) => `| ${r.key} | ${fmtDelta(r)} |`).join('\n');
+  function deltaSymbol(r) {
+    if (r.note) return '❓';
+    const num = parseFloat(r.delta);
+    return num >= 5 ? '🟢' : num <= -5 ? '🔴' : '🟡';
+  }
+
+  function parseKey(key) {
+    // key format: "<type> parser > <size> file"
+    const separatorIndex = key.indexOf(' > ');
+    if (separatorIndex === -1) {
+      return { fileType: key, fileSize: '' };
+    }
+    const fileType = key
+      .slice(0, separatorIndex)
+      .replace(/ parser$/, '')
+      .trim();
+    const fileSize = key
+      .slice(separatorIndex + 3)
+      .replace(/ file$/, '')
+      .trim();
+    return { fileType, fileSize };
+  }
+
+  // Group results by file type for separate tables
+  const byFileType = new Map();
+  for (const r of results) {
+    const { fileType, fileSize } = parseKey(r.key);
+    if (!byFileType.has(fileType)) byFileType.set(fileType, []);
+    byFileType.get(fileType).push({ r, fileSize });
+  }
+
+  // One 2-column table per file type (shown in main comment): file size | Δ
+  const summaryTables = [...byFileType.entries()].flatMap(([fileType, entries]) => [
+    `**${fileType}**`,
+    '',
+    `| File Size | Δ |`,
+    `|-----------|---|`,
+    ...entries.map(({ r, fileSize }) => `| ${fileSize} | ${deltaSymbol(r)} |`),
+    '',
+  ]);
 
   // Full table (hidden in <details>)
   const fullHeader = `| Benchmark | ${base} (hz) | ${branch} (hz) | Δ |`;
@@ -69,10 +105,7 @@ if (benchData) {
     marker,
     heading,
     '',
-    deltaHeader,
-    deltaSep,
-    deltaRows,
-    '',
+    ...summaryTables,
     legend,
     '',
     '<details>',
