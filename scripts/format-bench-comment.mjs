@@ -64,15 +64,23 @@ if (benchData) {
     return { fileType, fileSize };
   }
 
-  // 3-column summary table (shown in main comment): file type | file size | Δ
-  const deltaHeader = `| File Type | File Size | Δ |`;
-  const deltaSep = `|-----------|-----------|---|`;
-  const deltaRows = results
-    .map((r) => {
-      const { fileType, fileSize } = parseKey(r.key);
-      return `| ${fileType} | ${fileSize} | ${deltaSymbol(r)} |`;
-    })
-    .join('\n');
+  // Group results by file type for separate tables
+  const byFileType = new Map();
+  for (const r of results) {
+    const { fileType, fileSize } = parseKey(r.key);
+    if (!byFileType.has(fileType)) byFileType.set(fileType, []);
+    byFileType.get(fileType).push({ r, fileSize });
+  }
+
+  // One 2-column table per file type (shown in main comment): file size | Δ
+  const summaryTables = [...byFileType.entries()].flatMap(([fileType, entries]) => [
+    `**${fileType}**`,
+    '',
+    `| File Size | Δ |`,
+    `|-----------|---|`,
+    ...entries.map(({ r, fileSize }) => `| ${fileSize} | ${deltaSymbol(r)} |`),
+    '',
+  ]);
 
   // Full table (hidden in <details>)
   const fullHeader = `| Benchmark | ${base} (hz) | ${branch} (hz) | Δ |`;
@@ -91,10 +99,7 @@ if (benchData) {
     marker,
     heading,
     '',
-    deltaHeader,
-    deltaSep,
-    deltaRows,
-    '',
+    ...summaryTables,
     legend,
     '',
     '<details>',
