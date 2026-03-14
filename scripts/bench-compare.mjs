@@ -380,14 +380,14 @@ if (ITERATIONS > 1) {
   console.log('  Legend: min ├──[ Q1 ██ median │ ██ Q3 ]──┤ max');
   console.log('');
 
-  let lastSuite2 = '';
+  let prevSuite = '';
   for (const r of benchResults) {
     if (r.note || !r.baseHzValues.length || !r.currentHzValues.length) continue;
 
     const [suite] = r.key.split(' > ');
-    if (suite !== lastSuite2) {
-      if (lastSuite2) console.log('');
-      lastSuite2 = suite;
+    if (suite !== prevSuite) {
+      if (prevSuite) console.log('');
+      prevSuite = suite;
     }
 
     const allVals = [...r.baseHzValues, ...r.currentHzValues];
