@@ -447,7 +447,7 @@ function print(node) {
     case 'JSXSpreadAttribute':
     case 'JSXSpreadChild':
     case 'JSXFragment':
-      throw new Error(`ember-eslint-parser print: JSX node type '${node.type}' is not supported — use Glimmer template nodes instead`);
+      throw new Error(`ember-eslint-parser print: unsupported JSX node type '${node.type}' (use Glimmer template nodes instead)`);
 
     // ── TypeScript: type keywords ──────────────────────────────────
     case 'TSAnyKeyword':

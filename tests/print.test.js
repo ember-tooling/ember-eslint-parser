@@ -265,13 +265,13 @@ describe('print', () => {
 
   it('throws for JSX node types', () => {
     expect(() => print({ type: 'JSXElement' })).toThrow(
-      "JSX node type 'JSXElement' is not supported"
+      "unsupported JSX node type 'JSXElement'"
     );
     expect(() => print({ type: 'JSXFragment' })).toThrow(
-      "JSX node type 'JSXFragment' is not supported"
+      "unsupported JSX node type 'JSXFragment'"
     );
     expect(() => print({ type: 'JSXText' })).toThrow(
-      "JSX node type 'JSXText' is not supported"
+      "unsupported JSX node type 'JSXText'"
     );
   });
 
