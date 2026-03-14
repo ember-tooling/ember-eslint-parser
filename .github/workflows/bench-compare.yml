@@ -15,6 +15,8 @@ jobs:
     permissions:
       pull-requests: write
       contents: read
+    env:
+      BENCH_JSON_OUTPUT: ${{ runner.temp }}/bench-results.json
 
     steps:
       - uses: actions/checkout@v4
@@ -45,19 +47,78 @@ jobs:
             const fs = require('fs');
             const marker = '<!-- bench-compare -->';
 
-            let output;
+            let rawOutput;
             try {
-              output = fs.readFileSync(process.env.RUNNER_TEMP + '/bench-output.txt', 'utf8').trim();
+              rawOutput = fs.readFileSync(process.env.RUNNER_TEMP + '/bench-output.txt', 'utf8').trim();
             } catch {
-              output = '(no output — benchmark may have failed to start)';
+              rawOutput = '(no output — benchmark may have failed to start)';
             }
+
+            let benchData = null;
+            try {
+              benchData = JSON.parse(fs.readFileSync(process.env.BENCH_JSON_OUTPUT, 'utf8'));
+            } catch { /* JSON not available — fall back to raw output */ }
 
             const success = ${{ job.status == 'success' }};
             const heading = success
               ? '## 🏎️ Benchmark Comparison'
               : '## ❌ Benchmark Comparison (failed)';
 
-            const body = `${marker}\n${heading}\n\n\`\`\`\n${output}\n\`\`\``;
+            let body;
+            if (benchData) {
+              const { branch, base, results } = benchData;
+
+              function fmtHz(n) {
+                return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+              }
+
+              function fmtDelta(r) {
+                if (r.note) return r.note;
+                const num = parseFloat(r.delta);
+                const emoji = num >= 5 ? '🟢 ' : num <= -5 ? '🔴 ' : '🟡 ';
+                return emoji + r.delta;
+              }
+
+              // Delta-only table (shown in main comment)
+              const deltaHeader = `| Benchmark | Δ |`;
+              const deltaSep    = `|-----------|---|`;
+              const deltaRows = results.map(r =>
+                `| ${r.key} | ${fmtDelta(r)} |`
+              ).join('\n');
+
+              // Full table (hidden in <details>)
+              const fullHeader = `| Benchmark | ${base} (hz) | ${branch} (hz) | Δ |`;
+              const fullSep    = `|-----------|-------------|----------------|---|`;
+              const fullRows = results.map(r => {
+                const b = r.baseHz !== null ? fmtHz(r.baseHz) : '-';
+                const c = r.currentHz !== null ? fmtHz(r.currentHz) : '-';
+                return `| ${r.key} | ${b} | ${c} | ${fmtDelta(r)} |`;
+              }).join('\n');
+
+              const legend = '🟢 ≥ +5% faster &nbsp; 🔴 ≤ −5% slower &nbsp; 🟡 within ±5% similar';
+
+              body = [
+                marker,
+                heading,
+                '',
+                deltaHeader,
+                deltaSep,
+                deltaRows,
+                '',
+                legend,
+                '',
+                '<details>',
+                `<summary>Full results (${base} vs ${branch})</summary>`,
+                '',
+                fullHeader,
+                fullSep,
+                fullRows,
+                '',
+                '</details>',
+              ].join('\n');
+            } else {
+              body = `${marker}\n${heading}\n\n\`\`\`\n${rawOutput}\n\`\`\``;
+            }
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
