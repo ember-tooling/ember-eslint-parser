@@ -13,7 +13,7 @@
  */
 
 import { execSync, spawnSync } from 'node:child_process';
-import { readFileSync, unlinkSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { styleText } from 'node:util';
@@ -168,6 +168,8 @@ console.log(
 );
 console.log(ruler);
 
+const benchResults = [];
+
 let lastSuite = '';
 for (const key of [...allKeys].sort()) {
   const [suite] = key.split(' > ');
@@ -182,11 +184,13 @@ for (const key of [...allKeys].sort()) {
   if (!b || !c) {
     const note = !b ? '(missing in base)' : '(missing in current)';
     console.log(line(`  ${key}`, '-', '-', note));
+    benchResults.push({ key, baseHz: null, currentHz: null, delta: null, note });
     continue;
   }
 
   const pct = delta(c.hz, b.hz);
   console.log(line(`  ${key}`, fmt(b.hz), fmt(c.hz), colorize(pct)));
+  benchResults.push({ key, baseHz: b.hz, currentHz: c.hz, delta: pct, note: null });
 }
 
 console.log(ruler);
@@ -199,3 +203,11 @@ console.log(
     styleText('yellow', '■') +
     ' within ±5%  similar\n'
 );
+
+const jsonOutputPath = process.env.BENCH_JSON_OUTPUT;
+if (jsonOutputPath) {
+  writeFileSync(
+    jsonOutputPath,
+    JSON.stringify({ branch: CURRENT_BRANCH, base: BASE_BRANCH, results: benchResults }, null, 2)
+  );
+}
