@@ -6,10 +6,12 @@
  * side-by-side table showing the hz delta for every benchmark.
  *
  * Usage:
- *   node scripts/bench-compare.mjs [--base <branch>]
+ *   node scripts/bench-compare.mjs [--base <branch>] [--iterations <n>]
  *
  * Options:
- *   --base <branch>   Branch to compare against (default: main)
+ *   --base <branch>       Branch to compare against (default: main)
+ *   --iterations <n>      Number of benchmark runs per branch; the median hz
+ *                          is used for comparison (default: 1)
  */
 
 import { execSync, spawnSync } from 'node:child_process';
@@ -25,6 +27,9 @@ import { styleText } from 'node:util';
 const args = process.argv.slice(2);
 const baseIdx = args.indexOf('--base');
 const BASE_BRANCH = baseIdx !== -1 ? args[baseIdx + 1] : 'main';
+
+const iterIdx = args.indexOf('--iterations');
+const ITERATIONS = iterIdx !== -1 ? Math.max(1, parseInt(args[iterIdx + 1], 10) || 1) : 1;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -70,6 +75,45 @@ function loadResults(file) {
   return map;
 }
 
+function runBenchMultiple(outputPrefix, iterations) {
+  const files = [];
+  for (let i = 0; i < iterations; i++) {
+    const outFile = `${outputPrefix}-${i}.json`;
+    if (iterations > 1) console.log(`  Run ${i + 1}/${iterations}…`);
+    runBench(outFile);
+    files.push(outFile);
+  }
+  return files;
+}
+
+function median(sorted) {
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
+function loadMedianResults(files) {
+  const allRuns = files.map((f) => loadResults(f));
+
+  const allKeys = new Set();
+  for (const run of allRuns) {
+    for (const key of run.keys()) allKeys.add(key);
+  }
+
+  const map = new Map();
+  for (const key of allKeys) {
+    const hzValues = allRuns
+      .map((run) => run.get(key))
+      .filter(Boolean)
+      .map((b) => b.hz)
+      .sort((a, b) => a - b);
+
+    if (hzValues.length === 0) continue;
+
+    map.set(key, { hz: median(hzValues) });
+  }
+  return map;
+}
+
 function fmt(n) {
   return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
@@ -93,6 +137,12 @@ function colorize(pct) {
 
 const CURRENT_BRANCH = currentBranch();
 
+if (ITERATIONS > 1) {
+  console.log(
+    `ℹ️  Running ${ITERATIONS} iterations per branch and comparing medians for stable results.`
+  );
+}
+
 if (CURRENT_BRANCH === BASE_BRANCH) {
   console.error(`❌  Already on '${BASE_BRANCH}'. Check out your feature branch first.`);
   process.exit(1);
@@ -104,23 +154,29 @@ if (stashed) {
   run('git stash --include-untracked');
 }
 
-const tmpCurrent = join(tmpdir(), 'bench-current.json');
-const tmpBase = join(tmpdir(), `bench-${BASE_BRANCH}.json`);
+const tmpCurrentPrefix = join(tmpdir(), 'bench-current');
+const tmpBasePrefix = join(tmpdir(), `bench-${BASE_BRANCH}`);
 
 // Clean up temp files on exit
 function cleanup() {
-  for (const f of [tmpCurrent, tmpBase]) {
-    if (existsSync(f)) unlinkSync(f);
+  for (let i = 0; i < ITERATIONS; i++) {
+    for (const prefix of [tmpCurrentPrefix, tmpBasePrefix]) {
+      const f = `${prefix}-${i}.json`;
+      if (existsSync(f)) unlinkSync(f);
+    }
   }
 }
 process.on('exit', cleanup);
 process.on('SIGINT', () => process.exit(130));
 process.on('SIGTERM', () => process.exit(143));
 
+let currentFiles = [];
+let baseFiles = [];
+
 try {
   // ── 1. Benchmark current branch ──────────────────────────────────────────
   console.log(`\n🔧  Benchmarking current branch: \x1b[36m${CURRENT_BRANCH}\x1b[0m\n`);
-  runBench(tmpCurrent);
+  currentFiles = runBenchMultiple(tmpCurrentPrefix, ITERATIONS);
 
   // ── 2. Switch to base branch ──────────────────────────────────────────────
   console.log(`\n🔀  Switching to base branch: \x1b[36m${BASE_BRANCH}\x1b[0m\n`);
@@ -129,7 +185,7 @@ try {
 
   // ── 3. Benchmark base branch ──────────────────────────────────────────────
   console.log(`\n🔧  Benchmarking base branch: \x1b[36m${BASE_BRANCH}\x1b[0m\n`);
-  runBench(tmpBase);
+  baseFiles = runBenchMultiple(tmpBasePrefix, ITERATIONS);
 } finally {
   // ── 4. Restore original branch ────────────────────────────────────────────
   console.log(`\n🔀  Restoring branch: \x1b[36m${CURRENT_BRANCH}\x1b[0m\n`);
@@ -144,8 +200,9 @@ try {
 
 // ── 5. Compare ───────────────────────────────────────────────────────────────
 
-const currentResults = loadResults(tmpCurrent);
-const baseResults = loadResults(tmpBase);
+const currentResults =
+  ITERATIONS > 1 ? loadMedianResults(currentFiles) : loadResults(currentFiles[0]);
+const baseResults = ITERATIONS > 1 ? loadMedianResults(baseFiles) : loadResults(baseFiles[0]);
 
 const allKeys = new Set([...currentResults.keys(), ...baseResults.keys()]);
 
@@ -208,6 +265,15 @@ const jsonOutputPath = process.env.BENCH_JSON_OUTPUT;
 if (jsonOutputPath) {
   writeFileSync(
     jsonOutputPath,
-    JSON.stringify({ branch: CURRENT_BRANCH, base: BASE_BRANCH, results: benchResults }, null, 2)
+    JSON.stringify(
+      {
+        branch: CURRENT_BRANCH,
+        base: BASE_BRANCH,
+        iterations: ITERATIONS,
+        results: benchResults,
+      },
+      null,
+      2
+    )
   );
 }

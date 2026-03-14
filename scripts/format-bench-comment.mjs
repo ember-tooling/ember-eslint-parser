@@ -34,7 +34,7 @@ const heading = success ? '## 🏎️ Benchmark Comparison' : '## ❌ Benchmark 
 
 let body;
 if (benchData) {
-  const { branch, base, results } = benchData;
+  const { branch, base, iterations, results } = benchData;
 
   function fmtHz(n) {
     return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
@@ -100,6 +100,7 @@ if (benchData) {
     .join('\n');
 
   const legend = '🟢 ≥ +5% faster &nbsp; 🔴 ≤ −5% slower &nbsp; 🟡 within ±5% similar';
+  const methodology = iterations > 1 ? `\n_Median of ${iterations} runs per branch._` : '';
 
   body = [
     marker,
@@ -107,6 +108,7 @@ if (benchData) {
     '',
     ...summaryTables,
     legend,
+    methodology,
     '',
     '<details>',
     `<summary>Full results (${base} vs ${branch})</summary>`,

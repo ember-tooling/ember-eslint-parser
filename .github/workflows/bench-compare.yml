@@ -37,7 +37,7 @@ jobs:
           BENCH_JSON_OUTPUT: ${{ runner.temp }}/bench-results.json
         run: |
           set -o pipefail
-          pnpm bench:compare 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$RUNNER_TEMP/bench-output.txt"
+          pnpm bench:compare --iterations 5 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$RUNNER_TEMP/bench-output.txt"
 
       - name: Format PR comment
         if: always()
