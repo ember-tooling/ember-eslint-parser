@@ -2794,8 +2794,7 @@ describe('replaceExtensions', () => {
 
   it('replaces .gts extension when preceded by non-ASCII characters (em-dash)', () => {
     // Em-dash "—" is 3 bytes in UTF-8 but 1 character in UTF-16.
-    // TypeScript AST positions are character offsets, but replaceRange uses
-    // sliceByteRange (byte offsets), so the replacement is corrupted.
+    // replaceRange now uses character offsets directly, matching TypeScript's AST positions.
     const code = `// description — with em-dash\nimport MyComponent from './dynamic.gts';`;
     const result = replaceExtensions(code);
     expect(result).toBe(`// description — with em-dash\nimport MyComponent from './dynamic.mts';`);
