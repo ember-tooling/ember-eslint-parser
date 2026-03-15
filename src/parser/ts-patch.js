@@ -4,7 +4,8 @@ import { transformForLint, replaceRange } from './transforms.js';
 
 const require = createRequire(import.meta.url);
 
-let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs;
+export let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser;
+let isPatched, allowGjs;
 
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
@@ -162,5 +163,3 @@ try {
   replaceExtensions = (code) => code;
   syncMtsGtsSourceFiles = () => null;
 }
-
-export { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser };
