@@ -15,63 +15,7 @@ import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { run, bench, boxplot, summary, B, measure, flags } from 'mitata';
-
-// ---------------------------------------------------------------------------
-// Increase mitata's per-benchmark timing for more stable results.
-//
-// mitata defaults to ~642 ms min CPU time and 12 min samples per benchmark.
-// We increase these to collect more samples and reduce variance from
-// transient system noise. The values are configurable via env vars.
-// ---------------------------------------------------------------------------
-
-const BENCH_MIN_CPU_TIME = Number(process.env.BENCH_MIN_CPU_TIME) || 2_000_000_000; // 2 s in ns
-const BENCH_MIN_SAMPLES = Number(process.env.BENCH_MIN_SAMPLES) || 30;
-
-const _origRun = B.prototype.run;
-B.prototype.run = async function (thrw = false) {
-  // Only patch static benchmarks (no parametric args) — our use case
-  if (Object.keys(this._args).length > 0) return _origRun.call(this, thrw);
-
-  const heap = await (async () => {
-    try {
-      const { getHeapStatistics } = await import('node:v8');
-      getHeapStatistics(); // warm up / verify the API is available
-      return () => {
-        const m = getHeapStatistics();
-        return m.used_heap_size + m.malloced_memory;
-      };
-    } catch {
-      /* not available */
-    }
-  })();
-
-  const tune = {
-    inner_gc: this._gc === 'inner',
-    gc: !this._gc ? false : undefined,
-    heap,
-    min_cpu_time: BENCH_MIN_CPU_TIME,
-    min_samples: BENCH_MIN_SAMPLES,
-  };
-
-  let stats, error;
-  try {
-    stats = await measure(this.f, tune);
-  } catch (err) {
-    error = err;
-    if (thrw) throw err;
-  }
-
-  return {
-    kind: 'static',
-    args: this._args,
-    alias: this._name,
-    group: this._group,
-    baseline: !!(this.flags & flags.baseline),
-    runs: [{ stats, error, args: {}, name: this._name }],
-    style: { highlight: this._highlight, compact: !!(this.flags & flags.compact) },
-  };
-};
+import { run, bench, boxplot, summary } from 'mitata';
 
 // ---------------------------------------------------------------------------
 // CLI args
