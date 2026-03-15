@@ -115,6 +115,9 @@ for (const { type, ext, experimentParse, controlParse } of PARSERS) {
   for (const size of SIZES) {
     const code = FIXTURES[type][size];
     const opts = { ...PARSE_OPTIONS, filePath: `${size}${ext}` };
+    
+    // Force a full GC before each benchmark group to reduce GC-triggered variance
+    globalThis.gc?.();
 
     if (controlParse) {
       // Side-by-side comparison with boxplots
