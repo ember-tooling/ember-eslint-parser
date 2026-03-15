@@ -10,7 +10,10 @@
   "license": "ISC",
   "author": "",
   "exports": {
-    ".": "./src/parser/gjs-gts-parser.js",
+    ".": {
+      "import": "./src/index.mjs",
+      "require": "./src/parser/gjs-gts-parser.js"
+    },
     "./hbs": "./src/parser/hbs-parser.js",
     "./noop": "./src/preprocessor/noop.js"
   },
@@ -33,6 +36,7 @@
     "@glimmer/syntax": ">= 0.92.0",
     "@typescript-eslint/tsconfig-utils": "^8.38.0",
     "content-tag": "^4.1.0",
+    "ember-estree": "^0.1.1",
     "eslint-scope": "^9.1.1",
     "html-tags": "^5.1.0",
     "mathml-tag-names": "^4.0.0",
