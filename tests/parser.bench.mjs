@@ -25,7 +25,7 @@ import { run, bench, boxplot, summary, B, measure, flags } from 'mitata';
 // transient system noise. The values are configurable via env vars.
 // ---------------------------------------------------------------------------
 
-const BENCH_MIN_CPU_TIME = Number(process.env.BENCH_MIN_CPU_TIME) || 2_000_000_000;
+const BENCH_MIN_CPU_TIME = Number(process.env.BENCH_MIN_CPU_TIME) || 2_000_000_000; // 2 s in ns
 const BENCH_MIN_SAMPLES = Number(process.env.BENCH_MIN_SAMPLES) || 30;
 
 const _origRun = B.prototype.run;
@@ -36,7 +36,7 @@ B.prototype.run = async function (thrw = false) {
   const heap = await (async () => {
     try {
       const { getHeapStatistics } = await import('node:v8');
-      getHeapStatistics();
+      getHeapStatistics(); // warm up / verify the API is available
       return () => {
         const m = getHeapStatistics();
         return m.used_heap_size + m.malloced_memory;
