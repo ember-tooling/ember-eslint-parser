@@ -26,6 +26,7 @@
     "lint:package": "pnpm publint",
     "bench": "node --expose-gc tests/parser.bench.mjs",
     "bench:compare": "node scripts/bench-compare.mjs",
+    "bench:summary": "./scripts/local-bench-summary.sh",
     "test": "vitest run"
   },
   "dependencies": {

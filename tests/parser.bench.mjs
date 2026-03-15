@@ -89,6 +89,28 @@ const PARSERS = [
 
 const SIZES = ['small', 'medium', 'large'];
 
+// ---------------------------------------------------------------------------
+// JIT warm-up — parse every fixture with both parsers so V8 compiles and
+// optimises the hot paths before any measurement begins.  Without this, the
+// first-to-run parser pays the JIT compilation cost, creating order bias.
+// ---------------------------------------------------------------------------
+
+const WARMUP_ROUNDS = 5;
+
+for (const { type, ext, experimentParse, controlParse } of PARSERS) {
+  for (const size of SIZES) {
+    const code = FIXTURES[type][size];
+    const opts = { ...PARSE_OPTIONS, filePath: `${size}${ext}` };
+
+    for (let i = 0; i < WARMUP_ROUNDS; i++) {
+      experimentParse(code, opts);
+      controlParse?.(code, opts);
+    }
+  }
+}
+
+globalThis.gc?.();
+
 for (const { type, ext, experimentParse, controlParse } of PARSERS) {
   for (const size of SIZES) {
     const code = FIXTURES[type][size];
