@@ -97,17 +97,35 @@ try {
   console.error(`\n🏎️  Running benchmarks (experiment vs control)…\n`);
 
   const benchScript = join(ROOT, 'tests/parser.bench.mjs');
-  const benchArgs = ['--expose-gc', benchScript, '--control-dir', CONTROL_DIR];
+  const benchArgs = [
+    '--expose-gc',
+    '--max-old-space-size=4096',
+    benchScript,
+    '--control-dir',
+    CONTROL_DIR,
+  ];
 
-  // CPU pinning on Linux
+  // CPU pinning + process priority on Linux
   const IS_LINUX = process.platform === 'linux';
   const HAS_TASKSET = IS_LINUX && spawnSync('which', ['taskset'], { stdio: 'pipe' }).status === 0;
+  const HAS_NICE = IS_LINUX && spawnSync('which', ['nice'], { stdio: 'pipe' }).status === 0;
 
-  const cmd = HAS_TASKSET ? 'taskset' : 'node';
-  const fullArgs = HAS_TASKSET ? ['-c', '0', 'node', ...benchArgs] : benchArgs;
+  let cmd = 'node';
+  let fullArgs = benchArgs;
 
-  if (HAS_TASKSET) {
+  if (HAS_TASKSET && HAS_NICE) {
+    // nice -n -20: highest priority; taskset -c 0: pin to CPU 0
+    cmd = 'nice';
+    fullArgs = ['-n', '-20', 'taskset', '-c', '0', 'node', ...benchArgs];
+    console.error('📌  CPU pinning + high priority enabled (nice -n -20 taskset -c 0)\n');
+  } else if (HAS_TASKSET) {
+    cmd = 'taskset';
+    fullArgs = ['-c', '0', 'node', ...benchArgs];
     console.error('📌  CPU pinning enabled (taskset -c 0)\n');
+  } else if (HAS_NICE) {
+    cmd = 'nice';
+    fullArgs = ['-n', '-20', 'node', ...benchArgs];
+    console.error('📌  High priority enabled (nice -n -20)\n');
   }
 
   const result = spawnSync(cmd, fullArgs, {
