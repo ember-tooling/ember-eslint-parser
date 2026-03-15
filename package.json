@@ -24,7 +24,7 @@
     "lint:js": "eslint . --max-warnings=0",
     "lint:js:fix": "eslint . --fix --max-warnings=0",
     "lint:package": "pnpm publint",
-    "bench": "vitest bench",
+    "bench": "node --expose-gc tests/parser.bench.mjs",
     "bench:compare": "node scripts/bench-compare.mjs",
     "test": "vitest run"
   },
@@ -53,6 +53,7 @@
     "eslint-plugin-promise": "^6.0.0",
     "execa": "^8.0.1",
     "fs-extra": "^11.2.0",
+    "mitata": "1.0.34",
     "prettier": "^3.2.5",
     "publint": "^0.2.6",
     "release-plan": "^0.17.4",
