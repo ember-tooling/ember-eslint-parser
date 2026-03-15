@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   bench-compare:
-    name: "Benchmark Comparison"
+    name: 'Benchmark Comparison'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -19,25 +19,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          # Full history so the script can checkout main for baseline benchmarks.
+          # Full history so the script can git-archive the base branch.
           fetch-depth: 0
-          # Check out as a named branch (not detached HEAD) so the script can
-          # read the branch name and restore it after switching to main.
           ref: ${{ github.head_ref }}
 
       - uses: wyvox/action-setup-pnpm@v3
 
       - name: Run benchmark comparison
-        # Strip ANSI color codes so the output is readable in a PR comment.
-        # Write to RUNNER_TEMP (outside the repo) so the file is not seen as an
-        # untracked change by git — bench-compare.mjs stashes untracked files
-        # before switching branches, which would stash (and later restore) an
-        # empty copy of the file, discarding the real content.
         env:
           BENCH_JSON_OUTPUT: ${{ runner.temp }}/bench-results.json
         run: |
           set -o pipefail
-          pnpm bench:compare 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$RUNNER_TEMP/bench-output.txt"
+          pnpm bench:compare | sed 's/\x1b\[[0-9;]*m//g' > "$RUNNER_TEMP/bench-output.txt"
 
       - name: Format PR comment
         if: always()
