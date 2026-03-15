@@ -24,7 +24,7 @@
     "lint:fix": "concurrently \"npm:lint:*:fix\" --names \"fix:\"",
     "lint:js": "eslint . --max-warnings=0",
     "lint:js:fix": "eslint . --fix --max-warnings=0",
-    "lint:package": "pnpm publint",
+    "lint:package": "publint",
     "bench": "node --expose-gc tests/parser.bench.mjs",
     "bench:compare": "node scripts/bench-compare.mjs",
     "test": "vitest run"
