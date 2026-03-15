@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 
+export BENCH_JSON_OUTPUT=./bench-results.json
 
-BENCH_OUTPUT_FILE=./bench-output.txt
-BENCH_JSON_OUTPUT=./bench-results.json
+pnpm bench:compare
 
-pnpm bench:compare | sed 's/\x1b\[[0-9;]*m//g' > ./bench-output.txt
-node scripts/format-bench-comment.mjs > ./bench-comment.md
-
-cat ./bench-comment.md
+echo ""
+echo "━━━ Summary ━━━"
+node scripts/format-bench-cli.mjs

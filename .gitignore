@@ -3,3 +3,4 @@ package-lock.json
 
 bench-output.txt
 bench-comment.md
+bench-results.json
