@@ -65,15 +65,18 @@ if (pairs.size === 0) {
   process.exit(0);
 }
 
-// Build rows
+// Build rows — use median (p50) which is far more robust to outliers from
+// CPU frequency scaling, GC pauses, and other system noise than the mean.
 const rows = [];
 
 for (const [name, { control, experiment }] of pairs) {
   if (!control || !experiment) continue;
 
-  const delta = ((experiment.avg - control.avg) / control.avg) * 100;
+  const ctrlVal = control.p50 ?? control.avg;
+  const expVal = experiment.p50 ?? experiment.avg;
+  const delta = ((expVal - ctrlVal) / ctrlVal) * 100;
 
-  rows.push({ name, control: control.avg, experiment: experiment.avg, delta });
+  rows.push({ name, control: ctrlVal, experiment: expVal, delta });
 }
 
 if (rows.length === 0) {
@@ -83,9 +86,9 @@ if (rows.length === 0) {
 
 // Calculate column widths
 const nameW = Math.max('Benchmark'.length, ...rows.map((r) => r.name.length));
-const ctrlW = Math.max('Control (avg)'.length, ...rows.map((r) => formatTime(r.control).length));
+const ctrlW = Math.max('Control (p50)'.length, ...rows.map((r) => formatTime(r.control).length));
 const expW = Math.max(
-  'Experiment (avg)'.length,
+  'Experiment (p50)'.length,
   ...rows.map((r) => formatTime(r.experiment).length)
 );
 const deltaW = Math.max(
@@ -102,7 +105,7 @@ const pad = (s, w, right) => (right ? s.padStart(w) : s.padEnd(w));
 
 console.log();
 console.log(
-  `   ${pad('Benchmark', nameW)}   ${pad('Control (avg)', ctrlW, true)}   ${pad('Experiment (avg)', expW, true)}   ${pad('Δ', deltaW, true)}`
+  `   ${pad('Benchmark', nameW)}   ${pad('Control (p50)', ctrlW, true)}   ${pad('Experiment (p50)', expW, true)}   ${pad('Δ', deltaW, true)}`
 );
 console.log(
   `   ${'─'.repeat(nameW)}   ${'─'.repeat(ctrlW)}   ${'─'.repeat(expW)}   ${'─'.repeat(deltaW)}`
