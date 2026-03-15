@@ -1,0 +1,7 @@
+# Unlabeled Changes
+
+* `ember-eslint-parser`
+  * [#172](https://github.com/ember-tooling/ember-eslint-parser/pull/172) Switch to mitata for benchmark comparison with built-in boxplots and summaries ([@Copilot](https://github.com/apps/copilot-swe-agent))
+
+
+*Cannot plan release until the above changes are labeled*.
