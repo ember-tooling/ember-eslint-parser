@@ -1,12 +1,13 @@
-const fs = require('node:fs');
-const { transformForLint } = require('./transforms');
-const { replaceRange } = require('./transforms');
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
+import { transformForLint, replaceRange } from './transforms.js';
+
+const require = createRequire(import.meta.url);
 
 let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs;
 
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
-  // eslint-disable-next-line n/no-unpublished-require
   const tsPath = require.resolve('typescript', { paths: [parserPath] });
   const ts = require(tsPath);
   typescriptParser = require('@typescript-eslint/parser');
@@ -162,9 +163,4 @@ try {
   syncMtsGtsSourceFiles = () => null;
 }
 
-module.exports = {
-  patchTs,
-  replaceExtensions,
-  syncMtsGtsSourceFiles,
-  typescriptParser,
-};
+export { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser };

@@ -1,8 +1,10 @@
-const ContentTag = require('content-tag');
-const glimmer = require('@glimmer/syntax');
-const { visitorKeys: glimmerVisitorKeys } = glimmer;
-const DocumentLines = require('../utils/document');
-const { Reference, Scope, Variable, Definition } = require('eslint-scope');
+import ContentTag from 'content-tag';
+import * as glimmer from '@glimmer/syntax';
+import { buildGlimmerVisitorKeys, DocumentLines } from 'ember-estree';
+import { Reference, Scope, Variable, Definition } from 'eslint-scope';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
 const htmlTagsSet = new Set(require('html-tags').default);
 const svgTagsSet = new Set(require('svg-tags'));
 const mathMLTagsSet = new Set(require('mathml-tag-names').mathmlTagNames);
@@ -10,7 +12,6 @@ const mathMLTagsSet = new Set(require('mathml-tag-names').mathmlTagNames);
 let TypescriptScope = null;
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
-  // eslint-disable-next-line n/no-unpublished-require
   const scopeManagerPath = require.resolve('@typescript-eslint/scope-manager', {
     paths: [parserPath],
   });
@@ -91,28 +92,6 @@ function registerNodeInScope(node, scope, variable) {
     s.through.push(ref);
   }
   scope.references.push(ref);
-}
-
-/**
- * Builds the complete Glimmer visitor keys map with "Glimmer" prefix and
- * additional keys needed for traversal (blockParamNodes, parts, etc).
- * Result is cached since glimmerVisitorKeys is a constant.
- * @return {object}
- */
-let _cachedGlimmerVisitorKeys = null;
-function buildGlimmerVisitorKeys() {
-  if (_cachedGlimmerVisitorKeys) return _cachedGlimmerVisitorKeys;
-  const keys = {};
-  for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
-    keys[`Glimmer${k}`] = [...v];
-  }
-  if (!keys.GlimmerElementNode.includes('blockParamNodes')) {
-    keys.GlimmerElementNode.push('blockParamNodes', 'parts');
-  }
-  keys.GlimmerProgram = ['body', 'blockParamNodes'];
-  keys.GlimmerTemplate = ['body'];
-  _cachedGlimmerVisitorKeys = keys;
-  return keys;
 }
 
 /**
@@ -463,7 +442,7 @@ function processGlimmerTemplate({ templateContent, codeLines, templateRange, tok
  * @param code
  * @return {{templateVisitorKeys: {}, comments: *[], templateInfos: {templateRange: *, range: *, replacedRange: *}[]}}
  */
-module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(info, code) {
+export function preprocessGlimmerTemplates(info, code) {
   const templateInfos = info.templateInfos.map((r) => ({
     utf16Range: [r.range.startUtf16Codepoint, r.range.endUtf16Codepoint],
   }));
@@ -489,7 +468,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
     templateInfos,
     comments: allComments,
   };
-};
+}
 
 /**
  * traverses the AST and replaces the transformed template parts with the Glimmer
@@ -502,7 +481,7 @@ module.exports.preprocessGlimmerTemplates = function preprocessGlimmerTemplates(
  * @param preprocessedResult
  * @param visitorKeys
  */
-module.exports.convertAst = function convertAst(result, preprocessedResult, visitorKeys) {
+export function convertAst(result, preprocessedResult, visitorKeys) {
   const templateInfos = preprocessedResult.templateInfos;
   let counter = 0;
   result.ast.comments.push(...preprocessedResult.comments);
@@ -635,12 +614,11 @@ module.exports.convertAst = function convertAst(result, preprocessedResult, visi
   if (counter !== templateInfos.length) {
     throw new Error('failed to process all templates');
   }
-};
+}
 
-const replaceRange = function replaceRange(s, start, end, substitute) {
+export const replaceRange = function replaceRange(s, start, end, substitute) {
   return s.slice(0, start) + substitute + s.slice(end);
 };
-module.exports.replaceRange = replaceRange;
 
 const processor = new ContentTag.Preprocessor();
 
@@ -676,7 +654,7 @@ function createError(code, message, fileName, start, end = start) {
   return new EmberParserError(message, fileName, { end, start });
 }
 
-module.exports.transformForLint = function transformForLint(code, fileName) {
+export function transformForLint(code, fileName) {
   let jsCode = code;
   /**
    *
@@ -772,9 +750,6 @@ module.exports.transformForLint = function transformForLint(code, fileName) {
     templateInfos: result,
     output: jsCode,
   };
-};
+}
 
-module.exports.traverse = traverse;
-module.exports.tokenize = tokenize;
-module.exports.processGlimmerTemplate = processGlimmerTemplate;
-module.exports.buildGlimmerVisitorKeys = buildGlimmerVisitorKeys;
+export { traverse, tokenize, processGlimmerTemplate, buildGlimmerVisitorKeys };
