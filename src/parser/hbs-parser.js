@@ -1,6 +1,6 @@
-const eslintScope = require('eslint-scope');
-const DocumentLines = require('../utils/document');
-const { processGlimmerTemplate, buildGlimmerVisitorKeys } = require('./transforms');
+import * as eslintScope from 'eslint-scope';
+import DocumentLines from '../utils/document.js';
+import { processGlimmerTemplate, buildGlimmerVisitorKeys } from './transforms.js';
 
 // Constant: Program + all Glimmer node types. Computed once at module load.
 const hbsVisitorKeys = { Program: ['body'], ...buildGlimmerVisitorKeys() };
@@ -17,76 +17,76 @@ const hbsVisitorKeys = { Program: ['body'], ...buildGlimmerVisitorKeys() };
 /**
  * @type {import('eslint').ParserModule}
  */
-module.exports = {
-  meta: {
-    name: 'ember-eslint-parser/hbs',
-    version: '*',
-  },
-
-  parseForESLint(code, options) {
-    const filePath = (options && options.filePath) || '<hbs>';
-    const codeLines = new DocumentLines(code);
-
-    let result;
-    try {
-      result = processGlimmerTemplate({
-        templateContent: code,
-        codeLines,
-        templateRange: [0, code.length],
-      });
-    } catch (e) {
-      // Transform glimmer parse error to ESLint-compatible error
-      const loc = e.location || (e.hash && e.hash.loc);
-      if (loc && loc.start) {
-        const err = Object.assign(new SyntaxError(e.message), {
-          lineNumber: loc.start.line,
-          column: loc.start.column,
-          index: codeLines.positionToOffset(loc.start),
-          fileName: filePath,
-        });
-        throw err;
-      }
-      throw e;
-    }
-
-    const { ast: templateNode, comments } = result;
-
-    // Wrap in a synthetic Program node (required by ESLint)
-    const program = {
-      type: 'Program',
-      body: [templateNode],
-      tokens: templateNode.tokens,
-      comments,
-      range: [0, code.length],
-      start: 0,
-      end: code.length,
-      loc: {
-        start: { line: 1, column: 0 },
-        end: codeLines.offsetToPosition(code.length),
-      },
-    };
-
-    // Build visitor keys: Program + all Glimmer node types
-    const visitorKeys = hbsVisitorKeys;
-
-    // Create an empty scope manager.
-    // For HBS, all locals are assumed to be defined at runtime,
-    // so we don't track variable references (no no-undef errors).
-    const scopeManager = eslintScope.analyze(
-      {
-        type: 'Program',
-        body: [],
-        range: [0, code.length],
-        loc: program.loc,
-      },
-      { range: true }
-    );
-
-    return {
-      ast: program,
-      scopeManager,
-      visitorKeys,
-      services: {},
-    };
-  },
+export const meta = {
+  name: 'ember-eslint-parser/hbs',
+  version: '*',
 };
+
+export function parseForESLint(code, options) {
+  const filePath = (options && options.filePath) || '<hbs>';
+  const codeLines = new DocumentLines(code);
+
+  let result;
+  try {
+    result = processGlimmerTemplate({
+      templateContent: code,
+      codeLines,
+      templateRange: [0, code.length],
+    });
+  } catch (e) {
+    // Transform glimmer parse error to ESLint-compatible error
+    const loc = e.location || (e.hash && e.hash.loc);
+    if (loc && loc.start) {
+      const err = Object.assign(new SyntaxError(e.message), {
+        lineNumber: loc.start.line,
+        column: loc.start.column,
+        index: codeLines.positionToOffset(loc.start),
+        fileName: filePath,
+      });
+      throw err;
+    }
+    throw e;
+  }
+
+  const { ast: templateNode, comments } = result;
+
+  // Wrap in a synthetic Program node (required by ESLint)
+  const program = {
+    type: 'Program',
+    body: [templateNode],
+    tokens: templateNode.tokens,
+    comments,
+    range: [0, code.length],
+    start: 0,
+    end: code.length,
+    loc: {
+      start: { line: 1, column: 0 },
+      end: codeLines.offsetToPosition(code.length),
+    },
+  };
+
+  // Build visitor keys: Program + all Glimmer node types
+  const visitorKeys = hbsVisitorKeys;
+
+  // Create an empty scope manager.
+  // For HBS, all locals are assumed to be defined at runtime,
+  // so we don't track variable references (no no-undef errors).
+  const scopeManager = eslintScope.analyze(
+    {
+      type: 'Program',
+      body: [],
+      range: [0, code.length],
+      loc: program.loc,
+    },
+    { range: true }
+  );
+
+  return {
+    ast: program,
+    scopeManager,
+    visitorKeys,
+    services: {},
+  };
+}
+
+export default { meta, parseForESLint };

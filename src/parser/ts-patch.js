@@ -1,6 +1,8 @@
-const fs = require('node:fs');
-const { transformForLint } = require('./transforms');
-const { replaceRange } = require('./transforms');
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
+import { transformForLint, replaceRange } from './transforms.js';
+
+const require = createRequire(import.meta.url);
 
 let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs;
 
@@ -162,9 +164,4 @@ try {
   syncMtsGtsSourceFiles = () => null;
 }
 
-module.exports = {
-  patchTs,
-  replaceExtensions,
-  syncMtsGtsSourceFiles,
-  typescriptParser,
-};
+export { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser };

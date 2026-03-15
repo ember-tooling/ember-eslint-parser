@@ -1,13 +1,11 @@
-const tsconfigUtils = require('@typescript-eslint/tsconfig-utils');
-const babelParser = require('@babel/eslint-parser/experimental-worker');
-const { registerParsedFile } = require('../preprocessor/noop');
-const {
-  patchTs,
-  replaceExtensions,
-  syncMtsGtsSourceFiles,
-  typescriptParser,
-} = require('./ts-patch');
-const { transformForLint, preprocessGlimmerTemplates, convertAst } = require('./transforms');
+import { createRequire } from 'node:module';
+import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
+import babelParser from '@babel/eslint-parser/experimental-worker';
+import { registerParsedFile } from '../preprocessor/noop.js';
+import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
+import { transformForLint, preprocessGlimmerTemplates, convertAst } from './transforms.js';
+
+const require = createRequire(import.meta.url);
 
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers
@@ -131,86 +129,86 @@ function getAllowJs(options) {
 /**
  * @type {import('eslint').ParserModule}
  */
-module.exports = {
-  meta: {
-    name: 'ember-eslint-parser',
-    version: '*',
-  },
-
-  parseForESLint(code, options) {
-    const allowGjsWasSet = options.allowGjs !== undefined;
-    const allowGjs = allowGjsWasSet ? options.allowGjs : getAllowJs(options);
-    let actualAllowGjs;
-    // Only patch TypeScript if we actually need it.
-    if (options.programs || options.projectService || options.project) {
-      ({ allowGjs: actualAllowGjs } = patchTs({ allowGjs }));
-    }
-    registerParsedFile(options.filePath);
-    let jsCode = code;
-    const info = transformForLint(code, options.filePath);
-    jsCode = info.output;
-
-    const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');
-    let useTypescript = true;
-
-    if (options.useBabel || !typescriptParser) {
-      useTypescript = false;
-    }
-
-    let result = null;
-    const filePath = options.filePath;
-    if (options.project || options.projectService) {
-      jsCode = replaceExtensions(jsCode);
-    }
-
-    if (isTypescript && !typescriptParser) {
-      throw new Error('Please install typescript to process gts');
-    }
-
-    try {
-      result =
-        isTypescript || useTypescript
-          ? typescriptParser.parseForESLint(jsCode, {
-              ...options,
-              ranges: true,
-              extraFileExtensions: ['.gts', '.gjs'],
-              filePath,
-            })
-          : babelParser.parseForESLint(jsCode, {
-              ...options,
-              requireConfigFile: false,
-              ranges: true,
-            });
-      if (!info.templateInfos?.length) {
-        return result;
-      }
-      const preprocessedResult = preprocessGlimmerTemplates(info, code);
-      preprocessedResult.code = code;
-      const { templateVisitorKeys } = preprocessedResult;
-      const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
-      result.isTypescript = isTypescript || useTypescript;
-      convertAst(result, preprocessedResult, visitorKeys);
-      if (result.services?.program) {
-        // Compare allowJs with the actual program's compiler options
-        const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
-        if (
-          !allowGjsWasSet &&
-          programAllowJs !== undefined &&
-          actualAllowGjs !== undefined &&
-          actualAllowGjs !== programAllowJs
-        ) {
-          // eslint-disable-next-line no-console
-          console.warn(
-            '[ember-eslint-parser] allowJs does not match the actual program. Consider setting allowGjs explicitly.\n' +
-              `    Current: ${allowGjs}, Program: ${programAllowJs}`
-          );
-        }
-        syncMtsGtsSourceFiles(result.services.program);
-      }
-      return { ...result, visitorKeys };
-    } catch (e) {
-      console.error(e);
-      throw e;
-    }
-  },
+export const meta = {
+  name: 'ember-eslint-parser',
+  version: '*',
 };
+
+export function parseForESLint(code, options) {
+  const allowGjsWasSet = options.allowGjs !== undefined;
+  const allowGjs = allowGjsWasSet ? options.allowGjs : getAllowJs(options);
+  let actualAllowGjs;
+  // Only patch TypeScript if we actually need it.
+  if (options.programs || options.projectService || options.project) {
+    ({ allowGjs: actualAllowGjs } = patchTs({ allowGjs }));
+  }
+  registerParsedFile(options.filePath);
+  let jsCode = code;
+  const info = transformForLint(code, options.filePath);
+  jsCode = info.output;
+
+  const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');
+  let useTypescript = true;
+
+  if (options.useBabel || !typescriptParser) {
+    useTypescript = false;
+  }
+
+  let result = null;
+  const filePath = options.filePath;
+  if (options.project || options.projectService) {
+    jsCode = replaceExtensions(jsCode);
+  }
+
+  if (isTypescript && !typescriptParser) {
+    throw new Error('Please install typescript to process gts');
+  }
+
+  try {
+    result =
+      isTypescript || useTypescript
+        ? typescriptParser.parseForESLint(jsCode, {
+            ...options,
+            ranges: true,
+            extraFileExtensions: ['.gts', '.gjs'],
+            filePath,
+          })
+        : babelParser.parseForESLint(jsCode, {
+            ...options,
+            requireConfigFile: false,
+            ranges: true,
+          });
+    if (!info.templateInfos?.length) {
+      return result;
+    }
+    const preprocessedResult = preprocessGlimmerTemplates(info, code);
+    preprocessedResult.code = code;
+    const { templateVisitorKeys } = preprocessedResult;
+    const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
+    result.isTypescript = isTypescript || useTypescript;
+    convertAst(result, preprocessedResult, visitorKeys);
+    if (result.services?.program) {
+      // Compare allowJs with the actual program's compiler options
+      const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
+      if (
+        !allowGjsWasSet &&
+        programAllowJs !== undefined &&
+        actualAllowGjs !== undefined &&
+        actualAllowGjs !== programAllowJs
+      ) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          '[ember-eslint-parser] allowJs does not match the actual program. Consider setting allowGjs explicitly.\n' +
+            `    Current: ${allowGjs}, Program: ${programAllowJs}`
+        );
+      }
+      syncMtsGtsSourceFiles(result.services.program);
+    }
+    return { ...result, visitorKeys };
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
+}
+
+export default { meta, parseForESLint };

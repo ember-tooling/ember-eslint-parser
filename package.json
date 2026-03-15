@@ -9,6 +9,7 @@
   },
   "license": "ISC",
   "author": "",
+  "type": "module",
   "exports": {
     ".": "./src/parser/gjs-gts-parser.js",
     "./hbs": "./src/parser/hbs-parser.js",
