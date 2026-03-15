@@ -10,7 +10,7 @@ try {
   const parserPath = require.resolve('@typescript-eslint/parser');
   const tsPath = require.resolve('typescript', { paths: [parserPath] });
   const ts = require(tsPath);
-  typescriptParser = await import('@typescript-eslint/parser');
+  typescriptParser = require('@typescript-eslint/parser');
   patchTs = function patchTs(options = {}) {
     if (isPatched) return { allowGjs };
     isPatched = true;

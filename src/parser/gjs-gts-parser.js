@@ -9,20 +9,8 @@ import {
 import { transformForLint, preprocessGlimmerTemplates, convertAst } from './transforms.js';
 
 const require = createRequire(import.meta.url);
-
-let tsconfigUtils;
-try {
-  tsconfigUtils = require('@typescript-eslint/tsconfig-utils');
-} catch {
-  // not available
-}
-
-let babelParser;
-try {
-  babelParser = require('@babel/eslint-parser/experimental-worker');
-} catch {
-  // not available
-}
+const tsconfigUtils = require('@typescript-eslint/tsconfig-utils');
+const babelParser = require('@babel/eslint-parser/experimental-worker');
 
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers
