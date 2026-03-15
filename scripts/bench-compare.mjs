@@ -1,9 +1,12 @@
 /* eslint-disable n/no-process-exit */
 /**
- * Benchmark comparison script.
+ * Benchmark comparison script using mitata.
  *
- * Runs `pnpm bench` on the current branch and on `main`, then prints a
- * side-by-side table showing the hz delta for every benchmark.
+ * Copies the base branch's source to a temp directory, installs its
+ * dependencies, then runs the mitata bench script with --control-dir so that
+ * both control (base) and experiment (current) parsers are benchmarked in the
+ * same process — giving mitata a fair, head-to-head comparison with built-in
+ * summary tables and boxplots.
  *
  * Usage:
  *   node scripts/bench-compare.mjs [--base <branch>]
@@ -13,10 +16,9 @@
  */
 
 import { execSync, spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { styleText } from 'node:util';
 
 // ---------------------------------------------------------------------------
 // CLI args
@@ -34,83 +36,41 @@ function run(cmd, opts = {}) {
   return execSync(cmd, { stdio: 'inherit', ...opts });
 }
 
-function currentBranch() {
-  return execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
-}
-
-function hasUncommittedChanges() {
-  const result = execSync('git status --porcelain', { encoding: 'utf8' });
-  return result.trim().length > 0;
-}
-
-function runBench(outputFile) {
-  const result = spawnSync('pnpm', ['vitest', 'bench', '--outputJson', outputFile, '--run'], {
-    stdio: 'inherit',
-  });
-  if (result.status !== 0) {
-    console.error('\n❌  Benchmark run failed.');
-    process.exit(1);
+/**
+ * Resolve a branch name to a commit SHA. Tries `origin/<branch>` first (for CI
+ * where only the PR branch is checked out locally), then falls back to `<branch>`.
+ */
+function resolveRef(branch) {
+  for (const candidate of [`origin/${branch}`, branch]) {
+    const result = spawnSync('git', ['rev-parse', '--verify', candidate], {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    if (result.status === 0) return result.stdout.trim();
   }
-}
-
-function loadResults(file) {
-  const raw = JSON.parse(readFileSync(file, 'utf8'));
-  // Build a map of "Suite > name" → benchmark entry.
-  // fullName is e.g. "tests/parser.bench.js > gts parser"; strip the file prefix.
-  const map = new Map();
-  for (const suite of raw.files ?? []) {
-    for (const group of suite.groups ?? []) {
-      const suiteName = (group.fullName ?? '').replace(/^.*?>\s*/, '');
-      for (const bench of group.benchmarks ?? []) {
-        const key = `${suiteName} > ${bench.name}`;
-        map.set(key, bench);
-      }
-    }
-  }
-  return map;
-}
-
-function fmt(n) {
-  return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
-}
-
-function delta(current, base) {
-  const pct = ((current - base) / base) * 100;
-  const sign = pct >= 0 ? '+' : '';
-  return `${sign}${pct.toFixed(1)}%`;
-}
-
-function colorize(pct) {
-  const num = Number.parseFloat(pct);
-  if (num >= 5) return styleText('green', pct);
-  if (num <= -5) return styleText('red', pct);
-  return styleText('yellow', pct);
+  throw new Error(`Could not resolve ref for branch "${branch}". Is it fetched?`);
 }
 
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
-const CURRENT_BRANCH = currentBranch();
+const ROOT = process.cwd();
+const CONTROL_DIR = join(tmpdir(), `bench-control-${BASE_BRANCH}-${Date.now()}`);
 
-if (CURRENT_BRANCH === BASE_BRANCH) {
-  console.error(`❌  Already on '${BASE_BRANCH}'. Check out your feature branch first.`);
-  process.exit(1);
-}
+console.error(`\n🔧  Setting up control (${BASE_BRANCH}) in ${CONTROL_DIR}\n`);
 
-const stashed = hasUncommittedChanges();
-if (stashed) {
-  console.log('📦  Stashing uncommitted changes…');
-  run('git stash --include-untracked');
-}
+const BASE_REF = resolveRef(BASE_BRANCH);
+console.error(`   Resolved ${BASE_BRANCH} → ${BASE_REF.slice(0, 10)}\n`);
 
-const tmpCurrent = join(tmpdir(), 'bench-current.json');
-const tmpBase = join(tmpdir(), `bench-${BASE_BRANCH}.json`);
-
-// Clean up temp files on exit
+// Clean up temp dir on exit
 function cleanup() {
-  for (const f of [tmpCurrent, tmpBase]) {
-    if (existsSync(f)) unlinkSync(f);
+  if (existsSync(CONTROL_DIR)) {
+    try {
+      rmSync(CONTROL_DIR, { recursive: true, force: true });
+    } catch {
+      // best-effort cleanup
+    }
   }
 }
 process.on('exit', cleanup);
@@ -118,96 +78,59 @@ process.on('SIGINT', () => process.exit(130));
 process.on('SIGTERM', () => process.exit(143));
 
 try {
-  // ── 1. Benchmark current branch ──────────────────────────────────────────
-  console.log(`\n🔧  Benchmarking current branch: \x1b[36m${CURRENT_BRANCH}\x1b[0m\n`);
-  runBench(tmpCurrent);
+  // ── 1. Export base branch source to temp dir ─────────────────────────────
+  mkdirSync(CONTROL_DIR, { recursive: true });
 
-  // ── 2. Switch to base branch ──────────────────────────────────────────────
-  console.log(`\n🔀  Switching to base branch: \x1b[36m${BASE_BRANCH}\x1b[0m\n`);
-  run(`git checkout ${BASE_BRANCH}`);
-  run('pnpm install --frozen-lockfile');
-
-  // ── 3. Benchmark base branch ──────────────────────────────────────────────
-  console.log(`\n🔧  Benchmarking base branch: \x1b[36m${BASE_BRANCH}\x1b[0m\n`);
-  runBench(tmpBase);
-} finally {
-  // ── 4. Restore original branch ────────────────────────────────────────────
-  console.log(`\n🔀  Restoring branch: \x1b[36m${CURRENT_BRANCH}\x1b[0m\n`);
-  run(`git checkout ${CURRENT_BRANCH}`);
-  run('pnpm install --frozen-lockfile');
-
-  if (stashed) {
-    console.log('📦  Restoring stash…');
-    run('git stash pop');
-  }
-}
-
-// ── 5. Compare ───────────────────────────────────────────────────────────────
-
-const currentResults = loadResults(tmpCurrent);
-const baseResults = loadResults(tmpBase);
-
-const allKeys = new Set([...currentResults.keys(), ...baseResults.keys()]);
-
-const COL = { name: 44, base: 18, current: 18, delta: 12 };
-const line = (name, base, cur, diff) =>
-  name.padEnd(COL.name) +
-  base.padStart(COL.base) +
-  cur.padStart(COL.current) +
-  diff.padStart(COL.delta);
-
-const ruler = '─'.repeat(COL.name + COL.base + COL.current + COL.delta);
-
-console.log(`\n${'─'.repeat(ruler.length)}`);
-console.log(
-  `  Benchmark comparison: ${styleText('cyan', CURRENT_BRANCH)} vs ${styleText('cyan', BASE_BRANCH)}`
-);
-console.log(`${'─'.repeat(ruler.length)}`);
-console.log(
-  styleText('bold', line('Benchmark', `${BASE_BRANCH} (hz)`, `${CURRENT_BRANCH} (hz)`, 'Δ'))
-);
-console.log(ruler);
-
-const benchResults = [];
-
-let lastSuite = '';
-for (const key of [...allKeys].sort()) {
-  const [suite] = key.split(' > ');
-  if (suite !== lastSuite) {
-    if (lastSuite) console.log('');
-    lastSuite = suite;
-  }
-
-  const b = baseResults.get(key);
-  const c = currentResults.get(key);
-
-  if (!b || !c) {
-    const note = !b ? '(missing in base)' : '(missing in current)';
-    console.log(line(`  ${key}`, '-', '-', note));
-    benchResults.push({ key, baseHz: null, currentHz: null, delta: null, note });
-    continue;
-  }
-
-  const pct = delta(c.hz, b.hz);
-  console.log(line(`  ${key}`, fmt(b.hz), fmt(c.hz), colorize(pct)));
-  benchResults.push({ key, baseHz: b.hz, currentHz: c.hz, delta: pct, note: null });
-}
-
-console.log(ruler);
-console.log(
-  '\n  ' +
-    styleText('green', '■') +
-    ' ≥ +5%  faster   ' +
-    styleText('red', '■') +
-    ' ≤ −5%  slower   ' +
-    styleText('yellow', '■') +
-    ' within ±5%  similar\n'
-);
-
-const jsonOutputPath = process.env.BENCH_JSON_OUTPUT;
-if (jsonOutputPath) {
-  writeFileSync(
-    jsonOutputPath,
-    JSON.stringify({ branch: CURRENT_BRANCH, base: BASE_BRANCH, results: benchResults }, null, 2)
+  // Copy package manifests and source (use resolved SHA for reliability)
+  run(
+    `git archive ${BASE_REF} -- package.json pnpm-lock.yaml pnpm-workspace.yaml src/ | tar -x -C "${CONTROL_DIR}"`
   );
+
+  // ── 2. Install dependencies in control dir ───────────────────────────────
+  console.error(`\n📦  Installing dependencies for control (${BASE_BRANCH})…\n`);
+  run('pnpm install --frozen-lockfile', {
+    cwd: CONTROL_DIR,
+    stdio: ['inherit', 'pipe', 'inherit'],
+  });
+
+  // ── 3. Run mitata bench with --control-dir ───────────────────────────────
+  console.error(`\n🏎️  Running benchmarks (experiment vs control)…\n`);
+
+  const benchScript = join(ROOT, 'tests/parser.bench.mjs');
+  const benchArgs = [
+    '--expose-gc',
+    '--max-old-space-size=4096',
+    benchScript,
+    '--control-dir',
+    CONTROL_DIR,
+  ];
+
+  // CPU pinning on Linux to reduce cross-core migration variance
+  const IS_LINUX = process.platform === 'linux';
+  const HAS_TASKSET = IS_LINUX && spawnSync('which', ['taskset'], { stdio: 'pipe' }).status === 0;
+
+  let cmd = 'node';
+  let fullArgs = benchArgs;
+
+  if (HAS_TASKSET) {
+    cmd = 'taskset';
+    fullArgs = ['-c', '0', 'node', ...benchArgs];
+    console.error('📌  CPU pinning enabled (taskset -c 0)\n');
+  }
+
+  const result = spawnSync(cmd, fullArgs, {
+    stdio: 'inherit',
+    cwd: ROOT,
+    env: { ...process.env },
+  });
+
+  if (result.status !== 0) {
+    console.error('\n❌  Benchmark run failed.');
+    process.exit(1);
+  }
+
+  console.error('\n✅  Benchmark comparison complete.\n');
+} catch (e) {
+  console.error('❌  Error:', e.message);
+  process.exit(1);
 }

@@ -1,11 +1,6 @@
 import { createRequire } from 'node:module';
 import { registerParsedFile } from '../preprocessor/noop.js';
-import {
-  patchTs,
-  replaceExtensions,
-  syncMtsGtsSourceFiles,
-  typescriptParser,
-} from './ts-patch.js';
+import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
 import { transformForLint, preprocessGlimmerTemplates, convertAst } from './transforms.js';
 
 const require = createRequire(import.meta.url);
