@@ -58,10 +58,10 @@ function resolveRef(branch) {
 const ROOT = process.cwd();
 const CONTROL_DIR = join(tmpdir(), `bench-control-${BASE_BRANCH}-${Date.now()}`);
 
-console.log(`\n🔧  Setting up control (${BASE_BRANCH}) in ${CONTROL_DIR}\n`);
+console.error(`\n🔧  Setting up control (${BASE_BRANCH}) in ${CONTROL_DIR}\n`);
 
 const BASE_REF = resolveRef(BASE_BRANCH);
-console.log(`   Resolved ${BASE_BRANCH} → ${BASE_REF.slice(0, 10)}\n`);
+console.error(`   Resolved ${BASE_BRANCH} → ${BASE_REF.slice(0, 10)}\n`);
 
 // Clean up temp dir on exit
 function cleanup() {
@@ -87,11 +87,14 @@ try {
   );
 
   // ── 2. Install dependencies in control dir ───────────────────────────────
-  console.log(`\n📦  Installing dependencies for control (${BASE_BRANCH})…\n`);
-  run('pnpm install --frozen-lockfile', { cwd: CONTROL_DIR });
+  console.error(`\n📦  Installing dependencies for control (${BASE_BRANCH})…\n`);
+  run('pnpm install --frozen-lockfile', {
+    cwd: CONTROL_DIR,
+    stdio: ['inherit', 'pipe', 'inherit'],
+  });
 
   // ── 3. Run mitata bench with --control-dir ───────────────────────────────
-  console.log(`\n🏎️  Running benchmarks (experiment vs control)…\n`);
+  console.error(`\n🏎️  Running benchmarks (experiment vs control)…\n`);
 
   const benchScript = join(ROOT, 'tests/parser.bench.mjs');
   const benchArgs = ['--expose-gc', benchScript, '--control-dir', CONTROL_DIR];
@@ -104,7 +107,7 @@ try {
   const fullArgs = HAS_TASKSET ? ['-c', '0', 'node', ...benchArgs] : benchArgs;
 
   if (HAS_TASKSET) {
-    console.log('📌  CPU pinning enabled (taskset -c 0)\n');
+    console.error('📌  CPU pinning enabled (taskset -c 0)\n');
   }
 
   const result = spawnSync(cmd, fullArgs, {
@@ -118,7 +121,7 @@ try {
     process.exit(1);
   }
 
-  console.log('\n✅  Benchmark comparison complete.\n');
+  console.error('\n✅  Benchmark comparison complete.\n');
 } catch (e) {
   console.error('❌  Error:', e.message);
   process.exit(1);

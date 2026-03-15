@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   bench-compare:
-    name: "Benchmark Comparison"
+    name: 'Benchmark Comparison'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -30,12 +30,13 @@ jobs:
           BENCH_JSON_OUTPUT: ${{ runner.temp }}/bench-results.json
         run: |
           set -o pipefail
-          pnpm bench:compare 2>&1 | sed 's/\x1b\[[0-9;]*m//g' > "$RUNNER_TEMP/bench-output.txt"
+          pnpm bench:compare | sed 's/\x1b\[[0-9;]*m//g' > "$RUNNER_TEMP/bench-output.txt"
 
       - name: Format PR comment
         if: always()
         env:
           BENCH_OUTPUT_FILE: ${{ runner.temp }}/bench-output.txt
+          BENCH_JSON_OUTPUT: ${{ runner.temp }}/bench-results.json
           BENCH_JOB_SUCCESS: ${{ job.status == 'success' }}
         run: node scripts/format-bench-comment.mjs > "$RUNNER_TEMP/bench-comment.md"
 
