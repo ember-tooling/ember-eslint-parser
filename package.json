@@ -9,6 +9,7 @@
   },
   "license": "ISC",
   "author": "",
+  "type": "module",
   "exports": {
     ".": "./src/parser/gjs-gts-parser.js",
     "./hbs": "./src/parser/hbs-parser.js",
@@ -23,7 +24,7 @@
     "lint:fix": "concurrently \"npm:lint:*:fix\" --names \"fix:\"",
     "lint:js": "eslint . --max-warnings=0",
     "lint:js:fix": "eslint . --fix --max-warnings=0",
-    "lint:package": "pnpm publint",
+    "lint:package": "publint",
     "bench": "node --expose-gc tests/parser.bench.mjs",
     "bench:compare": "node scripts/bench-compare.mjs",
     "bench:summary": "./scripts/local-bench-summary.sh",

@@ -98,5 +98,5 @@ function isLineBreak(ch) {
   );
 }
 
-module.exports = DocumentLines;
-module.exports.isLineBreak = isLineBreak;
+export default DocumentLines;
+export { isLineBreak };
