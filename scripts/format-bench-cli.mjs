@@ -1,3 +1,4 @@
+/* eslint-disable n/no-process-exit */
 /**
  * Format benchmark JSON results as a CLI-friendly summary table.
  *
