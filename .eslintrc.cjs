@@ -1,7 +1,6 @@
 module.exports = {
   env: {
     browser: true,
-    commonjs: true,
     es2021: true,
   },
   extends: ['standard', 'plugin:prettier/recommended', 'plugin:n/recommended'],
@@ -10,24 +9,16 @@ module.exports = {
       env: {
         node: true,
       },
-      files: ['.eslintrc.{js,cjs}'],
+      files: ['.eslintrc.cjs', '.prettierrc.cjs'],
       parserOptions: {
         sourceType: 'script',
-      },
-    },
-    {
-      env: {
-        node: true,
-      },
-      files: ['tests/**/*.js'],
-      parserOptions: {
-        sourceType: 'module',
       },
     },
   ],
   ignorePatterns: ['tests/fixtures/**/*.js'],
   parserOptions: {
     ecmaVersion: 'latest',
+    sourceType: 'module',
   },
   rules: {},
 };

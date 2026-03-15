@@ -9,24 +9,27 @@
 
 const parsedFiles = new Set();
 
-module.exports = {
-  registerParsedFile(f) {
-    parsedFiles.add(f);
-  },
-  preprocess: undefined,
-  postprocess: (messages, fileName) => {
-    const msgs = messages.flat();
-    if (!parsedFiles.has(fileName)) {
-      msgs[0] = msgs[0] || {
-        message: '',
-      };
-      msgs[0].message += '\n';
-      msgs[0].message +=
-        'To lint Gjs/Gts files please follow the setup guide at https://github.com/ember-cli/eslint-plugin-ember#gtsgjs' +
-        '\nNote that this error can also happen if you have multiple versions of eslint-plugin-ember in your node_modules';
-    }
-    parsedFiles.delete(fileName); // required for tests
-    return msgs;
-  },
-  supportsAutofix: true,
-};
+export function registerParsedFile(f) {
+  parsedFiles.add(f);
+}
+
+export const preprocess = undefined;
+
+export function postprocess(messages, fileName) {
+  const msgs = messages.flat();
+  if (!parsedFiles.has(fileName)) {
+    msgs[0] = msgs[0] || {
+      message: '',
+    };
+    msgs[0].message += '\n';
+    msgs[0].message +=
+      'To lint Gjs/Gts files please follow the setup guide at https://github.com/ember-cli/eslint-plugin-ember#gtsgjs' +
+      '\nNote that this error can also happen if you have multiple versions of eslint-plugin-ember in your node_modules';
+  }
+  parsedFiles.delete(fileName); // required for tests
+  return msgs;
+}
+
+export const supportsAutofix = true;
+
+export default { registerParsedFile, preprocess, postprocess, supportsAutofix };
