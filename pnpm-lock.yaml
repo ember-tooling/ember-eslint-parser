@@ -24,7 +24,7 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       ember-estree:
-        specifier: '>= 0.0.1'
+        specifier: '>= 0.2.0'
         version: 0.2.0
       eslint-scope:
         specifier: ^9.1.1
