@@ -33,9 +33,9 @@
   "dependencies": {
     "@babel/eslint-parser": "^7.28.6",
     "@glimmer/syntax": ">= 0.92.0",
-    "ember-estree": ">= 0.2.0",
     "@typescript-eslint/tsconfig-utils": "^8.38.0",
     "content-tag": "^4.1.0",
+    "ember-estree": ">= 0.2.0",
     "eslint-scope": "^9.1.1",
     "html-tags": "^5.1.0",
     "mathml-tag-names": "^4.0.0",
@@ -79,7 +79,8 @@
   },
   "pnpm": {
     "overrides": {
-      "ember-eslint-parser": "workspace:*"
+      "ember-eslint-parser": "workspace:*",
+      "ember-estree": "link:../ember-estree"
     }
   }
 }

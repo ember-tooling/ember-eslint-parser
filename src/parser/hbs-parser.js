@@ -1,6 +1,5 @@
 import * as eslintScope from 'eslint-scope';
-import { DocumentLines, buildGlimmerVisitorKeys } from 'ember-estree';
-import { processGlimmerTemplate } from './transforms.js';
+import { DocumentLines, buildGlimmerVisitorKeys, processGlimmerTemplateFromSource } from 'ember-estree';
 
 // Constant: Program + all Glimmer node types. Computed once at module load.
 const hbsVisitorKeys = { Program: ['body'], ...buildGlimmerVisitorKeys() };
@@ -26,12 +25,13 @@ export function parseForESLint(code, options) {
   const filePath = (options && options.filePath) || '<hbs>';
   const codeLines = new DocumentLines(code);
 
-  let result;
+  let templateNode;
   try {
-    result = processGlimmerTemplate({
-      templateContent: code,
-      codeLines,
+    templateNode = processGlimmerTemplateFromSource(code, {
+      contentOffset: 0,
+      contentEnd: code.length,
       templateRange: [0, code.length],
+      source: code,
     });
   } catch (e) {
     // Transform glimmer parse error to ESLint-compatible error
@@ -48,14 +48,12 @@ export function parseForESLint(code, options) {
     throw e;
   }
 
-  const { ast: templateNode, comments } = result;
-
   // Wrap in a synthetic Program node (required by ESLint)
   const program = {
     type: 'Program',
     body: [templateNode],
     tokens: templateNode.tokens,
-    comments,
+    comments: templateNode.comments || [],
     range: [0, code.length],
     start: 0,
     end: code.length,
