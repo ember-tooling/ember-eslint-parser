@@ -1,12 +1,11 @@
 import { createRequire } from 'node:module';
 import ContentTag from 'content-tag';
 import {
-  visitorKeys as glimmerVisitorKeys,
   traverse as glimmerTraverse,
   preprocess as glimmerPreprocess,
   isKeyword as glimmerIsKeyword,
 } from '@glimmer/syntax';
-import DocumentLines from '../utils/document.js';
+import { DocumentLines, buildGlimmerVisitorKeys } from 'ember-estree';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
 import htmlTags from 'html-tags';
 import svgTags from 'svg-tags';
@@ -102,28 +101,6 @@ function registerNodeInScope(node, scope, variable) {
     s.through.push(ref);
   }
   scope.references.push(ref);
-}
-
-/**
- * Builds the complete Glimmer visitor keys map with "Glimmer" prefix and
- * additional keys needed for traversal (blockParamNodes, parts, etc).
- * Result is cached since glimmerVisitorKeys is a constant.
- * @return {object}
- */
-let _cachedGlimmerVisitorKeys = null;
-function buildGlimmerVisitorKeys() {
-  if (_cachedGlimmerVisitorKeys) return _cachedGlimmerVisitorKeys;
-  const keys = {};
-  for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
-    keys[`Glimmer${k}`] = [...v];
-  }
-  if (!keys.GlimmerElementNode.includes('blockParamNodes')) {
-    keys.GlimmerElementNode.push('blockParamNodes', 'parts');
-  }
-  keys.GlimmerProgram = ['body', 'blockParamNodes'];
-  keys.GlimmerTemplate = ['body'];
-  _cachedGlimmerVisitorKeys = keys;
-  return keys;
 }
 
 /**
@@ -784,4 +761,4 @@ export function transformForLint(code, fileName) {
   };
 }
 
-export { traverse, tokenize, processGlimmerTemplate, buildGlimmerVisitorKeys };
+export { traverse, tokenize, processGlimmerTemplate };
