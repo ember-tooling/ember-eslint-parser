@@ -146,6 +146,8 @@ export function parseForESLint(code, options) {
   const info = transformForLint(code, options.filePath);
   jsCode = info.output;
 
+  const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');
+
   if (!typescriptParser) {
     throw new Error(
       'Please install @typescript-eslint/parser and typescript to process gjs/gts files'
@@ -172,7 +174,7 @@ export function parseForESLint(code, options) {
     preprocessedResult.code = code;
     const { templateVisitorKeys } = preprocessedResult;
     const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
-    result.isTypescript = true;
+    result.isTypescript = isTypescript;
     convertAst(result, preprocessedResult, visitorKeys);
     if (result.services?.program) {
       // Compare allowJs with the actual program's compiler options
