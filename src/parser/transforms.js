@@ -1,8 +1,8 @@
+import { createRequire } from 'node:module';
 import ContentTag from 'content-tag';
 import * as glimmer from '@glimmer/syntax';
 import { buildGlimmerVisitorKeys, DocumentLines } from 'ember-estree';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
-import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const htmlTagsSet = new Set(require('html-tags').default);

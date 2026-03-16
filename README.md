@@ -54,3 +54,4 @@ export default [
 ## Support
 
 eslint-plugin-ember is the primary consumer of this parser library, so SemVer _may_ not be respected for other consumers.
+
