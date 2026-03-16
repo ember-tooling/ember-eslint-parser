@@ -322,14 +322,15 @@ export function convertAst(result, preprocessedResult, visitorKeys) {
         result.scopeManager.declaredVariables || result.scopeManager.__declaredVariables;
       const vars = [];
       declaredVariables.set(node, vars);
+      const blockParamNodes = node.blockParamNodes || [];
       const virtualJSParentNode = {
         type: 'FunctionDeclaration',
-        params: node.params,
+        params: blockParamNodes,
         range: node.range,
         loc: node.loc,
         parent: path.parent,
       };
-      for (const [i, b] of node.params.entries()) {
+      for (const [i, b] of blockParamNodes.entries()) {
         const v = new Variable(b.name, scope);
         v.identifiers.push(b);
         scope.variables.push(v);
