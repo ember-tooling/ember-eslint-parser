@@ -31,7 +31,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@babel/eslint-parser": "^7.28.6",
     "@glimmer/syntax": ">= 0.92.0",
     "@typescript-eslint/tsconfig-utils": "^8.38.0",
     "content-tag": "^4.1.0",
@@ -42,7 +41,6 @@
     "svg-tags": "^1.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.23.6",
     "@typescript-eslint/parser": "^7.1.0",
     "@typescript-eslint/scope-manager": "^7.1.0",
     "@typescript-eslint/visitor-keys": "^7.1.0",
@@ -65,13 +63,7 @@
     "vitest": "^1.2.2"
   },
   "peerDependencies": {
-    "@babel/core": "^7.23.6",
     "@typescript-eslint/parser": "*"
-  },
-  "peerDependenciesMeta": {
-    "@typescript-eslint/parser": {
-      "optional": true
-    }
   },
   "packageManager": "pnpm@10.21.0",
   "engines": {

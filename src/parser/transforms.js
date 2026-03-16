@@ -1,17 +1,26 @@
 import { createRequire } from 'node:module';
 import ContentTag from 'content-tag';
-import * as glimmer from '@glimmer/syntax';
+import {
+  traverse as glimmerTraverse,
+  preprocess as glimmerPreprocess,
+  isKeyword as glimmerIsKeyword,
+} from '@glimmer/syntax';
 import { buildGlimmerVisitorKeys, DocumentLines } from 'ember-estree';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
+import htmlTags from 'html-tags';
+import svgTags from 'svg-tags';
+import { mathmlTagNames } from 'mathml-tag-names';
+
+const htmlTagsSet = new Set(htmlTags);
+const svgTagsSet = new Set(svgTags);
+const mathMLTagsSet = new Set(mathmlTagNames);
 
 const require = createRequire(import.meta.url);
-const htmlTagsSet = new Set(require('html-tags').default);
-const svgTagsSet = new Set(require('svg-tags'));
-const mathMLTagsSet = new Set(require('mathml-tag-names').mathmlTagNames);
 
 let TypescriptScope = null;
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
+  // eslint-disable-next-line n/no-unpublished-require
   const scopeManagerPath = require.resolve('@typescript-eslint/scope-manager', {
     paths: [parserPath],
   });
@@ -119,12 +128,12 @@ function traverse(visitorKeys, node, visitor) {
 
     if (!currentPath.node) continue;
 
-    const visitorKeys = allVisitorKeys[currentPath.node.type];
-    if (!visitorKeys) {
+    const keys = allVisitorKeys[currentPath.node.type];
+    if (!keys) {
       continue;
     }
 
-    for (const visitorKey of visitorKeys) {
+    for (const visitorKey of keys) {
       const child = currentPath.node[visitorKey];
 
       if (!child) {
@@ -234,7 +243,7 @@ function collectNodes(ast) {
   const textNodes = [];
   const emptyTextNodes = [];
 
-  glimmer.traverse(ast, {
+  glimmerTraverse(ast, {
     All(node, path) {
       node.parent = path.parentNode;
       allNodes.push(node);
@@ -356,7 +365,7 @@ function processGlimmerTemplate({ templateContent, codeLines, templateRange, tok
     end: codeLines.offsetToPosition(range[1]),
   });
 
-  const ast = glimmer.preprocess(templateContent, { mode: 'codemod' });
+  const ast = glimmerPreprocess(templateContent, { mode: 'codemod' });
   const { allNodes, comments, textNodes, emptyTextNodes } = collectNodes(ast);
 
   // Fix ranges, locs, and prefix types with "Glimmer"
@@ -525,7 +534,7 @@ export function convertAst(result, preprocessedResult, visitorKeys) {
 
     if (node.type === 'GlimmerPathExpression' && node.head.type === 'VarHead') {
       const name = node.head.name;
-      if (glimmer.isKeyword(name)) {
+      if (glimmerIsKeyword(name)) {
         return null;
       }
       const { scope, variable } = findVarInParentScopes(result.scopeManager, path, name) || {};

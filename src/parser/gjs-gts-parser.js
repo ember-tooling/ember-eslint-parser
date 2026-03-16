@@ -1,11 +1,10 @@
 import { createRequire } from 'node:module';
+import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
 import { registerParsedFile } from '../preprocessor/noop.js';
 import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
 import { transformForLint, preprocessGlimmerTemplates, convertAst } from './transforms.js';
 
 const require = createRequire(import.meta.url);
-const tsconfigUtils = require('@typescript-eslint/tsconfig-utils');
-const babelParser = require('@babel/eslint-parser/experimental-worker');
 
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers
@@ -23,6 +22,7 @@ const babelParser = require('@babel/eslint-parser/experimental-worker');
 function parseAllowJsFromTsconfig(tsconfigPath, rootDir) {
   try {
     const parserPath = require.resolve('@typescript-eslint/parser');
+    // eslint-disable-next-line n/no-unpublished-require
     const tsPath = require.resolve('typescript', { paths: [parserPath] });
     const ts = require(tsPath);
     const parsed = tsconfigUtils.getParsedConfigFile(ts, tsconfigPath, rootDir);
@@ -128,6 +128,10 @@ function getAllowJs(options) {
 /**
  * @type {import('eslint').ParserModule}
  */
+export const meta = {
+  name: 'ember-eslint-parser',
+  version: '*',
+};
 
 export function parseForESLint(code, options) {
   const allowGjsWasSet = options.allowGjs !== undefined;
@@ -142,11 +146,10 @@ export function parseForESLint(code, options) {
   const info = transformForLint(code, options.filePath);
   jsCode = info.output;
 
-  const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');
-  let useTypescript = true;
-
-  if (options.useBabel || !typescriptParser) {
-    useTypescript = false;
+  if (!typescriptParser) {
+    throw new Error(
+      'Please install @typescript-eslint/parser and typescript to process gjs/gts files'
+    );
   }
 
   let result = null;
@@ -155,24 +158,13 @@ export function parseForESLint(code, options) {
     jsCode = replaceExtensions(jsCode);
   }
 
-  if (isTypescript && !typescriptParser) {
-    throw new Error('Please install typescript to process gts');
-  }
-
   try {
-    result =
-      isTypescript || useTypescript
-        ? typescriptParser.parseForESLint(jsCode, {
-            ...options,
-            ranges: true,
-            extraFileExtensions: ['.gts', '.gjs'],
-            filePath,
-          })
-        : babelParser.parseForESLint(jsCode, {
-            ...options,
-            requireConfigFile: false,
-            ranges: true,
-          });
+    result = typescriptParser.parseForESLint(jsCode, {
+      ...options,
+      ranges: true,
+      extraFileExtensions: ['.gts', '.gjs'],
+      filePath,
+    });
     if (!info.templateInfos?.length) {
       return result;
     }
@@ -180,7 +172,7 @@ export function parseForESLint(code, options) {
     preprocessedResult.code = code;
     const { templateVisitorKeys } = preprocessedResult;
     const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
-    result.isTypescript = isTypescript || useTypescript;
+    result.isTypescript = true;
     convertAst(result, preprocessedResult, visitorKeys);
     if (result.services?.program) {
       // Compare allowJs with the actual program's compiler options
@@ -206,10 +198,4 @@ export function parseForESLint(code, options) {
   }
 }
 
-export default {
-  meta: {
-    name: 'ember-eslint-parser',
-    version: '*',
-  },
-  parseForESLint,
-};
+export default { meta, parseForESLint };

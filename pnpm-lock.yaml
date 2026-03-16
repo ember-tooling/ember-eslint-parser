@@ -11,9 +11,6 @@ importers:
 
   .:
     dependencies:
-      '@babel/eslint-parser':
-        specifier: ^7.28.6
-        version: 7.28.6(@babel/core@7.26.0)(eslint@8.57.1)
       '@glimmer/syntax':
         specifier: '>= 0.92.0'
         version: 0.92.3
@@ -39,9 +36,6 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
     devDependencies:
-      '@babel/core':
-        specifier: ^7.23.6
-        version: 7.26.0
       '@typescript-eslint/parser':
         specifier: ^7.1.0
         version: 7.18.0(eslint@8.57.1)(typescript@5.7.2)

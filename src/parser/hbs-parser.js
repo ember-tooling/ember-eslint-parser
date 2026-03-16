@@ -1,4 +1,4 @@
-import { analyze as eslintScopeAnalyze } from 'eslint-scope';
+import * as eslintScope from 'eslint-scope';
 import { DocumentLines } from 'ember-estree';
 import { processGlimmerTemplate, buildGlimmerVisitorKeys } from './transforms.js';
 
@@ -17,6 +17,10 @@ const hbsVisitorKeys = { Program: ['body'], ...buildGlimmerVisitorKeys() };
 /**
  * @type {import('eslint').ParserModule}
  */
+export const meta = {
+  name: 'ember-eslint-parser/hbs',
+  version: '*',
+};
 
 export function parseForESLint(code, options) {
   const filePath = (options && options.filePath) || '<hbs>';
@@ -67,7 +71,7 @@ export function parseForESLint(code, options) {
   // Create an empty scope manager.
   // For HBS, all locals are assumed to be defined at runtime,
   // so we don't track variable references (no no-undef errors).
-  const scopeManager = eslintScopeAnalyze(
+  const scopeManager = eslintScope.analyze(
     {
       type: 'Program',
       body: [],
@@ -85,10 +89,4 @@ export function parseForESLint(code, options) {
   };
 }
 
-export default {
-  meta: {
-    name: 'ember-eslint-parser/hbs',
-    version: '*',
-  },
-  parseForESLint,
-};
+export default { meta, parseForESLint };

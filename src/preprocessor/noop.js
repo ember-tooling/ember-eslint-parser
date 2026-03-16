@@ -15,7 +15,7 @@ export function registerParsedFile(f) {
 
 export const preprocess = undefined;
 
-export function postprocess(messages, fileName) {
+export const postprocess = (messages, fileName) => {
   const msgs = messages.flat();
   if (!parsedFiles.has(fileName)) {
     msgs[0] = msgs[0] || {
@@ -28,7 +28,7 @@ export function postprocess(messages, fileName) {
   }
   parsedFiles.delete(fileName); // required for tests
   return msgs;
-}
+};
 
 export const supportsAutofix = true;
 

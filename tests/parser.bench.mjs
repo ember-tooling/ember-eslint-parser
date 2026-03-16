@@ -16,8 +16,6 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { run, bench, boxplot, summary } from 'mitata';
-import * as experimentGJS from '../src/parser/gjs-gts-parser.js';
-import * as experimentHBS from '../src/parser/hbs-parser.js';
 
 // ---------------------------------------------------------------------------
 // CLI args
@@ -26,6 +24,14 @@ import * as experimentHBS from '../src/parser/hbs-parser.js';
 const args = process.argv.slice(2);
 const ctrlIdx = args.indexOf('--control-dir');
 const CONTROL_DIR = ctrlIdx !== -1 ? resolve(args[ctrlIdx + 1]) : null;
+
+// ---------------------------------------------------------------------------
+// Load experiment (current branch) parsers
+// ---------------------------------------------------------------------------
+
+const require_ = createRequire(import.meta.url);
+const experimentGJS = require_('../src/parser/gjs-gts-parser.js');
+const experimentHBS = require_('../src/parser/hbs-parser.js');
 
 // ---------------------------------------------------------------------------
 // (Optionally) load control (base branch) parsers from tmp dir

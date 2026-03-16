@@ -4,11 +4,11 @@ import { transformForLint, replaceRange } from './transforms.js';
 
 const require = createRequire(import.meta.url);
 
-export let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser;
-let isPatched, allowGjs;
+let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs;
 
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
+  // eslint-disable-next-line n/no-unpublished-require
   const tsPath = require.resolve('typescript', { paths: [parserPath] });
   const ts = require(tsPath);
   typescriptParser = require('@typescript-eslint/parser');
@@ -163,3 +163,5 @@ try {
   replaceExtensions = (code) => code;
   syncMtsGtsSourceFiles = () => null;
 }
+
+export { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser };
