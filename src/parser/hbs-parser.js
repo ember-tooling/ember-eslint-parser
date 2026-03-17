@@ -1,5 +1,5 @@
 import * as eslintScope from 'eslint-scope';
-import { DocumentLines, buildGlimmerVisitorKeys, processGlimmerTemplateFromSource } from 'ember-estree';
+import { parseTemplate, DocumentLines, buildGlimmerVisitorKeys } from 'ember-estree';
 
 // Constant: Program + all Glimmer node types. Computed once at module load.
 const hbsVisitorKeys = { Program: ['body'], ...buildGlimmerVisitorKeys() };
@@ -27,14 +27,8 @@ export function parseForESLint(code, options) {
 
   let templateNode;
   try {
-    templateNode = processGlimmerTemplateFromSource(code, {
-      contentOffset: 0,
-      contentEnd: code.length,
-      templateRange: [0, code.length],
-      source: code,
-    });
+    templateNode = parseTemplate(code);
   } catch (e) {
-    // Transform glimmer parse error to ESLint-compatible error
     const loc = e.location || (e.hash && e.hash.loc);
     if (loc && loc.start) {
       const err = Object.assign(new SyntaxError(e.message), {
@@ -48,7 +42,6 @@ export function parseForESLint(code, options) {
     throw e;
   }
 
-  // Wrap in a synthetic Program node (required by ESLint)
   const program = {
     type: 'Program',
     body: [templateNode],
@@ -63,28 +56,14 @@ export function parseForESLint(code, options) {
     },
   };
 
-  // Build visitor keys: Program + all Glimmer node types
   const visitorKeys = hbsVisitorKeys;
 
-  // Create an empty scope manager.
-  // For HBS, all locals are assumed to be defined at runtime,
-  // so we don't track variable references (no no-undef errors).
   const scopeManager = eslintScope.analyze(
-    {
-      type: 'Program',
-      body: [],
-      range: [0, code.length],
-      loc: program.loc,
-    },
+    { type: 'Program', body: [], range: [0, code.length], loc: program.loc },
     { range: true }
   );
 
-  return {
-    ast: program,
-    scopeManager,
-    visitorKeys,
-    services: {},
-  };
+  return { ast: program, scopeManager, visitorKeys, services: {} };
 }
 
 export default { meta, parseForESLint };

@@ -3,16 +3,19 @@ import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
 import babelParser from '@babel/eslint-parser/experimental-worker';
 import { registerParsedFile } from '../preprocessor/noop.js';
 import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
-import { transformForLint, preprocessGlimmerTemplates, convertAst } from './transforms.js';
+import { toTree, buildGlimmerVisitorKeys } from 'ember-estree';
+import { registerGlimmerScopes } from './transforms.js';
 
 const require = createRequire(import.meta.url);
 
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers
- * 1. transforms gts/gjs files into parseable ts/js without changing the offsets and locations around it
- * 2. parses the transformed code and generates the AST for TS ot JS
- * 3. preprocesses the templates info and prepares the Glimmer AST
- * 4. converts the js/ts AST so that it includes the Glimmer AST at the right locations, replacing the original
+ *
+ * Uses ember-estree's toTree with a pluggable jsParser to:
+ * 1. Extract <template> regions via content-tag
+ * 2. Parse JS/TS with TypeScript-ESLint or Babel
+ * 3. Process Glimmer templates and splice them into the AST
+ * 4. Register Glimmer scopes for ESLint rules (no-undef, no-unused-vars)
  */
 
 /**
@@ -77,12 +80,10 @@ function getAllowJsFromPrograms(programs) {
 function getProjectServiceTsconfigPath(projectService) {
   if (!projectService) return null;
 
-  // If projectService is true, use default behavior (nearest tsconfig.json, allowJs from config)
   if (projectService === true) {
     return 'tsconfig.json';
   }
 
-  // If projectService is an object, handle ProjectServiceOptions
   if (typeof projectService === 'object') {
     if (typeof projectService.allowDefaultProject !== 'undefined') {
       // eslint-disable-next-line no-console
@@ -138,14 +139,10 @@ export function parseForESLint(code, options) {
   const allowGjsWasSet = options.allowGjs !== undefined;
   const allowGjs = allowGjsWasSet ? options.allowGjs : getAllowJs(options);
   let actualAllowGjs;
-  // Only patch TypeScript if we actually need it.
   if (options.programs || options.projectService || options.project) {
     ({ allowGjs: actualAllowGjs } = patchTs({ allowGjs }));
   }
   registerParsedFile(options.filePath);
-  let jsCode = code;
-  const info = transformForLint(code, options.filePath);
-  jsCode = info.output;
 
   const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');
   let useTypescript = true;
@@ -154,42 +151,51 @@ export function parseForESLint(code, options) {
     useTypescript = false;
   }
 
-  let result = null;
-  const filePath = options.filePath;
-  if (options.project || options.projectService) {
-    jsCode = replaceExtensions(jsCode);
-  }
-
   if (isTypescript && !typescriptParser) {
     throw new Error('Please install typescript to process gts');
   }
 
+  const filePath = options.filePath;
+
+  // scopeManager is captured from jsParser result for use in the visitor
+  let scopeManager = null;
+  let jsParserResult = null;
+
   try {
-    result =
-      isTypescript || useTypescript
-        ? typescriptParser.parseForESLint(jsCode, {
-            ...options,
-            ranges: true,
-            extraFileExtensions: ['.gts', '.gjs'],
-            filePath,
-          })
-        : babelParser.parseForESLint(jsCode, {
-            ...options,
-            requireConfigFile: false,
-            ranges: true,
-          });
-    if (!info.templateInfos?.length) {
-      return result;
-    }
-    const preprocessedResult = preprocessGlimmerTemplates(info, code);
-    preprocessedResult.code = code;
-    const { templateVisitorKeys } = preprocessedResult;
-    const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
-    result.isTypescript = isTypescript || useTypescript;
-    convertAst(result, preprocessedResult, visitorKeys);
-    if (result.services?.program) {
-      // Compare allowJs with the actual program's compiler options
-      const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
+    const result = toTree(code, {
+      filePath,
+      jsParser(placeholderJS, filename) {
+        let jsCode = placeholderJS;
+        if (options.project || options.projectService) {
+          jsCode = replaceExtensions(jsCode);
+        }
+
+        jsParserResult =
+          isTypescript || useTypescript
+            ? typescriptParser.parseForESLint(jsCode, {
+                ...options,
+                ranges: true,
+                extraFileExtensions: ['.gts', '.gjs'],
+                filePath: filename,
+              })
+            : babelParser.parseForESLint(jsCode, {
+                ...options,
+                requireConfigFile: false,
+                ranges: true,
+              });
+
+        scopeManager = jsParserResult.scopeManager;
+        return jsParserResult;
+      },
+      visitor(path) {
+        if (scopeManager) {
+          registerGlimmerScopes(path, scopeManager, isTypescript || useTypescript);
+        }
+      },
+    });
+
+    if (jsParserResult?.services?.program) {
+      const programAllowJs = jsParserResult.services.program.getCompilerOptions?.()?.allowJs;
       if (
         !allowGjsWasSet &&
         programAllowJs !== undefined &&
@@ -202,10 +208,30 @@ export function parseForESLint(code, options) {
             `    Current: ${allowGjs}, Program: ${programAllowJs}`
         );
       }
-      syncMtsGtsSourceFiles(result.services.program);
+      syncMtsGtsSourceFiles(jsParserResult.services.program);
     }
-    return { ...result, visitorKeys };
+
+    const visitorKeys = {
+      ...(jsParserResult?.visitorKeys || {}),
+      ...buildGlimmerVisitorKeys(),
+    };
+
+    return {
+      ast: result.program,
+      visitorKeys,
+      scopeManager,
+      services: jsParserResult?.services || {},
+    };
   } catch (e) {
+    // Wrap content-tag parse errors with ESLint-friendly properties
+    if (e.message?.includes('Parse Error at')) {
+      const [line, column] = e.message.split(':').slice(-2).map((x) => parseInt(x));
+      const err = new Error(e.source_code || e.message);
+      err.lineNumber = line;
+      err.column = column;
+      err.fileName = filePath;
+      throw err;
+    }
     console.error(e);
     throw e;
   }

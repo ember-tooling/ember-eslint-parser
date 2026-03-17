@@ -24,8 +24,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       ember-estree:
-        specifier: github:NullVoxPopuli/ember-estree#1a322e3
-        version: https://codeload.github.com/NullVoxPopuli/ember-estree/tar.gz/1a322e3
+        specifier: github:NullVoxPopuli/ember-estree#56dc454
+        version: https://codeload.github.com/NullVoxPopuli/ember-estree/tar.gz/56dc454
       eslint-scope:
         specifier: ^9.1.1
         version: 9.1.1
@@ -2827,8 +2827,8 @@ packages:
     resolution: {integrity: sha512-BtkjulweiXo9c3yVWrtexw2dTmBrvavD/xixNC6TKOBdrixUwU+6nuOO9dufDWsMxoid7MvtmDpzc9+mE8PdaA==}
     engines: {node: 10.* || >= 12.*}
 
-  ember-estree@https://codeload.github.com/NullVoxPopuli/ember-estree/tar.gz/1a322e3:
-    resolution: {tarball: https://codeload.github.com/NullVoxPopuli/ember-estree/tar.gz/1a322e3}
+  ember-estree@https://codeload.github.com/NullVoxPopuli/ember-estree/tar.gz/56dc454:
+    resolution: {tarball: https://codeload.github.com/NullVoxPopuli/ember-estree/tar.gz/56dc454}
     version: 0.3.0
 
   ember-rfc176-data@0.3.18:
@@ -8794,7 +8794,7 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-estree@https://codeload.github.com/NullVoxPopuli/ember-estree/tar.gz/1a322e3:
+  ember-estree@https://codeload.github.com/NullVoxPopuli/ember-estree/tar.gz/56dc454:
     dependencies:
       '@glimmer/syntax': 0.95.0
       content-tag: 4.1.0
