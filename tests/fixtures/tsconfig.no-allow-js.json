@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "rootDir": ".",
+    "allowJs": false,
+    "strictNullChecks": true
+  },
+  "include": ["**/*.ts", "**/*.gts"]
+}

@@ -14,9 +14,9 @@ try {
   ts = require(tsPath);
   typescriptParser = require('@typescript-eslint/parser');
   patchTs = function patchTs(options = {}) {
+    allowGjs = options.allowGjs !== undefined ? options.allowGjs : true;
     if (isPatched) return { allowGjs };
     isPatched = true;
-    allowGjs = options.allowGjs !== undefined ? options.allowGjs : true;
     const sys = { ...ts.sys };
     const newSys = {
       ...ts.sys,
