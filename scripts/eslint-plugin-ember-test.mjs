@@ -16,7 +16,10 @@ await fse.remove(FOLDERS.testRoot);
 await fse.ensureDir(FOLDERS.testRoot);
 
 // Using pnpm instead of yarn, because pnpm is way faster
-await execaCommand(`git clone --branch ${BRANCH} ${REPO}`, { cwd: FOLDERS.testRoot, stdio: 'inherit' });
+await execaCommand(`git clone --branch ${BRANCH} ${REPO}`, {
+  cwd: FOLDERS.testRoot,
+  stdio: 'inherit',
+});
 await execaCommand(`pnpm install`, { cwd: FOLDERS.repo, stdio: 'inherit' });
 await execaCommand(`pnpm add ${FOLDERS.here}`, { cwd: FOLDERS.repo, stdio: 'inherit' });
 await execaCommand(`pnpm run test`, { cwd: FOLDERS.repo, stdio: 'inherit' });
