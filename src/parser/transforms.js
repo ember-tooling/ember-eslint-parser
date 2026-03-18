@@ -1,16 +1,18 @@
 import { createRequire } from 'node:module';
 import ContentTag from 'content-tag';
+import { isKeyword as glimmerIsKeyword } from '@glimmer/syntax';
 import {
-  visitorKeys as glimmerVisitorKeys,
-  traverse as glimmerTraverse,
-  preprocess as glimmerPreprocess,
-  isKeyword as glimmerIsKeyword,
-} from '@glimmer/syntax';
-import DocumentLines from '../utils/document.js';
+  processGlimmerTemplate,
+  buildGlimmerVisitorKeys,
+  DocumentLines,
+  traverse,
+} from 'ember-estree';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
 import htmlTags from 'html-tags';
 import svgTags from 'svg-tags';
 import { mathmlTagNames } from 'mathml-tag-names';
+
+export { traverse, buildGlimmerVisitorKeys };
 
 const htmlTagsSet = new Set(htmlTags);
 const svgTagsSet = new Set(svgTags);
@@ -104,365 +106,8 @@ function registerNodeInScope(node, scope, variable) {
   scope.references.push(ref);
 }
 
-/**
- * Builds the complete Glimmer visitor keys map with "Glimmer" prefix and
- * additional keys needed for traversal (blockParamNodes, parts, etc).
- * Result is cached since glimmerVisitorKeys is a constant.
- * @return {object}
- */
-let _cachedGlimmerVisitorKeys = null;
-function buildGlimmerVisitorKeys() {
-  if (_cachedGlimmerVisitorKeys) return _cachedGlimmerVisitorKeys;
-  const keys = {};
-  for (const [k, v] of Object.entries(glimmerVisitorKeys)) {
-    keys[`Glimmer${k}`] = [...v];
-  }
-  if (!keys.GlimmerElementNode.includes('blockParamNodes')) {
-    keys.GlimmerElementNode.push('blockParamNodes', 'parts');
-  }
-  keys.GlimmerProgram = ['body', 'blockParamNodes'];
-  keys.GlimmerTemplate = ['body'];
-  _cachedGlimmerVisitorKeys = keys;
-  return keys;
-}
-
-/**
- * traverses all nodes using the {visitorKeys} calling the callback function, visitor
- * @param visitorKeys
- * @param node
- * @param visitor
- */
-function traverse(visitorKeys, node, visitor) {
-  const allVisitorKeys = { ...visitorKeys, ...buildGlimmerVisitorKeys() };
-  const queue = [];
-
-  queue.push({
-    node,
-    parent: null,
-    parentKey: null,
-    parentPath: null,
-    context: {},
-  });
-
-  while (queue.length > 0) {
-    const currentPath = queue.pop();
-
-    visitor(currentPath);
-
-    if (!currentPath.node) continue;
-
-    const visitorKeys = allVisitorKeys[currentPath.node.type];
-    if (!visitorKeys) {
-      continue;
-    }
-
-    for (const visitorKey of visitorKeys) {
-      const child = currentPath.node[visitorKey];
-
-      if (!child) {
-        continue;
-      } else if (Array.isArray(child)) {
-        for (const item of child) {
-          queue.push({
-            node: item,
-            parent: currentPath.node,
-            context: currentPath.context,
-            parentKey: visitorKey,
-            parentPath: currentPath,
-          });
-        }
-      } else {
-        queue.push({
-          node: child,
-          parent: currentPath.node,
-          context: currentPath.context,
-          parentKey: visitorKey,
-          parentPath: currentPath,
-        });
-      }
-    }
-  }
-}
-
 function isUpperCase(char) {
   return char.toUpperCase() === char;
-}
-
-function isAlphaNumeric(code) {
-  return !(
-    !(code > 47 && code < 58) && // numeric (0-9)
-    !(code > 64 && code < 91) && // upper alpha (A-Z)
-    !(code > 96 && code < 123)
-  );
-}
-
-function isWhiteSpaceCode(code) {
-  return (
-    code === 32 /* space */ ||
-    code === 9 /* tab */ ||
-    code === 13 /* carriageReturn */ ||
-    code === 10 /* lineFeed */ ||
-    code === 11 /* verticalTab */
-  );
-}
-
-/**
- * simple tokenizer for templates, just splits it up into words and punctuators
- * @param template {string}
- * @param startOffset {number}
- * @param doc {DocumentLines}
- * @return {Token[]}
- */
-function tokenize(template, doc, startOffset) {
-  const tokens = [];
-  let wordStart = -1;
-  function pushToken(value, type, range) {
-    const t = {
-      type,
-      value,
-      range,
-      start: range[0],
-      end: range[1],
-      loc: {
-        start: { ...doc.offsetToPosition(range[0]), index: range[0] },
-        end: { ...doc.offsetToPosition(range[1]), index: range[1] },
-      },
-    };
-    tokens.push(t);
-  }
-  for (let i = 0; i < template.length; i++) {
-    const code = template.charCodeAt(i);
-    if (isAlphaNumeric(code)) {
-      if (wordStart < 0) {
-        wordStart = i;
-      }
-    } else {
-      if (wordStart >= 0) {
-        pushToken(template.slice(wordStart, i), 'word', [startOffset + wordStart, startOffset + i]);
-        wordStart = -1;
-      }
-      if (!isWhiteSpaceCode(code)) {
-        pushToken(template[i], 'Punctuator', [startOffset + i, startOffset + i + 1]);
-      }
-    }
-  }
-  if (wordStart >= 0) {
-    pushToken(template.slice(wordStart), 'word', [
-      startOffset + wordStart,
-      startOffset + template.length,
-    ]);
-  }
-  return tokens;
-}
-
-/**
- * Traverses a Glimmer AST, sets parent references, and categorizes nodes.
- * @param {object} ast
- * @return {{ allNodes: object[], comments: object[], textNodes: object[], emptyTextNodes: object[] }}
- */
-function collectNodes(ast) {
-  const allNodes = [];
-  const comments = [];
-  const textNodes = [];
-  const emptyTextNodes = [];
-
-  glimmerTraverse(ast, {
-    All(node, path) {
-      node.parent = path.parentNode;
-      allNodes.push(node);
-      if (node.type === 'CommentStatement' || node.type === 'MustacheCommentStatement') {
-        comments.push(node);
-      }
-      if (node.type === 'TextNode') {
-        node.value = node.chars;
-        if (node.value.trim().length !== 0 || (node.parent && node.parent.type === 'AttrNode')) {
-          textNodes.push(node);
-        } else {
-          emptyTextNodes.push(node);
-        }
-      }
-    },
-  });
-
-  return { allNodes, comments, textNodes, emptyTextNodes };
-}
-
-/**
- * Removes nodes from their parent's children/body/parts arrays.
- * @param {object[]} nodes
- */
-function removeFromParent(nodes) {
-  for (const node of nodes) {
-    const children =
-      (node.parent && (node.parent.children || node.parent.body || node.parent.parts)) || [];
-    const idx = children.indexOf(node);
-    if (idx >= 0) {
-      children.splice(idx, 1);
-    }
-  }
-}
-
-/**
- * Builds the final token stream by filtering out tokens covered by comments
- * or text nodes, then merging text nodes back in sorted order.
- * @param {object[]} rawTokens
- * @param {object[]} comments
- * @param {object[]} textNodes
- * @return {object[]}
- */
-function buildTokenStream(rawTokens, comments, textNodes) {
-  // Build sorted interval arrays for O(log n) exclusion checks
-  const commentIntervals = comments.map((c) => c.range).sort((a, b) => a[0] - b[0]);
-  const textNodeIntervals = textNodes.map((t) => t.range).sort((a, b) => a[0] - b[0]);
-
-  /**
-   * Binary-search: is the token's range fully covered by any interval in `intervals`?
-   * Intervals must be sorted by start offset.
-   * @param {number[]} tokenRange
-   * @param {number[][]} intervals
-   */
-  function isCovered(tokenRange, intervals) {
-    let lo = 0;
-    let hi = intervals.length - 1;
-    while (lo <= hi) {
-      const mid = (lo + hi) >> 1;
-      const iv = intervals[mid];
-      if (iv[0] <= tokenRange[0] && iv[1] >= tokenRange[1]) {
-        return true;
-      }
-      if (iv[0] > tokenRange[0]) {
-        hi = mid - 1;
-      } else {
-        lo = mid + 1;
-      }
-    }
-    return false;
-  }
-
-  // Single-pass filter: drop tokens covered by a comment or text node
-  const filteredTokens = rawTokens.filter(
-    (t) => !isCovered(t.range, commentIntervals) && !isCovered(t.range, textNodeIntervals)
-  );
-
-  // Merge text nodes (already sorted by position from the AST) into filteredTokens
-  // using a single linear merge pass instead of repeated splice calls.
-  const sortedTextNodes = [...textNodes].sort((a, b) => a.range[0] - b.range[0]);
-  const result = [];
-  let ti = 0;
-  for (const token of filteredTokens) {
-    while (ti < sortedTextNodes.length && sortedTextNodes[ti].range[0] < token.range[0]) {
-      result.push(sortedTextNodes[ti++]);
-    }
-    result.push(token);
-  }
-  while (ti < sortedTextNodes.length) {
-    result.push(sortedTextNodes[ti++]);
-  }
-
-  return result;
-}
-
-/**
- * Parses a Glimmer template and produces a processed AST ready for ESLint.
- * Shared between hbs-parser (standalone .hbs files) and gjs/gts parser (embedded templates).
- *
- * @param {object} options
- * @param {string} options.templateContent - The template string to parse with glimmer
- * @param {DocumentLines} options.codeLines - DocumentLines for the full source file
- * @param {[number, number]} options.templateRange - Range [start, end] for the Template root node
- * @param {string} [options.tokenSource] - String to tokenize (defaults to templateContent)
- * @return {{ ast: object, comments: object[] }}
- */
-function processGlimmerTemplate({ templateContent, codeLines, templateRange, tokenSource }) {
-  const offset = templateRange[0];
-  const docLines = new DocumentLines(templateContent);
-
-  /** Convert a Glimmer loc to a file-level [start, end] range */
-  const toFileRange = (loc) => [
-    offset + docLines.positionToOffset(loc.start),
-    offset + docLines.positionToOffset(loc.end),
-  ];
-  /** Convert a file-level range to a file-level loc */
-  const toFileLoc = (range) => ({
-    start: codeLines.offsetToPosition(range[0]),
-    end: codeLines.offsetToPosition(range[1]),
-  });
-
-  const ast = glimmerPreprocess(templateContent, { mode: 'codemod' });
-  const { allNodes, comments, textNodes, emptyTextNodes } = collectNodes(ast);
-
-  // Fix ranges, locs, and prefix types with "Glimmer"
-  for (const n of allNodes) {
-    if (n.type === 'PathExpression') {
-      n.head.range = toFileRange(n.head.loc);
-      n.head.loc = toFileLoc(n.head.range);
-    }
-
-    n.range = n.type === 'Template' ? [...templateRange] : toFileRange(n.loc);
-    n.start = n.range[0];
-    n.end = n.range[1];
-    n.loc = toFileLoc(n.range);
-
-    if (n.type === 'ElementNode') {
-      n.name = n.tag;
-      n.parts = [n.path.head].map((p) => {
-        const range = toFileRange(p.loc);
-        return {
-          ...p,
-          name: p.original,
-          parent: n,
-          type: 'GlimmerElementNodePart',
-          range,
-          loc: toFileLoc(range),
-        };
-      });
-    }
-
-    if ('blockParams' in n) {
-      n.params = (n.params || []).map((p) => {
-        const range = toFileRange(p.loc);
-        return {
-          ...p,
-          type: 'BlockParam',
-          name: p.original,
-          parent: n,
-          range,
-          loc: toFileLoc(range),
-        };
-      });
-    }
-
-    // Nullify empty hashes before the type is renamed
-    if (
-      (n.type === 'MustacheStatement' ||
-        n.type === 'BlockStatement' ||
-        n.type === 'SubExpression') &&
-      n.hash &&
-      n.hash.pairs &&
-      n.hash.pairs.length === 0
-    ) {
-      n.hash = null;
-    }
-
-    n.type = `Glimmer${n.type}`;
-  }
-
-  // Clean up AST structure
-  removeFromParent(emptyTextNodes);
-  removeFromParent(comments);
-  for (const comment of comments) {
-    comment.type = 'Block';
-  }
-
-  // Build final token stream
-  ast.tokens = buildTokenStream(
-    tokenize(tokenSource || templateContent, codeLines, offset),
-    comments,
-    textNodes
-  );
-  ast.contents = templateContent;
-
-  return { ast, comments };
 }
 
 /**
@@ -615,14 +260,15 @@ export function convertAst(result, preprocessedResult, visitorKeys) {
         result.scopeManager.declaredVariables || result.scopeManager.__declaredVariables;
       const vars = [];
       declaredVariables.set(node, vars);
+      const blockParamNodes = node.blockParamNodes || [];
       const virtualJSParentNode = {
         type: 'FunctionDeclaration',
-        params: node.params,
+        params: blockParamNodes,
         range: node.range,
         loc: node.loc,
         parent: path.parent,
       };
-      for (const [i, b] of node.params.entries()) {
+      for (const [i, b] of blockParamNodes.entries()) {
         const v = new Variable(b.name, scope);
         v.identifiers.push(b);
         scope.variables.push(v);
@@ -783,5 +429,3 @@ export function transformForLint(code, fileName) {
     output: jsCode,
   };
 }
-
-export { traverse, tokenize, processGlimmerTemplate, buildGlimmerVisitorKeys };

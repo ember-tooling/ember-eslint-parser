@@ -1,6 +1,5 @@
 import * as eslintScope from 'eslint-scope';
-import DocumentLines from '../utils/document.js';
-import { processGlimmerTemplate, buildGlimmerVisitorKeys } from './transforms.js';
+import { processGlimmerTemplate, buildGlimmerVisitorKeys, DocumentLines } from 'ember-estree';
 
 // Constant: Program + all Glimmer node types. Computed once at module load.
 const hbsVisitorKeys = { Program: ['body'], ...buildGlimmerVisitorKeys() };

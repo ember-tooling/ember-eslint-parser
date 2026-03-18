@@ -35,6 +35,7 @@
     "@glimmer/syntax": ">= 0.92.0",
     "@typescript-eslint/tsconfig-utils": "^8.38.0",
     "content-tag": "^4.1.0",
+    "ember-estree": "link:../ember-estree",
     "eslint-scope": "^9.1.1",
     "html-tags": "^5.1.0",
     "mathml-tag-names": "^4.0.0",
