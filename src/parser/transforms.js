@@ -198,6 +198,29 @@ export function preprocessGlimmerTemplates(info, code) {
       end: codeLines.offsetToPosition(tpl.utf16Range[1]),
     };
 
+    // Add tokens for the <template> and </template> tags so ESLint's
+    // SourceCode has proper token coverage for the full range.
+    const openEnd = tpl.contentRange[0];
+    const closeStart = tpl.contentRange[1];
+    const openTag = code.slice(tpl.utf16Range[0], openEnd);
+    const closeTag = code.slice(closeStart, tpl.utf16Range[1]);
+    const makeToken = (value, range) => ({
+      type: 'Punctuator',
+      value,
+      range,
+      start: range[0],
+      end: range[1],
+      loc: {
+        start: codeLines.offsetToPosition(range[0]),
+        end: codeLines.offsetToPosition(range[1]),
+      },
+    });
+    ast.tokens = [
+      makeToken(openTag, [tpl.utf16Range[0], openEnd]),
+      ...(ast.tokens || []),
+      makeToken(closeTag, [closeStart, tpl.utf16Range[1]]),
+    ];
+
     ast.content = code.slice(...tpl.utf16Range);
     allComments.push(...comments);
     tpl.ast = ast;
@@ -261,6 +284,13 @@ export function convertAst(result, preprocessedResult, visitorKeys) {
       }
       counter++;
       const ast = template.ast;
+      // Remove properties from the original node type (TemplateLiteral, StaticBlock, etc.)
+      // that would confuse ESLint rules after we overwrite with the GlimmerTemplate AST.
+      for (const key of Object.keys(node)) {
+        if (!(key in ast) && key !== 'parent') {
+          delete node[key];
+        }
+      }
       Object.assign(node, ast);
     }
 

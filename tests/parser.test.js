@@ -753,6 +753,7 @@ export const NotFound = <template>
             "const",
             "ReportIssue",
             "=",
+            "<template>",
             "
           If the tutorial navigated you here,
           ",
@@ -770,10 +771,12 @@ export const NotFound = <template>
             ".
           ❤️
         ",
+            "</template>",
             ";",
             "const",
             "CurrentPath",
             "=",
+            "<template>",
             "{",
             "{",
             "#",
@@ -810,10 +813,12 @@ export const NotFound = <template>
             "let",
             "}",
             "}",
+            "</template>",
             ";",
             "const",
             "BackToStart",
             "=",
+            "<template>",
             "
           You may also try going
           ",
@@ -831,11 +836,13 @@ export const NotFound = <template>
             "/",
             "Link",
             ">",
+            "</template>",
             ";",
             "export",
             "const",
             "NotFound",
             "=",
+            "<template>",
             "
           Prose for the current tutorial, ",
             "<",
@@ -901,6 +908,7 @@ export const NotFound = <template>
             "
           \`
         ",
+            "</template>",
           ],
           "type": "Program",
         }
@@ -913,6 +921,7 @@ export const NotFound = <template>
             "const",
             "NotFound",
             "=",
+            "<template>",
             "
           Prose for the current tutorial, ",
             "<",
@@ -978,6 +987,7 @@ export const NotFound = <template>
             "
           \`
         ",
+            "</template>",
           ],
           "type": "ExportNamedDeclaration",
         }
@@ -989,6 +999,7 @@ export const NotFound = <template>
             "const",
             "NotFound",
             "=",
+            "<template>",
             "
           Prose for the current tutorial, ",
             "<",
@@ -1054,6 +1065,7 @@ export const NotFound = <template>
             "
           \`
         ",
+            "</template>",
           ],
           "type": "VariableDeclaration",
         }
@@ -1064,6 +1076,7 @@ export const NotFound = <template>
           "tokens": [
             "NotFound",
             "=",
+            "<template>",
             "
           Prose for the current tutorial, ",
             "<",
@@ -1129,6 +1142,7 @@ export const NotFound = <template>
             "
           \`
         ",
+            "</template>",
           ],
           "type": "VariableDeclarator",
         }
@@ -1137,103 +1151,7 @@ export const NotFound = <template>
       .toMatchInlineSnapshot(`
         {
           "tokens": [
-            "import",
-            "{",
-            "ExternalLink",
-            ",",
-            "Link",
-            ",",
-            "service",
-            "}",
-            "from",
-            "'limber-ui'",
-            ";",
-            "const",
-            "ReportIssue",
-            "=",
-            "
-          If the tutorial navigated you here,
-          ",
-            "<",
-            "ExternalLink",
-            "href",
-            "=",
-            "https://github.com/NullVoxPopuli/limber/issues",
-            ">",
-            "please report the issue",
-            "<",
-            "/",
-            "ExternalLink",
-            ">",
-            ".
-          ❤️
-        ",
-            ";",
-            "const",
-            "CurrentPath",
-            "=",
-            "{",
-            "{",
-            "#",
-            "let",
-            "(",
-            "service",
-            """,
-            "docs",
-            """,
-            ")",
-            "as",
-            "|",
-            "docs",
-            "|",
-            "}",
-            "}",
-            "<",
-            "code",
-            ">",
-            "{",
-            "{",
-            "docs",
-            ".",
-            "currentPath",
-            "}",
-            "}",
-            "<",
-            "/",
-            "code",
-            ">",
-            "{",
-            "{",
-            "/",
-            "let",
-            "}",
-            "}",
-            ";",
-            "const",
-            "BackToStart",
-            "=",
-            "
-          You may also try going
-          ",
-            "<",
-            "Link",
-            "href",
-            "=",
-            "/",
-            "style",
-            "=",
-            "width: max-content; display: inline-block;",
-            ">",
-            "back to the beginning",
-            "<",
-            "/",
-            "Link",
-            ">",
-            ";",
-            "export",
-            "const",
-            "NotFound",
-            "=",
+            "<template>",
             "
           Prose for the current tutorial, ",
             "<",
@@ -1299,6 +1217,7 @@ export const NotFound = <template>
             "
           \`
         ",
+            "</template>",
           ],
           "type": "GlimmerTemplate",
         }
@@ -1657,6 +1576,7 @@ export const NotFound = <template>
             "const",
             "BackToStart",
             "=",
+            "<template>",
             "
           You may also try going
           ",
@@ -1674,6 +1594,7 @@ export const NotFound = <template>
             "/",
             "Link",
             ">",
+            "</template>",
             ";",
           ],
           "type": "VariableDeclaration",
@@ -1685,6 +1606,7 @@ export const NotFound = <template>
           "tokens": [
             "BackToStart",
             "=",
+            "<template>",
             "
           You may also try going
           ",
@@ -1702,6 +1624,7 @@ export const NotFound = <template>
             "/",
             "Link",
             ">",
+            "</template>",
           ],
           "type": "VariableDeclarator",
         }
@@ -1710,81 +1633,7 @@ export const NotFound = <template>
       .toMatchInlineSnapshot(`
         {
           "tokens": [
-            "import",
-            "{",
-            "ExternalLink",
-            ",",
-            "Link",
-            ",",
-            "service",
-            "}",
-            "from",
-            "'limber-ui'",
-            ";",
-            "const",
-            "ReportIssue",
-            "=",
-            "
-          If the tutorial navigated you here,
-          ",
-            "<",
-            "ExternalLink",
-            "href",
-            "=",
-            "https://github.com/NullVoxPopuli/limber/issues",
-            ">",
-            "please report the issue",
-            "<",
-            "/",
-            "ExternalLink",
-            ">",
-            ".
-          ❤️
-        ",
-            ";",
-            "const",
-            "CurrentPath",
-            "=",
-            "{",
-            "{",
-            "#",
-            "let",
-            "(",
-            "service",
-            """,
-            "docs",
-            """,
-            ")",
-            "as",
-            "|",
-            "docs",
-            "|",
-            "}",
-            "}",
-            "<",
-            "code",
-            ">",
-            "{",
-            "{",
-            "docs",
-            ".",
-            "currentPath",
-            "}",
-            "}",
-            "<",
-            "/",
-            "code",
-            ">",
-            "{",
-            "{",
-            "/",
-            "let",
-            "}",
-            "}",
-            ";",
-            "const",
-            "BackToStart",
-            "=",
+            "<template>",
             "
           You may also try going
           ",
@@ -1802,6 +1651,7 @@ export const NotFound = <template>
             "/",
             "Link",
             ">",
+            "</template>",
           ],
           "type": "GlimmerTemplate",
         }
@@ -1913,6 +1763,7 @@ export const NotFound = <template>
             "const",
             "CurrentPath",
             "=",
+            "<template>",
             "{",
             "{",
             "#",
@@ -1949,6 +1800,7 @@ export const NotFound = <template>
             "let",
             "}",
             "}",
+            "</template>",
             ";",
           ],
           "type": "VariableDeclaration",
@@ -1960,6 +1812,7 @@ export const NotFound = <template>
           "tokens": [
             "CurrentPath",
             "=",
+            "<template>",
             "{",
             "{",
             "#",
@@ -1996,6 +1849,7 @@ export const NotFound = <template>
             "let",
             "}",
             "}",
+            "</template>",
           ],
           "type": "VariableDeclarator",
         }
@@ -2004,41 +1858,7 @@ export const NotFound = <template>
       .toMatchInlineSnapshot(`
         {
           "tokens": [
-            "import",
-            "{",
-            "ExternalLink",
-            ",",
-            "Link",
-            ",",
-            "service",
-            "}",
-            "from",
-            "'limber-ui'",
-            ";",
-            "const",
-            "ReportIssue",
-            "=",
-            "
-          If the tutorial navigated you here,
-          ",
-            "<",
-            "ExternalLink",
-            "href",
-            "=",
-            "https://github.com/NullVoxPopuli/limber/issues",
-            ">",
-            "please report the issue",
-            "<",
-            "/",
-            "ExternalLink",
-            ">",
-            ".
-          ❤️
-        ",
-            ";",
-            "const",
-            "CurrentPath",
-            "=",
+            "<template>",
             "{",
             "{",
             "#",
@@ -2075,6 +1895,7 @@ export const NotFound = <template>
             "let",
             "}",
             "}",
+            "</template>",
           ],
           "type": "GlimmerTemplate",
         }
@@ -2261,6 +2082,7 @@ export const NotFound = <template>
             "const",
             "ReportIssue",
             "=",
+            "<template>",
             "
           If the tutorial navigated you here,
           ",
@@ -2278,6 +2100,7 @@ export const NotFound = <template>
             ".
           ❤️
         ",
+            "</template>",
             ";",
           ],
           "type": "VariableDeclaration",
@@ -2289,6 +2112,7 @@ export const NotFound = <template>
           "tokens": [
             "ReportIssue",
             "=",
+            "<template>",
             "
           If the tutorial navigated you here,
           ",
@@ -2306,6 +2130,7 @@ export const NotFound = <template>
             ".
           ❤️
         ",
+            "</template>",
           ],
           "type": "VariableDeclarator",
         }
@@ -2314,20 +2139,7 @@ export const NotFound = <template>
       .toMatchInlineSnapshot(`
         {
           "tokens": [
-            "import",
-            "{",
-            "ExternalLink",
-            ",",
-            "Link",
-            ",",
-            "service",
-            "}",
-            "from",
-            "'limber-ui'",
-            ";",
-            "const",
-            "ReportIssue",
-            "=",
+            "<template>",
             "
           If the tutorial navigated you here,
           ",
@@ -2345,6 +2157,7 @@ export const NotFound = <template>
             ".
           ❤️
         ",
+            "</template>",
           ],
           "type": "GlimmerTemplate",
         }
