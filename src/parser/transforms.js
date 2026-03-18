@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import ContentTag from 'content-tag';
 import { isKeyword as glimmerIsKeyword } from '@glimmer/syntax';
-import { toTree, buildGlimmerVisitorKeys, DocumentLines } from 'ember-estree';
+import { buildGlimmerVisitorKeys, DocumentLines } from 'ember-estree';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
 import htmlTags from 'html-tags';
 import svgTags from 'svg-tags';
@@ -25,12 +25,8 @@ try {
   // not available
 }
 
-/**
- * finds the nearest node scope
- * @param scopeManager
- * @param nodePath
- * @return {*|null}
- */
+// ── Scope helpers ─────────────────────────────────────────────────────
+
 function findParentScope(scopeManager, nodePath) {
   let scope = null;
   let path = nodePath;
@@ -44,18 +40,6 @@ function findParentScope(scopeManager, nodePath) {
   return null;
 }
 
-/**
- * tries to find the variable names {name} in any parent scope
- * if the variable is not found it just returns the nearest scope,
- * so that it's usage can be registered.
- *
- * Also returns the nearest scope (equivalent to findParentScope) in one pass,
- * avoiding the redundant second traversal that findParentScope would perform.
- * @param scopeManager
- * @param nodePath
- * @param name
- * @return {{scope: null, variable: *}|{scope: (*|null)}}
- */
 function findVarInParentScopes(scopeManager, nodePath, name) {
   let defScope = null;
   let currentScope = null;
@@ -77,19 +61,12 @@ function findVarInParentScopes(scopeManager, nodePath, name) {
   return { scope: currentScope, variable: defScope.set.get(name) };
 }
 
-/**
- * registers a node variable usage in the scope.
- * @param node
- * @param scope
- * @param variable
- */
 function registerNodeInScope(node, scope, variable) {
   const ref = new Reference(node, scope, Reference.READ);
   if (variable) {
     variable.references.push(ref);
     ref.resolved = variable;
   } else {
-    // register missing variable in most upper scope.
     let s = scope;
     while (s.upper) {
       s = s.upper;
@@ -99,12 +76,8 @@ function registerNodeInScope(node, scope, variable) {
   scope.references.push(ref);
 }
 
-/**
- * traverses all nodes using the {visitorKeys} calling the callback function, visitor
- * @param visitorKeys
- * @param node
- * @param visitor
- */
+// ── AST traversal ─────────────────────────────────────────────────────
+
 function traverse(visitorKeys, node, visitor) {
   const allVisitorKeys = { ...visitorKeys, ...buildGlimmerVisitorKeys() };
   const queue = [];
@@ -124,12 +97,12 @@ function traverse(visitorKeys, node, visitor) {
 
     if (!currentPath.node) continue;
 
-    const visitorKeys = allVisitorKeys[currentPath.node.type];
-    if (!visitorKeys) {
+    const keys = allVisitorKeys[currentPath.node.type];
+    if (!keys) {
       continue;
     }
 
-    for (const visitorKey of visitorKeys) {
+    for (const visitorKey of keys) {
       const child = currentPath.node[visitorKey];
 
       if (!child) {
@@ -161,138 +134,22 @@ function isUpperCase(char) {
   return char.toUpperCase() === char;
 }
 
-/**
- * Preprocesses the template info, parsing the template content to Glimmer AST,
- * fixing the offsets and locations of all nodes
- * also calculates the block params locations & ranges
- * and adding it to the info
- * @param info
- * @param code
- * @return {{templateVisitorKeys: {}, comments: *[], templateInfos: {templateRange: *, range: *, replacedRange: *}[]}}
- */
-export function preprocessGlimmerTemplates(info, code) {
-  const templateInfos = info.templateInfos.map((r) => ({
-    utf16Range: [r.range.startUtf16Codepoint, r.range.endUtf16Codepoint],
-    contentRange: [r.contentRange.startUtf16Codepoint, r.contentRange.endUtf16Codepoint],
-  }));
-  const codeLines = new DocumentLines(code);
-  const allComments = [];
-
-  for (const tpl of templateInfos) {
-    // Pass inner content only (without <template> tags) to avoid
-    // glimmer wrapping it in a spurious ElementNode(tag: "template")
-    const templateContent = code.slice(...tpl.contentRange);
-
-    const { ast, comments } = toTree(templateContent, {
-      templateOnly: true,
-      codeLines,
-      templateRange: [...tpl.contentRange],
-    });
-
-    // Fix the Template root to cover the full <template>...</template> range
-    ast.range = [...tpl.utf16Range];
-    ast.start = tpl.utf16Range[0];
-    ast.end = tpl.utf16Range[1];
-    ast.loc = {
-      start: codeLines.offsetToPosition(tpl.utf16Range[0]),
-      end: codeLines.offsetToPosition(tpl.utf16Range[1]),
-    };
-
-    // Add tokens for the <template> and </template> tags so ESLint's
-    // SourceCode has proper token coverage for the full range.
-    const openEnd = tpl.contentRange[0];
-    const closeStart = tpl.contentRange[1];
-    const openTag = code.slice(tpl.utf16Range[0], openEnd);
-    const closeTag = code.slice(closeStart, tpl.utf16Range[1]);
-    const makeToken = (value, range) => ({
-      type: 'Punctuator',
-      value,
-      range,
-      start: range[0],
-      end: range[1],
-      loc: {
-        start: codeLines.offsetToPosition(range[0]),
-        end: codeLines.offsetToPosition(range[1]),
-      },
-    });
-    ast.tokens = [
-      makeToken(openTag, [tpl.utf16Range[0], openEnd]),
-      ...(ast.tokens || []),
-      makeToken(closeTag, [closeStart, tpl.utf16Range[1]]),
-    ];
-
-    ast.content = code.slice(...tpl.utf16Range);
-    allComments.push(...comments);
-    tpl.ast = ast;
-  }
-
-  return {
-    templateVisitorKeys: buildGlimmerVisitorKeys(),
-    templateInfos,
-    comments: allComments,
-  };
-}
+// ── Glimmer scope registration ────────────────────────────────────────
 
 /**
- * traverses the AST and replaces the transformed template parts with the Glimmer
- * AST.
- * This also creates the scopes for the Glimmer Blocks and registers the block params
- * in the scope, and also any usages of variables in path expressions
- * this allows the basic eslint rules no-undef and no-unsused to work also for the
- * templates without needing any custom rules
- * @param result
- * @param preprocessedResult
- * @param visitorKeys
+ * Walks the AST and registers Glimmer-specific scopes:
+ * - Block scopes for blockParams ({{#each ... as |item|}})
+ * - Variable references for path expressions ({{foo}})
+ * - Variable references for element tag names (<MyComponent />)
+ *
+ * This is the ESLint-specific layer on top of ember-estree's AST.
+ * @param result - The parseForESLint result with ast, scopeManager, visitorKeys, isTypescript
  */
-export function convertAst(result, preprocessedResult, visitorKeys) {
-  const templateInfos = preprocessedResult.templateInfos;
-  let counter = 0;
-  if (!result.ast.comments) result.ast.comments = [];
-  result.ast.comments.push(...preprocessedResult.comments);
-
-  for (const ti of templateInfos) {
-    const firstIdx = result.ast.tokens.findIndex((t) => t.range[0] === ti.utf16Range[0]);
-    const lastIdx = result.ast.tokens.findIndex((t) => t.range[1] === ti.utf16Range[1]);
-    result.ast.tokens.splice(firstIdx, lastIdx - firstIdx + 1, ...ti.ast.tokens);
-  }
-
-  // Build a Map keyed by range start for O(1) lookup during traversal
-  const templateInfoByStart = new Map(templateInfos.map((t) => [t.utf16Range[0], t]));
-
+export function registerGlimmerScopes(result) {
   // eslint-disable-next-line complexity
-  traverse(visitorKeys, result.ast, (path) => {
+  traverse(result.visitorKeys, result.ast, (path) => {
     const node = path.node;
     if (!node) return null;
-
-    if (
-      node.type === 'ExpressionStatement' ||
-      node.type === 'StaticBlock' ||
-      node.type === 'TemplateLiteral' ||
-      node.type === 'ExportDefaultDeclaration'
-    ) {
-      let range = node.range;
-      if (node.type === 'ExportDefaultDeclaration') {
-        range = [node.declaration.range[0], node.declaration.range[1]];
-      }
-
-      const template = templateInfoByStart.get(range[0]);
-      if (
-        !template ||
-        (template.utf16Range[1] !== range[1] && template.utf16Range[1] !== range[1] + 1)
-      ) {
-        return null;
-      }
-      counter++;
-      const ast = template.ast;
-      // Remove properties from the original node type (TemplateLiteral, StaticBlock, etc.)
-      // that would confuse ESLint rules after we overwrite with the GlimmerTemplate AST.
-      for (const key of Object.keys(node)) {
-        if (!(key in ast) && key !== 'parent') {
-          delete node[key];
-        }
-      }
-      Object.assign(node, ast);
-    }
 
     if (node.type === 'GlimmerPathExpression' && node.head.type === 'VarHead') {
       const name = node.head.name;
@@ -306,31 +163,14 @@ export function convertAst(result, preprocessedResult, visitorKeys) {
       }
     }
     if (node.type === 'GlimmerElementNode') {
-      // always reference first part of tag name, this also has the advantage
-      // that errors regarding this tag will only mark the tag name instead of
-      // the whole tag + children
       const n = node.parts[0];
       const { scope, variable } = findVarInParentScopes(result.scopeManager, path, n.name) || {};
-      /*
-      register a node in scope if we found a variable
-      we ignore named-blocks and args as we know that it doesn't reference anything in current scope
-      we also ignore `this`
-      if we do not find a variable we register it with a missing variable if
-        * it starts with upper case, it should be a component with a reference
-        * it includes a dot, it's a path which should have a reference
-        * it's NOT a standard html, svg or mathml tag, it should have a referenced variable
-      */
+
       const ignore =
-        // Local instance access
         n.name === 'this' ||
-        // named block
         n.name.startsWith(':') ||
-        // argument
         n.name.startsWith('@') ||
-        // defined locally
         !scope ||
-        // custom-elements are allowed to be used even if they don't exist
-        // and are undefined
         n.name.includes('-');
 
       const registerUndef =
@@ -346,7 +186,7 @@ export function convertAst(result, preprocessedResult, visitorKeys) {
     }
 
     if ('blockParams' in node) {
-      const blockParamNodes = node.blockParamNodes || node.params || [];
+      const blockParamNodes = node.blockParamNodes || [];
       const upperScope = findParentScope(result.scopeManager, path);
       const scope = result.isTypescript
         ? new TypescriptScope.BlockScope(result.scopeManager, upperScope, node)
@@ -382,11 +222,9 @@ export function convertAst(result, preprocessedResult, visitorKeys) {
     }
     return null;
   });
-
-  if (counter !== templateInfos.length) {
-    throw new Error('failed to process all templates');
-  }
 }
+
+// ── transformForLint (used by ts-patch.js) ────────────────────────────
 
 export const replaceRange = function replaceRange(s, start, end, substitute) {
   return s.slice(0, start) + substitute + s.slice(end);
@@ -406,17 +244,14 @@ class EmberParserError extends Error {
     });
   }
 
-  // For old version of ESLint https://github.com/typescript-eslint/typescript-eslint/pull/6556#discussion_r1123237311
   get index() {
     return this.location.start.offset;
   }
 
-  // https://github.com/eslint/eslint/blob/b09a512107249a4eb19ef5a37b0bd672266eafdb/lib/linter/linter.js#L853
   get lineNumber() {
     return this.location.start.line;
   }
 
-  // https://github.com/eslint/eslint/blob/b09a512107249a4eb19ef5a37b0bd672266eafdb/lib/linter/linter.js#L854
   get column() {
     return this.location.start.column;
   }
@@ -426,64 +261,22 @@ function createError(code, message, fileName, start, end = start) {
   return new EmberParserError(message, fileName, { end, start });
 }
 
+/**
+ * Transform code for TypeScript virtual file system.
+ * Replaces <template> regions with backtick expressions that TS can parse.
+ * Used by ts-patch.js for type-aware linting.
+ */
 export function transformForLint(code, fileName) {
   let jsCode = code;
-  /**
-   *
-   * @type {{
-   *   type: 'expression' | 'class-member';
-   *   tagName: 'template';
-   *   contents: string;
-   *   range: {
-   *     startByte: number;
-   *     endByte: number;
-   *     startChar: number;
-   *     endChar: number;
-   *     startUtf16Codepoint: number;
-   *     endUtf16Codepoint: number;
-   *   };
-   *   contentRange: {
-   *     startByte: number;
-   *     endByte: number;
-   *     startChar: number;
-   *     endChar: number;
-   *     startUtf16Codepoint: number;
-   *     endUtf16Codepoint: number;
-   *   };
-   *   startRange: {
-   *     startByte: number;
-   *     endByte: number;
-   *     startChar: number;
-   *     endChar: number;
-   *     startUtf16Codepoint: number;
-   *     endUtf16Codepoint: number;
-   *   };
-   *   endRange: {
-   *     startByte: number;
-   *     endByte: number;
-   *     startChar: number;
-   *     endChar: number;
-   *     startUtf16Codepoint: number;
-   *     endUtf16Codepoint: number;
-   *   };
-   * }[]}
-   */
   let result = null;
   try {
     result = processor.parse(code);
   } catch (e) {
-    // Parse Error at <anon>:1:19: 1:19
     if (e.message.includes('Parse Error at')) {
       const [line, column] = e.message
         .split(':')
         .slice(-2)
         .map((x) => parseInt(x));
-      // e.source_code has actually usable info, e.g × Expected ',', got 'string literal (, '')'
-      //     ╭─[9:1]
-      //   9 │
-      //  10 │ console.log(test'');
-      //     ·                 ──
-      //     ╰────
       throw createError(code, e.source_code, fileName, { line, column });
     }
     throw e;

@@ -1,18 +1,21 @@
 import { createRequire } from 'node:module';
 import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
-import babelParser from '@babel/eslint-parser/experimental-worker';
 import { registerParsedFile } from '../preprocessor/noop.js';
 import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
-import { transformForLint, preprocessGlimmerTemplates, convertAst } from './transforms.js';
+import { registerGlimmerScopes, transformForLint } from './transforms.js';
+import { toTree } from 'ember-estree';
+import * as eslintScope from 'eslint-scope';
 
 const require = createRequire(import.meta.url);
 
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers
- * 1. transforms gts/gjs files into parseable ts/js without changing the offsets and locations around it
- * 2. parses the transformed code and generates the AST for TS ot JS
- * 3. preprocesses the templates info and prepares the Glimmer AST
- * 4. converts the js/ts AST so that it includes the Glimmer AST at the right locations, replacing the original
+ *
+ * Uses ember-estree's toTree with a custom parser option to handle
+ * the full pipeline: template extraction, placeholder replacement,
+ * JS/TS parsing, Glimmer AST processing, and AST splicing.
+ *
+ * This parser adds ESLint-specific scope management on top.
  */
 
 /**
@@ -77,12 +80,10 @@ function getAllowJsFromPrograms(programs) {
 function getProjectServiceTsconfigPath(projectService) {
   if (!projectService) return null;
 
-  // If projectService is true, use default behavior (nearest tsconfig.json, allowJs from config)
   if (projectService === true) {
     return 'tsconfig.json';
   }
 
-  // If projectService is an object, handle ProjectServiceOptions
   if (typeof projectService === 'object') {
     if (typeof projectService.allowDefaultProject !== 'undefined') {
       // eslint-disable-next-line no-console
@@ -143,9 +144,6 @@ export function parseForESLint(code, options) {
     ({ allowGjs: actualAllowGjs } = patchTs({ allowGjs }));
   }
   registerParsedFile(options.filePath);
-  let jsCode = code;
-  const info = transformForLint(code, options.filePath);
-  jsCode = info.output;
 
   const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');
   let useTypescript = true;
@@ -154,41 +152,60 @@ export function parseForESLint(code, options) {
     useTypescript = false;
   }
 
-  let result = null;
-  const filePath = options.filePath;
-  if (options.project || options.projectService) {
-    jsCode = replaceExtensions(jsCode);
-  }
-
   if (isTypescript && !typescriptParser) {
     throw new Error('Please install typescript to process gts');
   }
 
+  const filePath = options.filePath;
+
   try {
-    result =
-      isTypescript || useTypescript
-        ? typescriptParser.parseForESLint(jsCode, {
-            ...options,
-            ranges: true,
-            extraFileExtensions: ['.gts', '.gjs'],
-            filePath,
-          })
-        : babelParser.parseForESLint(jsCode, {
-            ...options,
-            requireConfigFile: false,
-            ranges: true,
-          });
-    if (!info.templateInfos?.length) {
-      return result;
+    // Use ember-estree's toTree with a custom parser.
+    // For TypeScript: use @typescript-eslint/parser (provides scopeManager + services)
+    // For JavaScript: use ember-estree's default oxc parser + eslint-scope
+    // For TypeScript: use transformForLint (backtick/static-block placeholders)
+    // which the TS parser understands. For JS: use ember-estree's default oxc.
+    const result = toTree(code, {
+      filePath,
+      parser:
+        isTypescript || useTypescript
+          ? (source, parseResults, _defaultJS) => {
+              // Use TS-compatible placeholder format
+              const info = transformForLint(source, filePath);
+              let parseCode = info.output;
+              if (options.project || options.projectService) {
+                parseCode = replaceExtensions(parseCode);
+              }
+              return typescriptParser.parseForESLint(parseCode, {
+                ...options,
+                ranges: true,
+                extraFileExtensions: ['.gts', '.gjs'],
+                filePath,
+              });
+            }
+          : undefined,
+    });
+
+    // When using default oxc parser, create a scope manager with eslint-scope.
+    // Don't pass Glimmer visitor keys — eslint-scope should only analyze JS scopes.
+    // Glimmer scopes (block params, path refs) are handled by registerGlimmerScopes.
+    if (!result.scopeManager) {
+      const ast = result.ast || result;
+      const program = ast.program || ast;
+      result.scopeManager = eslintScope.analyze(program, {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+        range: true,
+      });
     }
-    const preprocessedResult = preprocessGlimmerTemplates(info, code);
-    preprocessedResult.code = code;
-    const { templateVisitorKeys } = preprocessedResult;
-    const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
+
     result.isTypescript = isTypescript || useTypescript;
-    convertAst(result, preprocessedResult, visitorKeys);
+
+    // Register Glimmer-specific scopes (block params, path expressions, element refs)
+    if (result.templateInfos?.length) {
+      registerGlimmerScopes(result);
+    }
+
     if (result.services?.program) {
-      // Compare allowJs with the actual program's compiler options
       const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
       if (
         !allowGjsWasSet &&
@@ -204,8 +221,14 @@ export function parseForESLint(code, options) {
       }
       syncMtsGtsSourceFiles(result.services.program);
     }
-    return { ...result, visitorKeys };
+
+    // Clean up internal properties before returning to ESLint
+    delete result.templateInfos;
+    delete result.isTypescript;
+
+    return result;
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error(e);
     throw e;
   }
