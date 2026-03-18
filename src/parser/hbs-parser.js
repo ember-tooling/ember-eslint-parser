@@ -1,8 +1,8 @@
 import * as eslintScope from 'eslint-scope';
-import { toTree, buildGlimmerVisitorKeys, DocumentLines } from 'ember-estree';
+import { toTree, glimmerVisitorKeys, DocumentLines } from 'ember-estree';
 
 // Constant: Program + all Glimmer node types. Computed once at module load.
-const hbsVisitorKeys = { Program: ['body'], ...buildGlimmerVisitorKeys() };
+const hbsVisitorKeys = { Program: ['body'], ...glimmerVisitorKeys };
 
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers

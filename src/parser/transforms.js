@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import { Preprocessor } from 'content-tag';
 import { isKeyword as glimmerIsKeyword } from '@glimmer/syntax';
-import { buildGlimmerVisitorKeys, toPlaceholderJS } from 'ember-estree';
+import { glimmerVisitorKeys } from 'ember-estree';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
 import htmlTags from 'html-tags';
 import svgTags from 'svg-tags';
@@ -175,7 +175,7 @@ export function buildGlimmerVisitors(getScopeManager, isTypescript) {
 // ── registerGlimmerScopes (fallback for JS/oxc path) ──────────────────
 
 function traverse(visitorKeys, node, visitor) {
-  const allVisitorKeys = { ...visitorKeys, ...buildGlimmerVisitorKeys() };
+  const allVisitorKeys = { ...visitorKeys, ...glimmerVisitorKeys };
   const queue = [];
 
   queue.push({
@@ -279,7 +279,7 @@ function createError(code, message, fileName, start, end = start) {
 
 /**
  * Transform code for TypeScript virtual file system.
- * Uses ember-estree's toPlaceholderJS to create TS-compatible placeholders.
+ * Replaces <template> regions with backtick/static-block placeholders.
  * Used by ts-patch.js for type-aware linting.
  */
 export function transformForLint(code, fileName) {
@@ -296,15 +296,33 @@ export function transformForLint(code, fileName) {
     }
     throw e;
   }
-  const output = toPlaceholderJS(code, result);
+
+  // Build placeholder JS inline (same format as ember-estree's toPlaceholderJS)
+  let jsCode = code;
+  for (const tplInfo of [...result].reverse()) {
+    const content = tplInfo.contents.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    const start = tplInfo.range.startUtf16Codepoint;
+    const end = tplInfo.range.endUtf16Codepoint;
+    const tplLength = end - start;
+    let replacement;
+    if (tplInfo.type === 'class-member') {
+      const spaces = tplLength - content.length - 10; // "static{`" + "`}" = 10
+      replacement = `static{\`${content}${' '.repeat(Math.max(0, spaces))}\`}`;
+    } else {
+      const spaces = tplLength - content.length - 2; // "`" + "`" = 2
+      replacement = `\`${content}${' '.repeat(Math.max(0, spaces))}\``;
+    }
+    jsCode = replaceRange(jsCode, start, end, replacement);
+  }
+
   /* istanbul ignore next */
-  if (output.length !== code.length) {
+  if (jsCode.length !== code.length) {
     throw new Error('bad transform');
   }
   return {
     templateInfos: result,
-    output,
+    output: jsCode,
   };
 }
 
-export { traverse, buildGlimmerVisitorKeys };
+export { traverse, glimmerVisitorKeys };
