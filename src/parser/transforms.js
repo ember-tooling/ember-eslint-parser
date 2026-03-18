@@ -1,18 +1,13 @@
 import { createRequire } from 'node:module';
 import ContentTag from 'content-tag';
 import { isKeyword as glimmerIsKeyword } from '@glimmer/syntax';
-import {
-  processGlimmerTemplate,
-  buildGlimmerVisitorKeys,
-  DocumentLines,
-  traverse,
-} from 'ember-estree';
+import { toTree, buildGlimmerVisitorKeys, DocumentLines } from 'ember-estree';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
 import htmlTags from 'html-tags';
 import svgTags from 'svg-tags';
 import { mathmlTagNames } from 'mathml-tag-names';
 
-export { traverse, buildGlimmerVisitorKeys };
+export { buildGlimmerVisitorKeys };
 
 const htmlTagsSet = new Set(htmlTags);
 const svgTagsSet = new Set(svgTags);
@@ -106,6 +101,64 @@ function registerNodeInScope(node, scope, variable) {
   scope.references.push(ref);
 }
 
+/**
+ * traverses all nodes using the {visitorKeys} calling the callback function, visitor
+ * @param visitorKeys
+ * @param node
+ * @param visitor
+ */
+export function traverse(visitorKeys, node, visitor) {
+  const allVisitorKeys = { ...visitorKeys, ...buildGlimmerVisitorKeys() };
+  const queue = [];
+
+  queue.push({
+    node,
+    parent: null,
+    parentKey: null,
+    parentPath: null,
+    context: {},
+  });
+
+  while (queue.length > 0) {
+    const currentPath = queue.pop();
+
+    visitor(currentPath);
+
+    if (!currentPath.node) continue;
+
+    const keys = allVisitorKeys[currentPath.node.type];
+    if (!keys) {
+      continue;
+    }
+
+    for (const visitorKey of keys) {
+      const child = currentPath.node[visitorKey];
+
+      if (!child) {
+        continue;
+      } else if (Array.isArray(child)) {
+        for (const item of child) {
+          queue.push({
+            node: item,
+            parent: currentPath.node,
+            context: currentPath.context,
+            parentKey: visitorKey,
+            parentPath: currentPath,
+          });
+        }
+      } else {
+        queue.push({
+          node: child,
+          parent: currentPath.node,
+          context: currentPath.context,
+          parentKey: visitorKey,
+          parentPath: currentPath,
+        });
+      }
+    }
+  }
+}
+
 function isUpperCase(char) {
   return char.toUpperCase() === char;
 }
@@ -122,20 +175,30 @@ function isUpperCase(char) {
 export function preprocessGlimmerTemplates(info, code) {
   const templateInfos = info.templateInfos.map((r) => ({
     utf16Range: [r.range.startUtf16Codepoint, r.range.endUtf16Codepoint],
+    contentRange: [r.contentRange.startUtf16Codepoint, r.contentRange.endUtf16Codepoint],
   }));
   const codeLines = new DocumentLines(code);
   const allComments = [];
 
   for (const tpl of templateInfos) {
-    const template = code.slice(...tpl.utf16Range);
+    const templateContent = code.slice(...tpl.contentRange);
 
-    const { ast, comments } = processGlimmerTemplate({
-      templateContent: template,
+    const { ast, comments } = toTree(templateContent, {
+      templateOnly: true,
       codeLines,
-      templateRange: [...tpl.utf16Range],
+      templateRange: [...tpl.contentRange],
     });
 
-    ast.content = template;
+    // Fix the Template root to cover the full <template>...</template> range
+    ast.range = [...tpl.utf16Range];
+    ast.start = tpl.utf16Range[0];
+    ast.end = tpl.utf16Range[1];
+    ast.loc = {
+      start: codeLines.offsetToPosition(tpl.utf16Range[0]),
+      end: codeLines.offsetToPosition(tpl.utf16Range[1]),
+    };
+
+    ast.content = code.slice(...tpl.utf16Range);
     allComments.push(...comments);
     tpl.ast = ast;
   }
