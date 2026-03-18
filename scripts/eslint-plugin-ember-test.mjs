@@ -15,4 +15,12 @@ await fse.ensureDir(FOLDERS.testRoot);
 await execaCommand(`git clone ${REPO}`, { cwd: FOLDERS.testRoot, stdio: 'inherit' });
 await execaCommand(`pnpm install`, { cwd: FOLDERS.repo, stdio: 'inherit' });
 await execaCommand(`pnpm add ${FOLDERS.here}`, { cwd: FOLDERS.repo, stdio: 'inherit' });
+
+// ember-estree renames BlockParam → GlimmerBlockParam for consistency with
+// all other Glimmer-prefixed node types.  Patch the downstream assertion.
+await execaCommand(
+  `sed -i "s/nodeType: BlockParam/nodeType: GlimmerBlockParam/g" tests/lib/rules-preprocessor/gjs-gts-parser-test.js`,
+  { cwd: FOLDERS.repo, stdio: 'inherit' }
+);
+
 await execaCommand(`pnpm run test`, { cwd: FOLDERS.repo, stdio: 'inherit' });
