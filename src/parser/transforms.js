@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
 import ContentTag from 'content-tag';
 import { isKeyword as glimmerIsKeyword } from '@glimmer/syntax';
-import { buildGlimmerVisitorKeys, DocumentLines } from 'ember-estree';
+import { buildGlimmerVisitorKeys } from 'ember-estree';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
 import htmlTags from 'html-tags';
 import svgTags from 'svg-tags';

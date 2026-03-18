@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
 import { registerParsedFile } from '../preprocessor/noop.js';
 import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
-import { registerGlimmerScopes, transformForLint } from './transforms.js';
+import { registerGlimmerScopes, replaceRange } from './transforms.js';
 import { toTree } from 'ember-estree';
 import * as eslintScope from 'eslint-scope';
 
@@ -169,9 +169,9 @@ export function parseForESLint(code, options) {
       parser:
         isTypescript || useTypescript
           ? (source, parseResults, _defaultJS) => {
-              // Use TS-compatible placeholder format
-              const info = transformForLint(source, filePath);
-              let parseCode = info.output;
+              // Build TS-compatible placeholder JS from parseResults
+              // (backtick/static-block format that TS parser understands)
+              let parseCode = toTSPlaceholderJS(source, parseResults);
               if (options.project || options.projectService) {
                 parseCode = replaceExtensions(parseCode);
               }
@@ -230,8 +230,49 @@ export function parseForESLint(code, options) {
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error(e);
+    // Convert content-tag parse errors to ESLint-compatible format
+    if (e.message?.includes('Parse Error at')) {
+      const [line, column] = e.message
+        .split(':')
+        .slice(-2)
+        .map((x) => parseInt(x));
+      const err = new Error(e.source_code || e.message);
+      err.lineNumber = line;
+      err.column = column;
+      err.fileName = filePath;
+      err.index = undefined;
+      throw err;
+    }
     throw e;
   }
+}
+
+/**
+ * Build TS-compatible placeholder JS from content-tag parseResults.
+ * Uses backtick expressions for expression templates and static blocks
+ * for class member templates — formats that the TS parser understands.
+ */
+function toTSPlaceholderJS(source, parseResults) {
+  let jsCode = source;
+  for (const tplInfo of [...parseResults].reverse()) {
+    const content = tplInfo.contents.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    const tplLength = tplInfo.range.endUtf16Codepoint - tplInfo.range.startUtf16Codepoint;
+    let replacementCode;
+    if (tplInfo.type === 'class-member') {
+      const spaces = tplLength - content.length - 'static{`'.length - '`}'.length;
+      replacementCode = `static{\`${content}${' '.repeat(spaces)}\`}`;
+    } else {
+      const spaces = tplLength - content.length - '`'.length - '`'.length;
+      replacementCode = `\`${content}${' '.repeat(spaces)}\``;
+    }
+    jsCode = replaceRange(
+      jsCode,
+      tplInfo.range.startUtf16Codepoint,
+      tplInfo.range.endUtf16Codepoint,
+      replacementCode
+    );
+  }
+  return jsCode;
 }
 
 export default { meta, parseForESLint };
