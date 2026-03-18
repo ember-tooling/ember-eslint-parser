@@ -150,14 +150,7 @@ function getAllowJs(options) {
  * Glint transforms templates into __glintDSL__ calls that TS understands,
  * then we remap AST positions back to original source and splice in Glimmer AST.
  */
-function parseWithGlint(
-  code,
-  options,
-  transformedModule,
-  allowGjsWasSet,
-  actualAllowGjs,
-  allowGjs
-) {
+function parseWithGlint(code, options, transformedModule) {
   const filePath = options.filePath;
 
   // Get transformed TS code and replace .gts→.mts imports
@@ -209,19 +202,6 @@ function parseWithGlint(
   convertAst(result, preprocessedResult, visitorKeys, { matchByRangeOnly: true });
 
   if (result.services?.program) {
-    const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
-    if (
-      !allowGjsWasSet &&
-      programAllowJs !== undefined &&
-      actualAllowGjs !== undefined &&
-      actualAllowGjs !== programAllowJs
-    ) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        '[ember-eslint-parser] allowJs does not match the actual program. Consider setting allowGjs explicitly.\n' +
-          `    Current: ${allowGjs}, Program: ${programAllowJs}`
-      );
-    }
     syncMtsGtsSourceFiles(result.services.program);
   }
 
@@ -237,12 +217,10 @@ export const meta = {
 };
 
 export function parseForESLint(code, options) {
-  const allowGjsWasSet = options.allowGjs !== undefined;
-  const allowGjs = allowGjsWasSet ? options.allowGjs : getAllowJs(options);
-  let actualAllowGjs;
+  const allowGjs = options.allowGjs !== undefined ? options.allowGjs : getAllowJs(options);
   // Only patch TypeScript if we actually need it.
   if (options.programs || options.projectService || options.project) {
-    ({ allowGjs: actualAllowGjs } = patchTs({ allowGjs }));
+    patchTs({ allowGjs });
   }
   registerParsedFile(options.filePath);
 
@@ -255,14 +233,7 @@ export function parseForESLint(code, options) {
       if (glintConfig) {
         const glintTransform = glintRewriteModule(code, options.filePath, ts, glintConfig);
         if (glintTransform) {
-          return parseWithGlint(
-            code,
-            options,
-            glintTransform,
-            allowGjsWasSet,
-            actualAllowGjs,
-            allowGjs
-          );
+          return parseWithGlint(code, options, glintTransform);
         }
       }
     } catch (e) {
@@ -327,19 +298,6 @@ export function parseForESLint(code, options) {
     if (!result.scopeManager) result.scopeManager = scopeManager;
 
     if (result.services?.program) {
-      const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
-      if (
-        !allowGjsWasSet &&
-        programAllowJs !== undefined &&
-        actualAllowGjs !== undefined &&
-        actualAllowGjs !== programAllowJs
-      ) {
-        // eslint-disable-next-line no-console
-        console.warn(
-          '[ember-eslint-parser] allowJs does not match the actual program. Consider setting allowGjs explicitly.\n' +
-            `    Current: ${allowGjs}, Program: ${programAllowJs}`
-        );
-      }
       syncMtsGtsSourceFiles(result.services.program);
     }
 
