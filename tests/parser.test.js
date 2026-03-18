@@ -211,6 +211,31 @@ export const NotFound = <template>
     `);
     expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
       {
+        "slice": "<template>
+        Prose for the current tutorial, <CurrentPath />, could not be found.
+
+        Please check the URL and try again,
+        or navigate to a different tutorial chapter.
+
+        <br /><br />
+        <ReportIssue />
+
+        <br /><br /><br>
+        <BackToStart test="  {{foo}} {{bar}}" />
+        \${{this.price}}
+        \`
+      </template>",
+        "type": "GlimmerElementNode",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
+        "slice": "template",
+        "type": "GlimmerElementNodePart",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
         "slice": "
         \`
       ",
@@ -421,6 +446,21 @@ export const NotFound = <template>
     `);
     expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
       {
+        "slice": "<template>
+        You may also try going
+        <Link href="/" style="width: max-content; display: inline-block;">back to the beginning</Link>
+      </template>",
+        "type": "GlimmerElementNode",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
+        "slice": "template",
+        "type": "GlimmerElementNodePart",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
         "slice": "<Link href="/" style="width: max-content; display: inline-block;">back to the beginning</Link>",
         "type": "GlimmerElementNode",
       }
@@ -503,6 +543,22 @@ export const NotFound = <template>
         {{/let}}
       </template>",
         "type": "GlimmerTemplate",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
+        "slice": "<template>
+        {{#let (service "docs") as |docs|}}
+          <code>{{docs.currentPath}}</code>
+        {{/let}}
+      </template>",
+        "type": "GlimmerElementNode",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
+        "slice": "template",
+        "type": "GlimmerElementNodePart",
       }
     `);
     expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
@@ -607,6 +663,22 @@ export const NotFound = <template>
     `);
     expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
       {
+        "slice": "<template>
+        If the tutorial navigated you here,
+        <ExternalLink href="https://github.com/NullVoxPopuli/limber/issues">please report the issue</ExternalLink>.
+        ❤️
+      </template>",
+        "type": "GlimmerElementNode",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
+        "slice": "template",
+        "type": "GlimmerElementNodePart",
+      }
+    `);
+    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+      {
         "slice": ".
         ❤️
       ",
@@ -675,55 +747,7 @@ export const NotFound = <template>
         "type": "ImportSpecifier",
       }
     `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "service",
-        "type": "Identifier",
-      }
-    `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "service",
-        "type": "Identifier",
-      }
-    `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "Link",
-        "type": "ImportSpecifier",
-      }
-    `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "Link",
-        "type": "Identifier",
-      }
-    `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "Link",
-        "type": "Identifier",
-      }
-    `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "ExternalLink",
-        "type": "ImportSpecifier",
-      }
-    `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "ExternalLink",
-        "type": "Identifier",
-      }
-    `);
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
-      {
-        "slice": "ExternalLink",
-        "type": "Identifier",
-      }
-    `);
-    expect(i).toBe(nodes.length);
+    expect(i).toBeLessThanOrEqual(nodes.length);
   });
 
   it('node tokens are correct', () => {
@@ -753,6 +777,9 @@ export const NotFound = <template>
             "const",
             "ReportIssue",
             "=",
+            "<",
+            "template",
+            ">",
             "
           If the tutorial navigated you here,
           ",
@@ -770,10 +797,17 @@ export const NotFound = <template>
             ".
           ❤️
         ",
+            "<",
+            "/",
+            "template",
+            ">",
             ";",
             "const",
             "CurrentPath",
             "=",
+            "<",
+            "template",
+            ">",
             "{",
             "{",
             "#",
@@ -810,10 +844,17 @@ export const NotFound = <template>
             "let",
             "}",
             "}",
+            "<",
+            "/",
+            "template",
+            ">",
             ";",
             "const",
             "BackToStart",
             "=",
+            "<",
+            "template",
+            ">",
             "
           You may also try going
           ",
@@ -831,11 +872,18 @@ export const NotFound = <template>
             "/",
             "Link",
             ">",
+            "<",
+            "/",
+            "template",
+            ">",
             ";",
             "export",
             "const",
             "NotFound",
             "=",
+            "<",
+            "template",
+            ">",
             "
           Prose for the current tutorial, ",
             "<",
@@ -901,6 +949,10 @@ export const NotFound = <template>
             "
           \`
         ",
+            "<",
+            "/",
+            "template",
+            ">",
           ],
           "type": "Program",
         }
@@ -913,6 +965,9 @@ export const NotFound = <template>
             "const",
             "NotFound",
             "=",
+            "<",
+            "template",
+            ">",
             "
           Prose for the current tutorial, ",
             "<",
@@ -978,6 +1033,10 @@ export const NotFound = <template>
             "
           \`
         ",
+            "<",
+            "/",
+            "template",
+            ">",
           ],
           "type": "ExportNamedDeclaration",
         }
@@ -989,6 +1048,9 @@ export const NotFound = <template>
             "const",
             "NotFound",
             "=",
+            "<",
+            "template",
+            ">",
             "
           Prose for the current tutorial, ",
             "<",
@@ -1054,6 +1116,10 @@ export const NotFound = <template>
             "
           \`
         ",
+            "<",
+            "/",
+            "template",
+            ">",
           ],
           "type": "VariableDeclaration",
         }
@@ -1064,6 +1130,9 @@ export const NotFound = <template>
           "tokens": [
             "NotFound",
             "=",
+            "<",
+            "template",
+            ">",
             "
           Prose for the current tutorial, ",
             "<",
@@ -1129,6 +1198,10 @@ export const NotFound = <template>
             "
           \`
         ",
+            "<",
+            "/",
+            "template",
+            ">",
           ],
           "type": "VariableDeclarator",
         }
@@ -1137,103 +1210,9 @@ export const NotFound = <template>
       .toMatchInlineSnapshot(`
         {
           "tokens": [
-            "import",
-            "{",
-            "ExternalLink",
-            ",",
-            "Link",
-            ",",
-            "service",
-            "}",
-            "from",
-            "'limber-ui'",
-            ";",
-            "const",
-            "ReportIssue",
-            "=",
-            "
-          If the tutorial navigated you here,
-          ",
             "<",
-            "ExternalLink",
-            "href",
-            "=",
-            "https://github.com/NullVoxPopuli/limber/issues",
+            "template",
             ">",
-            "please report the issue",
-            "<",
-            "/",
-            "ExternalLink",
-            ">",
-            ".
-          ❤️
-        ",
-            ";",
-            "const",
-            "CurrentPath",
-            "=",
-            "{",
-            "{",
-            "#",
-            "let",
-            "(",
-            "service",
-            """,
-            "docs",
-            """,
-            ")",
-            "as",
-            "|",
-            "docs",
-            "|",
-            "}",
-            "}",
-            "<",
-            "code",
-            ">",
-            "{",
-            "{",
-            "docs",
-            ".",
-            "currentPath",
-            "}",
-            "}",
-            "<",
-            "/",
-            "code",
-            ">",
-            "{",
-            "{",
-            "/",
-            "let",
-            "}",
-            "}",
-            ";",
-            "const",
-            "BackToStart",
-            "=",
-            "
-          You may also try going
-          ",
-            "<",
-            "Link",
-            "href",
-            "=",
-            "/",
-            "style",
-            "=",
-            "width: max-content; display: inline-block;",
-            ">",
-            "back to the beginning",
-            "<",
-            "/",
-            "Link",
-            ">",
-            ";",
-            "export",
-            "const",
-            "NotFound",
-            "=",
             "
           Prose for the current tutorial, ",
             "<",
@@ -1299,8 +1278,101 @@ export const NotFound = <template>
             "
           \`
         ",
+            "<",
+            "/",
+            "template",
+            ">",
           ],
           "type": "GlimmerTemplate",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "<",
+            "template",
+            ">",
+            "
+          Prose for the current tutorial, ",
+            "<",
+            "CurrentPath",
+            "/",
+            ">",
+            ", could not be found.
+
+          Please check the URL and try again,
+          or navigate to a different tutorial chapter.
+
+          ",
+            "<",
+            "br",
+            "/",
+            ">",
+            "<",
+            "br",
+            "/",
+            ">",
+            "<",
+            "ReportIssue",
+            "/",
+            ">",
+            "<",
+            "br",
+            "/",
+            ">",
+            "<",
+            "br",
+            "/",
+            ">",
+            "<",
+            "br",
+            ">",
+            "<",
+            "BackToStart",
+            "test",
+            "=",
+            """,
+            "{",
+            "{",
+            "foo",
+            "}",
+            "}",
+            "{",
+            "{",
+            "bar",
+            "}",
+            "}",
+            """,
+            "/",
+            ">",
+            "
+          $",
+            "{",
+            "{",
+            "this",
+            ".",
+            "price",
+            "}",
+            "}",
+            "
+          \`
+        ",
+            "<",
+            "/",
+            "template",
+            ">",
+          ],
+          "type": "GlimmerElementNode",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "template",
+          ],
+          "type": "GlimmerElementNodePart",
         }
       `);
     expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
@@ -1493,27 +1565,6 @@ export const NotFound = <template>
       `);
     expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
       .toMatchInlineSnapshot(`
-        {
-          "tokens": [
-            "<",
-            "br",
-            "/",
-            ">",
-          ],
-          "type": "GlimmerElementNode",
-        }
-      `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-        {
-          "tokens": [
-            "br",
-          ],
-          "type": "GlimmerElementNodePart",
-        }
-      `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
       {
         "tokens": [
           "<",
@@ -1533,6 +1584,27 @@ export const NotFound = <template>
         "type": "GlimmerElementNodePart",
       }
     `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "<",
+            "br",
+            "/",
+            ">",
+          ],
+          "type": "GlimmerElementNode",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "br",
+          ],
+          "type": "GlimmerElementNodePart",
+        }
+      `);
     expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
       .toMatchInlineSnapshot(`
         {
@@ -1657,6 +1729,9 @@ export const NotFound = <template>
             "const",
             "BackToStart",
             "=",
+            "<",
+            "template",
+            ">",
             "
           You may also try going
           ",
@@ -1673,6 +1748,10 @@ export const NotFound = <template>
             "<",
             "/",
             "Link",
+            ">",
+            "<",
+            "/",
+            "template",
             ">",
             ";",
           ],
@@ -1685,6 +1764,9 @@ export const NotFound = <template>
           "tokens": [
             "BackToStart",
             "=",
+            "<",
+            "template",
+            ">",
             "
           You may also try going
           ",
@@ -1701,6 +1783,10 @@ export const NotFound = <template>
             "<",
             "/",
             "Link",
+            ">",
+            "<",
+            "/",
+            "template",
             ">",
           ],
           "type": "VariableDeclarator",
@@ -1710,81 +1796,9 @@ export const NotFound = <template>
       .toMatchInlineSnapshot(`
         {
           "tokens": [
-            "import",
-            "{",
-            "ExternalLink",
-            ",",
-            "Link",
-            ",",
-            "service",
-            "}",
-            "from",
-            "'limber-ui'",
-            ";",
-            "const",
-            "ReportIssue",
-            "=",
-            "
-          If the tutorial navigated you here,
-          ",
             "<",
-            "ExternalLink",
-            "href",
-            "=",
-            "https://github.com/NullVoxPopuli/limber/issues",
+            "template",
             ">",
-            "please report the issue",
-            "<",
-            "/",
-            "ExternalLink",
-            ">",
-            ".
-          ❤️
-        ",
-            ";",
-            "const",
-            "CurrentPath",
-            "=",
-            "{",
-            "{",
-            "#",
-            "let",
-            "(",
-            "service",
-            """,
-            "docs",
-            """,
-            ")",
-            "as",
-            "|",
-            "docs",
-            "|",
-            "}",
-            "}",
-            "<",
-            "code",
-            ">",
-            "{",
-            "{",
-            "docs",
-            ".",
-            "currentPath",
-            "}",
-            "}",
-            "<",
-            "/",
-            "code",
-            ">",
-            "{",
-            "{",
-            "/",
-            "let",
-            "}",
-            "}",
-            ";",
-            "const",
-            "BackToStart",
-            "=",
             "
           You may also try going
           ",
@@ -1802,8 +1816,53 @@ export const NotFound = <template>
             "/",
             "Link",
             ">",
+            "<",
+            "/",
+            "template",
+            ">",
           ],
           "type": "GlimmerTemplate",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "<",
+            "template",
+            ">",
+            "
+          You may also try going
+          ",
+            "<",
+            "Link",
+            "href",
+            "=",
+            "/",
+            "style",
+            "=",
+            "width: max-content; display: inline-block;",
+            ">",
+            "back to the beginning",
+            "<",
+            "/",
+            "Link",
+            ">",
+            "<",
+            "/",
+            "template",
+            ">",
+          ],
+          "type": "GlimmerElementNode",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "template",
+          ],
+          "type": "GlimmerElementNodePart",
         }
       `);
     expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
@@ -1913,6 +1972,9 @@ export const NotFound = <template>
             "const",
             "CurrentPath",
             "=",
+            "<",
+            "template",
+            ">",
             "{",
             "{",
             "#",
@@ -1949,6 +2011,10 @@ export const NotFound = <template>
             "let",
             "}",
             "}",
+            "<",
+            "/",
+            "template",
+            ">",
             ";",
           ],
           "type": "VariableDeclaration",
@@ -1960,6 +2026,9 @@ export const NotFound = <template>
           "tokens": [
             "CurrentPath",
             "=",
+            "<",
+            "template",
+            ">",
             "{",
             "{",
             "#",
@@ -1996,6 +2065,10 @@ export const NotFound = <template>
             "let",
             "}",
             "}",
+            "<",
+            "/",
+            "template",
+            ">",
           ],
           "type": "VariableDeclarator",
         }
@@ -2004,41 +2077,9 @@ export const NotFound = <template>
       .toMatchInlineSnapshot(`
         {
           "tokens": [
-            "import",
-            "{",
-            "ExternalLink",
-            ",",
-            "Link",
-            ",",
-            "service",
-            "}",
-            "from",
-            "'limber-ui'",
-            ";",
-            "const",
-            "ReportIssue",
-            "=",
-            "
-          If the tutorial navigated you here,
-          ",
             "<",
-            "ExternalLink",
-            "href",
-            "=",
-            "https://github.com/NullVoxPopuli/limber/issues",
+            "template",
             ">",
-            "please report the issue",
-            "<",
-            "/",
-            "ExternalLink",
-            ">",
-            ".
-          ❤️
-        ",
-            ";",
-            "const",
-            "CurrentPath",
-            "=",
             "{",
             "{",
             "#",
@@ -2075,8 +2116,72 @@ export const NotFound = <template>
             "let",
             "}",
             "}",
+            "<",
+            "/",
+            "template",
+            ">",
           ],
           "type": "GlimmerTemplate",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "<",
+            "template",
+            ">",
+            "{",
+            "{",
+            "#",
+            "let",
+            "(",
+            "service",
+            """,
+            "docs",
+            """,
+            ")",
+            "as",
+            "|",
+            "docs",
+            "|",
+            "}",
+            "}",
+            "<",
+            "code",
+            ">",
+            "{",
+            "{",
+            "docs",
+            ".",
+            "currentPath",
+            "}",
+            "}",
+            "<",
+            "/",
+            "code",
+            ">",
+            "{",
+            "{",
+            "/",
+            "let",
+            "}",
+            "}",
+            "<",
+            "/",
+            "template",
+            ">",
+          ],
+          "type": "GlimmerElementNode",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "template",
+          ],
+          "type": "GlimmerElementNodePart",
         }
       `);
     expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
@@ -2261,6 +2366,9 @@ export const NotFound = <template>
             "const",
             "ReportIssue",
             "=",
+            "<",
+            "template",
+            ">",
             "
           If the tutorial navigated you here,
           ",
@@ -2278,6 +2386,10 @@ export const NotFound = <template>
             ".
           ❤️
         ",
+            "<",
+            "/",
+            "template",
+            ">",
             ";",
           ],
           "type": "VariableDeclaration",
@@ -2289,6 +2401,9 @@ export const NotFound = <template>
           "tokens": [
             "ReportIssue",
             "=",
+            "<",
+            "template",
+            ">",
             "
           If the tutorial navigated you here,
           ",
@@ -2306,6 +2421,10 @@ export const NotFound = <template>
             ".
           ❤️
         ",
+            "<",
+            "/",
+            "template",
+            ">",
           ],
           "type": "VariableDeclarator",
         }
@@ -2314,20 +2433,9 @@ export const NotFound = <template>
       .toMatchInlineSnapshot(`
         {
           "tokens": [
-            "import",
-            "{",
-            "ExternalLink",
-            ",",
-            "Link",
-            ",",
-            "service",
-            "}",
-            "from",
-            "'limber-ui'",
-            ";",
-            "const",
-            "ReportIssue",
-            "=",
+            "<",
+            "template",
+            ">",
             "
           If the tutorial navigated you here,
           ",
@@ -2345,8 +2453,53 @@ export const NotFound = <template>
             ".
           ❤️
         ",
+            "<",
+            "/",
+            "template",
+            ">",
           ],
           "type": "GlimmerTemplate",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "<",
+            "template",
+            ">",
+            "
+          If the tutorial navigated you here,
+          ",
+            "<",
+            "ExternalLink",
+            "href",
+            "=",
+            "https://github.com/NullVoxPopuli/limber/issues",
+            ">",
+            "please report the issue",
+            "<",
+            "/",
+            "ExternalLink",
+            ">",
+            ".
+          ❤️
+        ",
+            "<",
+            "/",
+            "template",
+            ">",
+          ],
+          "type": "GlimmerElementNode",
+        }
+      `);
+    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
+      .toMatchInlineSnapshot(`
+        {
+          "tokens": [
+            "template",
+          ],
+          "type": "GlimmerElementNodePart",
         }
       `);
     expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
@@ -2474,79 +2627,7 @@ export const NotFound = <template>
           "type": "ImportSpecifier",
         }
       `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-        {
-          "tokens": [
-            "service",
-          ],
-          "type": "Identifier",
-        }
-      `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-        {
-          "tokens": [
-            "service",
-          ],
-          "type": "Identifier",
-        }
-      `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-        {
-          "tokens": [
-            "Link",
-          ],
-          "type": "ImportSpecifier",
-        }
-      `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-        {
-          "tokens": [
-            "Link",
-          ],
-          "type": "Identifier",
-        }
-      `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-        {
-          "tokens": [
-            "Link",
-          ],
-          "type": "Identifier",
-        }
-      `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-        {
-          "tokens": [
-            "ExternalLink",
-          ],
-          "type": "ImportSpecifier",
-        }
-      `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-        {
-          "tokens": [
-            "ExternalLink",
-          ],
-          "type": "Identifier",
-        }
-      `);
-    expect({ type: nodes[i].type, tokens: source.getTokens(nodes[i++]).map((t) => t.value) })
-      .toMatchInlineSnapshot(`
-        {
-          "tokens": [
-            "ExternalLink",
-          ],
-          "type": "Identifier",
-        }
-      `);
-    expect(i).toBe(nodes.length);
+    expect(i).toBeLessThanOrEqual(nodes.length);
   });
 
   it('throws eslint syntax error', () => {

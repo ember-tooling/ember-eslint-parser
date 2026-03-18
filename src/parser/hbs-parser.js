@@ -1,5 +1,6 @@
 import * as eslintScope from 'eslint-scope';
-import { toTree, buildGlimmerVisitorKeys, DocumentLines } from 'ember-estree';
+import DocumentLines from '../utils/document.js';
+import { processGlimmerTemplate, buildGlimmerVisitorKeys } from './transforms.js';
 
 // Constant: Program + all Glimmer node types. Computed once at module load.
 const hbsVisitorKeys = { Program: ['body'], ...buildGlimmerVisitorKeys() };
@@ -27,7 +28,11 @@ export function parseForESLint(code, options) {
 
   let result;
   try {
-    result = toTree(code, { templateOnly: true });
+    result = processGlimmerTemplate({
+      templateContent: code,
+      codeLines,
+      templateRange: [0, code.length],
+    });
   } catch (e) {
     // Transform glimmer parse error to ESLint-compatible error
     const loc = e.location || (e.hash && e.hash.loc);
