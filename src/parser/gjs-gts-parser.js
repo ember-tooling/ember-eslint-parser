@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
 import { registerParsedFile } from '../preprocessor/noop.js';
 import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
-import { registerGlimmerScopes, replaceRange } from './transforms.js';
+import { buildGlimmerVisitors, registerGlimmerScopes } from './transforms.js';
 import { toTree } from 'ember-estree';
 import * as eslintScope from 'eslint-scope';
 
@@ -15,7 +15,8 @@ const require = createRequire(import.meta.url);
  * the full pipeline: template extraction, placeholder replacement,
  * JS/TS parsing, Glimmer AST processing, and AST splicing.
  *
- * This parser adds ESLint-specific scope management on top.
+ * Scope registration happens via toTree's visitors API, eliminating
+ * a second AST traversal.
  */
 
 /**
@@ -157,52 +158,53 @@ export function parseForESLint(code, options) {
   }
 
   const filePath = options.filePath;
+  const useTS = isTypescript || useTypescript;
+
+  // scopeManager is captured by the parser callback and used by visitors
+  let scopeManager = null;
 
   try {
-    // Use ember-estree's toTree with a custom parser.
-    // For TypeScript: use @typescript-eslint/parser (provides scopeManager + services)
-    // For JavaScript: use ember-estree's default oxc parser + eslint-scope
-    // For TypeScript: use transformForLint (backtick/static-block placeholders)
-    // which the TS parser understands. For JS: use ember-estree's default oxc.
     const result = toTree(code, {
       filePath,
-      parser:
-        isTypescript || useTypescript
-          ? (source, parseResults, _defaultJS) => {
-              // Build TS-compatible placeholder JS from parseResults
-              // (backtick/static-block format that TS parser understands)
-              let parseCode = toTSPlaceholderJS(source, parseResults);
-              if (options.project || options.projectService) {
-                parseCode = replaceExtensions(parseCode);
-              }
-              return typescriptParser.parseForESLint(parseCode, {
-                ...options,
-                ranges: true,
-                extraFileExtensions: ['.gts', '.gjs'],
-                filePath,
-              });
+      parser: useTS
+        ? (_source, _parseResults, placeholderJS) => {
+            let parseCode = placeholderJS;
+            if (options.project || options.projectService) {
+              parseCode = replaceExtensions(parseCode);
             }
-          : undefined,
+            const tsResult = typescriptParser.parseForESLint(parseCode, {
+              ...options,
+              ranges: true,
+              extraFileExtensions: ['.gts', '.gjs'],
+              filePath,
+            });
+            scopeManager = tsResult.scopeManager;
+            return tsResult;
+          }
+        : undefined,
+      // Visitors run during toTree's traversal — eliminates a second pass
+      visitors: useTS ? buildGlimmerVisitors(() => scopeManager, useTS) : undefined,
     });
 
-    // When using default oxc parser, create a scope manager with eslint-scope.
-    // Don't pass Glimmer visitor keys — eslint-scope should only analyze JS scopes.
-    // Glimmer scopes (block params, path refs) are handled by registerGlimmerScopes.
-    if (!result.scopeManager) {
+    // For JS/oxc path: create scope manager and register Glimmer scopes
+    if (!useTS) {
       const ast = result.ast || result;
       const program = ast.program || ast;
-      result.scopeManager = eslintScope.analyze(program, {
+      scopeManager = eslintScope.analyze(program, {
         ecmaVersion: 2022,
         sourceType: 'module',
         range: true,
       });
+      if (result.templateInfos?.length) {
+        result.scopeManager = scopeManager;
+        result.isTypescript = false;
+        registerGlimmerScopes(result);
+      }
     }
 
-    result.isTypescript = isTypescript || useTypescript;
-
-    // Register Glimmer-specific scopes (block params, path expressions, element refs)
-    if (result.templateInfos?.length) {
-      registerGlimmerScopes(result);
+    // Ensure result has scopeManager
+    if (!result.scopeManager) {
+      result.scopeManager = scopeManager;
     }
 
     if (result.services?.program) {
@@ -245,34 +247,6 @@ export function parseForESLint(code, options) {
     }
     throw e;
   }
-}
-
-/**
- * Build TS-compatible placeholder JS from content-tag parseResults.
- * Uses backtick expressions for expression templates and static blocks
- * for class member templates — formats that the TS parser understands.
- */
-function toTSPlaceholderJS(source, parseResults) {
-  let jsCode = source;
-  for (const tplInfo of [...parseResults].reverse()) {
-    const content = tplInfo.contents.replace(/`/g, '\\`').replace(/\$/g, '\\$');
-    const tplLength = tplInfo.range.endUtf16Codepoint - tplInfo.range.startUtf16Codepoint;
-    let replacementCode;
-    if (tplInfo.type === 'class-member') {
-      const spaces = tplLength - content.length - 'static{`'.length - '`}'.length;
-      replacementCode = `static{\`${content}${' '.repeat(spaces)}\`}`;
-    } else {
-      const spaces = tplLength - content.length - '`'.length - '`'.length;
-      replacementCode = `\`${content}${' '.repeat(spaces)}\``;
-    }
-    jsCode = replaceRange(
-      jsCode,
-      tplInfo.range.startUtf16Codepoint,
-      tplInfo.range.endUtf16Codepoint,
-      replacementCode
-    );
-  }
-  return jsCode;
 }
 
 export default { meta, parseForESLint };

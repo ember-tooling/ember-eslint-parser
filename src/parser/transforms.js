@@ -1,7 +1,7 @@
 import { createRequire } from 'node:module';
-import ContentTag from 'content-tag';
+import { Preprocessor } from 'content-tag';
 import { isKeyword as glimmerIsKeyword } from '@glimmer/syntax';
-import { buildGlimmerVisitorKeys } from 'ember-estree';
+import { buildGlimmerVisitorKeys, toPlaceholderJS } from 'ember-estree';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
 import htmlTags from 'html-tags';
 import svgTags from 'svg-tags';
@@ -76,7 +76,103 @@ function registerNodeInScope(node, scope, variable) {
   scope.references.push(ref);
 }
 
-// ── AST traversal ─────────────────────────────────────────────────────
+function isUpperCase(char) {
+  return char.toUpperCase() === char;
+}
+
+function registerBlockParams(node, path, scopeManager, isTypescript) {
+  const blockParamNodes = node.blockParamNodes || [];
+  const upperScope = findParentScope(scopeManager, path);
+  const scope = isTypescript
+    ? new TypescriptScope.BlockScope(scopeManager, upperScope, node)
+    : new Scope(scopeManager, 'block', upperScope, node);
+  const declaredVariables = scopeManager.declaredVariables || scopeManager.__declaredVariables;
+  const vars = [];
+  declaredVariables.set(node, vars);
+  const virtualJSParentNode = {
+    type: 'FunctionDeclaration',
+    params: blockParamNodes,
+    range: node.range,
+    loc: node.loc,
+    parent: path.parent,
+  };
+  for (const [i, b] of blockParamNodes.entries()) {
+    const v = new Variable(b.name, scope);
+    v.identifiers.push(b);
+    scope.variables.push(v);
+    scope.set.set(b.name, v);
+    vars.push(v);
+
+    const virtualJSNode = {
+      type: 'Identifier',
+      name: b.name,
+      range: b.range,
+      loc: b.loc,
+      parent: virtualJSParentNode,
+    };
+    v.defs.push(new Definition('Parameter', virtualJSNode, node, node, i, 'Block Param'));
+    v.defs.push(new Definition('Parameter', b, node, node, i, 'Block Param'));
+  }
+}
+
+function registerPathExpression(node, path, scopeManager) {
+  if (node.head.type !== 'VarHead') return;
+  const name = node.head.name;
+  if (glimmerIsKeyword(name)) return;
+  const { scope, variable } = findVarInParentScopes(scopeManager, path, name) || {};
+  if (scope) {
+    node.head.parent = node;
+    registerNodeInScope(node.head, scope, variable);
+  }
+}
+
+function registerElementNode(node, path, scopeManager) {
+  const n = node.parts[0];
+  const { scope, variable } = findVarInParentScopes(scopeManager, path, n.name) || {};
+  const ignore =
+    n.name === 'this' ||
+    n.name.startsWith(':') ||
+    n.name.startsWith('@') ||
+    !scope ||
+    n.name.includes('-');
+
+  const registerUndef =
+    isUpperCase(n.name[0]) ||
+    node.name.includes('.') ||
+    (!htmlTagsSet.has(node.name) && !svgTagsSet.has(node.name) && !mathMLTagsSet.has(node.name));
+
+  if (!ignore && (variable || registerUndef)) {
+    registerNodeInScope(n, scope, variable);
+  }
+}
+
+// ── Visitor builders ──────────────────────────────────────────────────
+
+/**
+ * Build Glimmer visitors for toTree that register scopes during traversal.
+ * Uses a getter for scopeManager so it's available after the parser callback runs.
+ * @param {function} getScopeManager - returns the scopeManager (may be null initially)
+ * @param {boolean} isTypescript
+ * @returns {object} visitors for toTree
+ */
+export function buildGlimmerVisitors(getScopeManager, isTypescript) {
+  return {
+    GlimmerPathExpression(node, path) {
+      const sm = getScopeManager();
+      if (sm) registerPathExpression(node, path, sm);
+    },
+    GlimmerElementNode(node, path) {
+      const sm = getScopeManager();
+      if (sm) registerElementNode(node, path, sm);
+    },
+    GlimmerBlockParams(node, path) {
+      const sm = getScopeManager();
+      if (sm) registerBlockParams(node, path, sm, isTypescript);
+    },
+  };
+}
+
+// ── registerGlimmerScopes (fallback for JS/oxc path) ──────────────────
 
 function traverse(visitorKeys, node, visitor) {
   const allVisitorKeys = { ...visitorKeys, ...buildGlimmerVisitorKeys() };
@@ -92,19 +188,12 @@ function traverse(visitorKeys, node, visitor) {
 
   while (queue.length > 0) {
     const currentPath = queue.pop();
-
     visitor(currentPath);
-
     if (!currentPath.node) continue;
-
     const keys = allVisitorKeys[currentPath.node.type];
-    if (!keys) {
-      continue;
-    }
-
+    if (!keys) continue;
     for (const visitorKey of keys) {
       const child = currentPath.node[visitorKey];
-
       if (!child) {
         continue;
       } else if (Array.isArray(child)) {
@@ -130,97 +219,24 @@ function traverse(visitorKeys, node, visitor) {
   }
 }
 
-function isUpperCase(char) {
-  return char.toUpperCase() === char;
-}
-
-// ── Glimmer scope registration ────────────────────────────────────────
-
 /**
- * Walks the AST and registers Glimmer-specific scopes:
- * - Block scopes for blockParams ({{#each ... as |item|}})
- * - Variable references for path expressions ({{foo}})
- * - Variable references for element tag names (<MyComponent />)
- *
- * This is the ESLint-specific layer on top of ember-estree's AST.
- * @param result - The parseForESLint result with ast, scopeManager, visitorKeys, isTypescript
+ * Full AST traversal for scope registration — used as fallback for JS/oxc path.
+ * For the TS path, toTree's visitor API handles this during splicing.
  */
 export function registerGlimmerScopes(result) {
   // eslint-disable-next-line complexity
   traverse(result.visitorKeys, result.ast, (path) => {
     const node = path.node;
-    if (!node) return null;
-
-    if (node.type === 'GlimmerPathExpression' && node.head.type === 'VarHead') {
-      const name = node.head.name;
-      if (glimmerIsKeyword(name)) {
-        return null;
-      }
-      const { scope, variable } = findVarInParentScopes(result.scopeManager, path, name) || {};
-      if (scope) {
-        node.head.parent = node;
-        registerNodeInScope(node.head, scope, variable);
-      }
+    if (!node) return;
+    if (node.type === 'GlimmerPathExpression') {
+      registerPathExpression(node, path, result.scopeManager);
     }
     if (node.type === 'GlimmerElementNode') {
-      const n = node.parts[0];
-      const { scope, variable } = findVarInParentScopes(result.scopeManager, path, n.name) || {};
-
-      const ignore =
-        n.name === 'this' ||
-        n.name.startsWith(':') ||
-        n.name.startsWith('@') ||
-        !scope ||
-        n.name.includes('-');
-
-      const registerUndef =
-        isUpperCase(n.name[0]) ||
-        node.name.includes('.') ||
-        (!htmlTagsSet.has(node.name) &&
-          !svgTagsSet.has(node.name) &&
-          !mathMLTagsSet.has(node.name));
-
-      if (!ignore && (variable || registerUndef)) {
-        registerNodeInScope(n, scope, variable);
-      }
+      registerElementNode(node, path, result.scopeManager);
     }
-
-    if ('blockParams' in node) {
-      const blockParamNodes = node.blockParamNodes || [];
-      const upperScope = findParentScope(result.scopeManager, path);
-      const scope = result.isTypescript
-        ? new TypescriptScope.BlockScope(result.scopeManager, upperScope, node)
-        : new Scope(result.scopeManager, 'block', upperScope, node);
-      const declaredVariables =
-        result.scopeManager.declaredVariables || result.scopeManager.__declaredVariables;
-      const vars = [];
-      declaredVariables.set(node, vars);
-      const virtualJSParentNode = {
-        type: 'FunctionDeclaration',
-        params: blockParamNodes,
-        range: node.range,
-        loc: node.loc,
-        parent: path.parent,
-      };
-      for (const [i, b] of blockParamNodes.entries()) {
-        const v = new Variable(b.name, scope);
-        v.identifiers.push(b);
-        scope.variables.push(v);
-        scope.set.set(b.name, v);
-        vars.push(v);
-
-        const virtualJSNode = {
-          type: 'Identifier',
-          name: b.name,
-          range: b.range,
-          loc: b.loc,
-          parent: virtualJSParentNode,
-        };
-        v.defs.push(new Definition('Parameter', virtualJSNode, node, node, i, 'Block Param'));
-        v.defs.push(new Definition('Parameter', b, node, node, i, 'Block Param'));
-      }
+    if ('blockParams' in node && node.type?.startsWith('Glimmer')) {
+      registerBlockParams(node, path, result.scopeManager, result.isTypescript);
     }
-    return null;
   });
 }
 
@@ -230,7 +246,7 @@ export const replaceRange = function replaceRange(s, start, end, substitute) {
   return s.slice(0, start) + substitute + s.slice(end);
 };
 
-const processor = new ContentTag.Preprocessor();
+const processor = new Preprocessor();
 
 class EmberParserError extends Error {
   constructor(message, fileName, location) {
@@ -263,12 +279,11 @@ function createError(code, message, fileName, start, end = start) {
 
 /**
  * Transform code for TypeScript virtual file system.
- * Replaces <template> regions with backtick expressions that TS can parse.
+ * Uses ember-estree's toPlaceholderJS to create TS-compatible placeholders.
  * Used by ts-patch.js for type-aware linting.
  */
 export function transformForLint(code, fileName) {
-  let jsCode = code;
-  let result = null;
+  let result;
   try {
     result = processor.parse(code);
   } catch (e) {
@@ -281,39 +296,14 @@ export function transformForLint(code, fileName) {
     }
     throw e;
   }
-  for (const tplInfo of result.reverse()) {
-    const content = tplInfo.contents.replace(/`/g, '\\`').replace(/\$/g, '\\$');
-    if (tplInfo.type === 'class-member') {
-      const tplLength = tplInfo.range.endUtf16Codepoint - tplInfo.range.startUtf16Codepoint;
-      const spaces = tplLength - content.length - 'static{`'.length - '`}'.length;
-      const total = content + ' '.repeat(spaces);
-      const replacementCode = `static{\`${total}\`}`;
-      jsCode = replaceRange(
-        jsCode,
-        tplInfo.range.startUtf16Codepoint,
-        tplInfo.range.endUtf16Codepoint,
-        replacementCode
-      );
-    } else {
-      const tplLength = tplInfo.range.endUtf16Codepoint - tplInfo.range.startUtf16Codepoint;
-      const spaces = tplLength - content.length - '`'.length - '`'.length;
-      const total = content + ' '.repeat(spaces);
-      const replacementCode = `\`${total}\``;
-      jsCode = replaceRange(
-        jsCode,
-        tplInfo.range.startUtf16Codepoint,
-        tplInfo.range.endUtf16Codepoint,
-        replacementCode
-      );
-    }
-  }
+  const output = toPlaceholderJS(code, result);
   /* istanbul ignore next */
-  if (jsCode.length !== code.length) {
+  if (output.length !== code.length) {
     throw new Error('bad transform');
   }
   return {
     templateInfos: result,
-    output: jsCode,
+    output,
   };
 }
 
