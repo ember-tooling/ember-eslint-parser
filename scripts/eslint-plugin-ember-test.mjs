@@ -18,9 +18,8 @@ await execaCommand(`pnpm add ${FOLDERS.here}`, { cwd: FOLDERS.repo, stdio: 'inhe
 
 // ember-estree renames BlockParam → GlimmerBlockParam for consistency with
 // all other Glimmer-prefixed node types.  Patch the downstream assertion.
-await execaCommand(
-  `sed -i "s/nodeType: BlockParam/nodeType: GlimmerBlockParam/g" tests/lib/rules-preprocessor/gjs-gts-parser-test.js`,
-  { cwd: FOLDERS.repo, stdio: 'inherit' }
-);
+const testFile = `${FOLDERS.repo}/tests/lib/rules-preprocessor/gjs-gts-parser-test.js`;
+const content = await fse.readFile(testFile, 'utf8');
+await fse.writeFile(testFile, content.replaceAll('nodeType: BlockParam', 'nodeType: GlimmerBlockParam'));
 
 await execaCommand(`pnpm run test`, { cwd: FOLDERS.repo, stdio: 'inherit' });
