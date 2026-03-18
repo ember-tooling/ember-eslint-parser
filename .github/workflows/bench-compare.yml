@@ -62,6 +62,9 @@ jobs:
 
             if (isFork) {
               core.info('PR is from a fork — skipping PR comment (results are in the job summary).');
+              core.info('--- Comment body start ---');
+              core.info(body);
+              core.info('--- Comment body end ---');
             } else {
               const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
