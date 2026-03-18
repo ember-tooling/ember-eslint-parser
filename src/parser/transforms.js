@@ -173,20 +173,32 @@ function isUpperCase(char) {
 export function preprocessGlimmerTemplates(info, code) {
   const templateInfos = info.templateInfos.map((r) => ({
     utf16Range: [r.range.startUtf16Codepoint, r.range.endUtf16Codepoint],
+    contentRange: [r.contentRange.startUtf16Codepoint, r.contentRange.endUtf16Codepoint],
   }));
   const codeLines = new DocumentLines(code);
   const allComments = [];
 
   for (const tpl of templateInfos) {
-    const template = code.slice(...tpl.utf16Range);
+    // Pass inner content only (without <template> tags) to avoid
+    // glimmer wrapping it in a spurious ElementNode(tag: "template")
+    const templateContent = code.slice(...tpl.contentRange);
 
-    const { ast, comments } = toTree(template, {
+    const { ast, comments } = toTree(templateContent, {
       templateOnly: true,
       codeLines,
-      templateRange: [...tpl.utf16Range],
+      templateRange: [...tpl.contentRange],
     });
 
-    ast.content = template;
+    // Fix the Template root to cover the full <template>...</template> range
+    ast.range = [...tpl.utf16Range];
+    ast.start = tpl.utf16Range[0];
+    ast.end = tpl.utf16Range[1];
+    ast.loc = {
+      start: codeLines.offsetToPosition(tpl.utf16Range[0]),
+      end: codeLines.offsetToPosition(tpl.utf16Range[1]),
+    };
+
+    ast.content = code.slice(...tpl.utf16Range);
     allComments.push(...comments);
     tpl.ast = ast;
   }
