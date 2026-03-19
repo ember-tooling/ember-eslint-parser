@@ -21,8 +21,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       ember-estree:
-        specifier: github:NullVoxPopuli-ai-agent/ember-estree#882a2fe
-        version: https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/882a2fe
+        specifier: github:NullVoxPopuli-ai-agent/ember-estree#008f046
+        version: https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/008f046
       eslint-scope:
         specifier: ^9.1.1
         version: 9.1.1
@@ -2795,9 +2795,9 @@ packages:
     resolution: {integrity: sha512-BtkjulweiXo9c3yVWrtexw2dTmBrvavD/xixNC6TKOBdrixUwU+6nuOO9dufDWsMxoid7MvtmDpzc9+mE8PdaA==}
     engines: {node: 10.* || >= 12.*}
 
-  ember-estree@https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/882a2fe:
-    resolution: {tarball: https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/882a2fe}
-    version: 0.3.0
+  ember-estree@https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/008f046:
+    resolution: {tarball: https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/008f046}
+    version: 0.4.0
 
   ember-rfc176-data@0.3.18:
     resolution: {integrity: sha512-JtuLoYGSjay1W3MQAxt3eINWXNYYQliK90tLwtb8aeCuQK8zKGCRbBodVIrkcTqshULMnRuTOS6t1P7oQk3g6Q==}
@@ -8674,7 +8674,7 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-estree@https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/882a2fe:
+  ember-estree@https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/008f046:
     dependencies:
       '@glimmer/env': 0.1.7
       '@glimmer/syntax': 0.95.0
