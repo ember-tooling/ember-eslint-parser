@@ -51,11 +51,7 @@ export function getGlintConfig(filePath) {
  */
 export function glintRewriteModule(code, filePath, ts, config) {
   if (!rewriteModule) return null;
-  return rewriteModule(
-    ts,
-    { script: { filename: filePath, contents: code } },
-    config.environment
-  );
+  return rewriteModule(ts, { script: { filename: filePath, contents: code } }, config.environment);
 }
 
 /**

@@ -569,14 +569,14 @@ export function convertAst(result, preprocessedResult, visitorKeys, options) {
     // Glint produces CallExpression for expression templates and StaticBlock for
     // class-member templates (vs TemplateLiteral from transformForLint).
     const typeMatches = matchByRangeOnly
-      ? (node.type === 'ExpressionStatement' ||
-         node.type === 'CallExpression' ||
-         node.type === 'StaticBlock' ||
-         node.type === 'ExportDefaultDeclaration')
-      : (node.type === 'ExpressionStatement' ||
-         node.type === 'StaticBlock' ||
-         node.type === 'TemplateLiteral' ||
-         node.type === 'ExportDefaultDeclaration');
+      ? node.type === 'ExpressionStatement' ||
+        node.type === 'CallExpression' ||
+        node.type === 'StaticBlock' ||
+        node.type === 'ExportDefaultDeclaration'
+      : node.type === 'ExpressionStatement' ||
+        node.type === 'StaticBlock' ||
+        node.type === 'TemplateLiteral' ||
+        node.type === 'ExportDefaultDeclaration';
 
     if (typeMatches) {
       let range = node.range;

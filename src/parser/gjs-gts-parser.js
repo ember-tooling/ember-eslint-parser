@@ -2,14 +2,25 @@ import { createRequire } from 'node:module';
 import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
 import babelParser from '@babel/eslint-parser/experimental-worker';
 import { registerParsedFile } from '../preprocessor/noop.js';
-import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, ts } from './ts-patch.js';
+import {
+  patchTs,
+  replaceExtensions,
+  syncMtsGtsSourceFiles,
+  typescriptParser,
+  ts,
+} from './ts-patch.js';
 import {
   transformForLint,
   preprocessGlimmerTemplates,
   preprocessGlimmerTemplatesFromCharOffsets,
   convertAst,
 } from './transforms.js';
-import { isGlintAvailable, getGlintConfig, glintRewriteModule, buildTemplateInfoFromGlint } from './glint-utils.js';
+import {
+  isGlintAvailable,
+  getGlintConfig,
+  glintRewriteModule,
+  buildTemplateInfoFromGlint,
+} from './glint-utils.js';
 import { remapAstPositions, remapTokens } from './remap.js';
 
 const require = createRequire(import.meta.url);
