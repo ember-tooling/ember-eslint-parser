@@ -1,18 +1,22 @@
 import { createRequire } from 'node:module';
 import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
-import babelParser from '@babel/eslint-parser/experimental-worker';
 import { registerParsedFile } from '../preprocessor/noop.js';
 import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
-import { transformForLint, preprocessGlimmerTemplates, convertAst } from './transforms.js';
+import { buildGlimmerVisitors } from './transforms.js';
+import { toTree } from 'ember-estree';
+import * as eslintScope from 'eslint-scope';
 
 const require = createRequire(import.meta.url);
 
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers
- * 1. transforms gts/gjs files into parseable ts/js without changing the offsets and locations around it
- * 2. parses the transformed code and generates the AST for TS ot JS
- * 3. preprocesses the templates info and prepares the Glimmer AST
- * 4. converts the js/ts AST so that it includes the Glimmer AST at the right locations, replacing the original
+ *
+ * Uses ember-estree's toTree with a custom parser option to handle
+ * the full pipeline: template extraction, placeholder replacement,
+ * JS/TS parsing, Glimmer AST processing, and AST splicing.
+ *
+ * Scope registration happens via toTree's visitors API, eliminating
+ * a second AST traversal.
  */
 
 /**
@@ -77,12 +81,10 @@ function getAllowJsFromPrograms(programs) {
 function getProjectServiceTsconfigPath(projectService) {
   if (!projectService) return null;
 
-  // If projectService is true, use default behavior (nearest tsconfig.json, allowJs from config)
   if (projectService === true) {
     return 'tsconfig.json';
   }
 
-  // If projectService is an object, handle ProjectServiceOptions
   if (typeof projectService === 'object') {
     if (typeof projectService.allowDefaultProject !== 'undefined') {
       // eslint-disable-next-line no-console
@@ -143,9 +145,6 @@ export function parseForESLint(code, options) {
     ({ allowGjs: actualAllowGjs } = patchTs({ allowGjs }));
   }
   registerParsedFile(options.filePath);
-  let jsCode = code;
-  const info = transformForLint(code, options.filePath);
-  jsCode = info.output;
 
   const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');
   let useTypescript = true;
@@ -154,41 +153,55 @@ export function parseForESLint(code, options) {
     useTypescript = false;
   }
 
-  let result = null;
-  const filePath = options.filePath;
-  if (options.project || options.projectService) {
-    jsCode = replaceExtensions(jsCode);
-  }
-
   if (isTypescript && !typescriptParser) {
     throw new Error('Please install typescript to process gts');
   }
 
+  const filePath = options.filePath;
+  const useTS = isTypescript || useTypescript;
+
+  // Both paths create scopeManager inside the parser callback so it's
+  // available when toTree invokes visitors during splice — no second pass.
+  let scopeManager = null;
+
   try {
-    result =
-      isTypescript || useTypescript
-        ? typescriptParser.parseForESLint(jsCode, {
-            ...options,
-            ranges: true,
-            extraFileExtensions: ['.gts', '.gjs'],
-            filePath,
-          })
-        : babelParser.parseForESLint(jsCode, {
-            ...options,
-            requireConfigFile: false,
-            ranges: true,
-          });
-    if (!info.templateInfos?.length) {
-      return result;
-    }
-    const preprocessedResult = preprocessGlimmerTemplates(info, code);
-    preprocessedResult.code = code;
-    const { templateVisitorKeys } = preprocessedResult;
-    const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
-    result.isTypescript = isTypescript || useTypescript;
-    convertAst(result, preprocessedResult, visitorKeys);
+    const result = toTree(code, {
+      filePath,
+      parser: useTS
+        ? (placeholderJS) => {
+            let parseCode = placeholderJS;
+            if (options.project || options.projectService) {
+              parseCode = replaceExtensions(parseCode);
+            }
+            const tsResult = typescriptParser.parseForESLint(parseCode, {
+              ...options,
+              ranges: true,
+              extraFileExtensions: ['.gts', '.gjs'],
+              filePath,
+            });
+            scopeManager = tsResult.scopeManager;
+            return tsResult;
+          }
+        : (placeholderJS) => {
+            // JS path: parse with oxc, create scope manager from placeholder AST
+            const { parseSync } = require('oxc-parser');
+            const oxcResult = parseSync(filePath || 'input.js', placeholderJS);
+            const program = oxcResult.program;
+            program.tokens = oxcResult.tokens || [];
+            program.comments = oxcResult.comments || [];
+            scopeManager = eslintScope.analyze(program, {
+              ecmaVersion: 2022,
+              sourceType: 'module',
+              range: true,
+            });
+            return { ast: program, scopeManager };
+          },
+      visitors: buildGlimmerVisitors(() => scopeManager, useTS),
+    });
+
+    if (!result.scopeManager) result.scopeManager = scopeManager;
+
     if (result.services?.program) {
-      // Compare allowJs with the actual program's compiler options
       const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
       if (
         !allowGjsWasSet &&
@@ -204,9 +217,27 @@ export function parseForESLint(code, options) {
       }
       syncMtsGtsSourceFiles(result.services.program);
     }
-    return { ...result, visitorKeys };
+
+    delete result.templateInfos;
+    delete result.isTypescript;
+
+    return result;
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.error(e);
+    // Convert content-tag parse errors to ESLint-compatible format
+    if (e.message?.includes('Parse Error at')) {
+      const [line, column] = e.message
+        .split(':')
+        .slice(-2)
+        .map((x) => parseInt(x));
+      const err = new Error(e.source_code || e.message);
+      err.lineNumber = line;
+      err.column = column;
+      err.fileName = filePath;
+      err.index = undefined;
+      throw err;
+    }
     throw e;
   }
 }
