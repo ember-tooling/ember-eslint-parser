@@ -23,7 +23,6 @@ export const meta = {
 
 export function parseForESLint(code, options) {
   const filePath = (options && options.filePath) || '<hbs>';
-  const codeLines = new DocumentLines(code);
 
   let result;
   try {
@@ -32,6 +31,7 @@ export function parseForESLint(code, options) {
     // Transform glimmer parse error to ESLint-compatible error
     const loc = e.location || (e.hash && e.hash.loc);
     if (loc && loc.start) {
+      const codeLines = new DocumentLines(code);
       const err = Object.assign(new SyntaxError(e.message), {
         lineNumber: loc.start.line,
         column: loc.start.column,
@@ -45,6 +45,10 @@ export function parseForESLint(code, options) {
 
   const { ast: templateNode, comments } = result;
 
+  // Use the Template node's loc.end for the Program's end position
+  // (avoids creating a duplicate DocumentLines just for this)
+  const endLoc = templateNode.loc?.end || { line: 1, column: code.length };
+
   // Wrap in a synthetic Program node (required by ESLint)
   const program = {
     type: 'Program',
@@ -56,7 +60,7 @@ export function parseForESLint(code, options) {
     end: code.length,
     loc: {
       start: { line: 1, column: 0 },
-      end: codeLines.offsetToPosition(code.length),
+      end: endLoc,
     },
   };
 
