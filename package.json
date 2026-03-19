@@ -35,7 +35,7 @@
     "@glimmer/syntax": ">= 0.92.0",
     "@typescript-eslint/tsconfig-utils": "^8.38.0",
     "content-tag": "^4.1.0",
-    "ember-estree": "github:NullVoxPopuli-ai-agent/ember-estree#17c4778",
+    "ember-estree": "github:NullVoxPopuli-ai-agent/ember-estree#5d1e051",
     "eslint-scope": "^9.1.1",
     "html-tags": "^5.1.0",
     "mathml-tag-names": "^4.0.0",
