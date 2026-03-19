@@ -1,21 +1,22 @@
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { transformForLint, replaceRange } from './transforms.js';
+import { isGlintAvailable, getGlintConfig, glintRewriteModule } from './glint-utils.js';
 
 const require = createRequire(import.meta.url);
 
-let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs;
+let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs, ts;
 
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
   // eslint-disable-next-line n/no-unpublished-require
   const tsPath = require.resolve('typescript', { paths: [parserPath] });
-  const ts = require(tsPath);
+  ts = require(tsPath);
   typescriptParser = require('@typescript-eslint/parser');
   patchTs = function patchTs(options = {}) {
+    allowGjs = options.allowGjs !== undefined ? options.allowGjs : true;
     if (isPatched) return { allowGjs };
     isPatched = true;
-    allowGjs = options.allowGjs !== undefined ? options.allowGjs : true;
     const sys = { ...ts.sys };
     const newSys = {
       ...ts.sys,
@@ -52,11 +53,28 @@ try {
           content = fs.readFileSync(fileName).toString();
         }
         if (fileName.endsWith('.gts') || (allowGjs && fileName.endsWith('.gjs'))) {
-          try {
-            content = transformForLint(content).output;
-          } catch (e) {
-            console.error('failed to transformForLint for gts/gjs processing');
-            console.error(e);
+          let transformed = false;
+          if (isGlintAvailable()) {
+            try {
+              const config = getGlintConfig(fileName);
+              if (config) {
+                const result = glintRewriteModule(content, fileName, ts, config);
+                if (result) {
+                  content = result.transformedContents;
+                  transformed = true;
+                }
+              }
+            } catch (e) {
+              // Glint transform failed, fall through to transformForLint
+            }
+          }
+          if (!transformed) {
+            try {
+              content = transformForLint(content).output;
+            } catch (e) {
+              console.error('failed to transformForLint for gts/gjs processing');
+              console.error(e);
+            }
           }
         }
         if (
@@ -164,4 +182,4 @@ try {
   syncMtsGtsSourceFiles = () => null;
 }
 
-export { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser };
+export { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, ts };

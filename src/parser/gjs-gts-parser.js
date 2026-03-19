@@ -2,8 +2,26 @@ import { createRequire } from 'node:module';
 import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
 import babelParser from '@babel/eslint-parser/experimental-worker';
 import { registerParsedFile } from '../preprocessor/noop.js';
-import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
-import { transformForLint, preprocessGlimmerTemplates, convertAst } from './transforms.js';
+import {
+  patchTs,
+  replaceExtensions,
+  syncMtsGtsSourceFiles,
+  typescriptParser,
+  ts,
+} from './ts-patch.js';
+import {
+  transformForLint,
+  preprocessGlimmerTemplates,
+  preprocessGlimmerTemplatesFromCharOffsets,
+  convertAst,
+} from './transforms.js';
+import {
+  isGlintAvailable,
+  getGlintConfig,
+  glintRewriteModule,
+  buildTemplateInfoFromGlint,
+} from './glint-utils.js';
+import { remapAstPositions, remapTokens } from './remap.js';
 
 const require = createRequire(import.meta.url);
 
@@ -127,6 +145,69 @@ function getAllowJs(options) {
 }
 
 /**
+ * Parse using Glint's transform for full type-aware template support.
+ * Glint transforms templates into __glintDSL__ calls that TS understands,
+ * then we remap AST positions back to original source and splice in Glimmer AST.
+ */
+function parseWithGlint(code, options, transformedModule) {
+  const filePath = options.filePath;
+
+  // Get transformed TS code and replace .gts→.mts imports
+  let tsCode = transformedModule.transformedContents;
+  if (options.project || options.projectService) {
+    tsCode = replaceExtensions(tsCode);
+  }
+
+  // Parse the transformed code with TS parser (positions in transformed-space)
+  const result = typescriptParser.parseForESLint(tsCode, {
+    ...options,
+    ranges: true,
+    extraFileExtensions: ['.gts', '.gjs'],
+    filePath,
+  });
+
+  // Build template infos from Glint's correlatedSpans
+  const glintTemplateInfos = buildTemplateInfoFromGlint(transformedModule, filePath);
+
+  // Always remap positions even if no templates — Glint may have changed code length
+  // for non-template spans (e.g., directive placeholders)
+  const { templateSpans } = remapAstPositions(
+    result.ast,
+    result.visitorKeys,
+    transformedModule.correlatedSpans,
+    code
+  );
+
+  // Remap tokens
+  result.ast.tokens = remapTokens(
+    result.ast.tokens,
+    transformedModule.correlatedSpans,
+    templateSpans,
+    code
+  );
+
+  if (!glintTemplateInfos.length) {
+    return result;
+  }
+
+  // Preprocess Glimmer templates (parse to Glimmer AST with correct positions)
+  const preprocessedResult = preprocessGlimmerTemplatesFromCharOffsets(glintTemplateInfos, code);
+  const { templateVisitorKeys } = preprocessedResult;
+  const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
+  result.isTypescript = true;
+
+  // Splice Glimmer AST into the remapped TS AST (matchByRangeOnly because
+  // Glint produces different node types than transformForLint)
+  convertAst(result, preprocessedResult, visitorKeys, { matchByRangeOnly: true });
+
+  if (result.services?.program) {
+    syncMtsGtsSourceFiles(result.services.program);
+  }
+
+  return { ...result, visitorKeys };
+}
+
+/**
  * @type {import('eslint').ParserModule}
  */
 export const meta = {
@@ -135,14 +216,32 @@ export const meta = {
 };
 
 export function parseForESLint(code, options) {
-  const allowGjsWasSet = options.allowGjs !== undefined;
-  const allowGjs = allowGjsWasSet ? options.allowGjs : getAllowJs(options);
-  let actualAllowGjs;
+  const allowGjs = options.allowGjs !== undefined ? options.allowGjs : getAllowJs(options);
   // Only patch TypeScript if we actually need it.
   if (options.programs || options.projectService || options.project) {
-    ({ allowGjs: actualAllowGjs } = patchTs({ allowGjs }));
+    patchTs({ allowGjs });
   }
   registerParsedFile(options.filePath);
+
+  // Try Glint path for .gts/.gjs files when Glint is available
+  const isGts = options.filePath.endsWith('.gts');
+  const isGjs = options.filePath.endsWith('.gjs');
+  if ((isGts || isGjs) && isGlintAvailable() && ts && typescriptParser) {
+    try {
+      const glintConfig = getGlintConfig(options.filePath);
+      if (glintConfig) {
+        const glintTransform = glintRewriteModule(code, options.filePath, ts, glintConfig);
+        if (glintTransform) {
+          return parseWithGlint(code, options, glintTransform);
+        }
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.warn('[ember-eslint-parser] Glint path failed, falling back:', e.stack || e.message);
+    }
+  }
+
+  // Existing (non-Glint) path
   let jsCode = code;
   const info = transformForLint(code, options.filePath);
   jsCode = info.output;
@@ -188,20 +287,6 @@ export function parseForESLint(code, options) {
     result.isTypescript = isTypescript || useTypescript;
     convertAst(result, preprocessedResult, visitorKeys);
     if (result.services?.program) {
-      // Compare allowJs with the actual program's compiler options
-      const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
-      if (
-        !allowGjsWasSet &&
-        programAllowJs !== undefined &&
-        actualAllowGjs !== undefined &&
-        actualAllowGjs !== programAllowJs
-      ) {
-        // eslint-disable-next-line no-console
-        console.warn(
-          '[ember-eslint-parser] allowJs does not match the actual program. Consider setting allowGjs explicitly.\n' +
-            `    Current: ${allowGjs}, Program: ${programAllowJs}`
-        );
-      }
       syncMtsGtsSourceFiles(result.services.program);
     }
     return { ...result, visitorKeys };

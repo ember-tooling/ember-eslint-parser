@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
 import { replaceExtensions } from '../src/parser/ts-patch.js';
 import { traverse } from '../src/parser/transforms.js';
@@ -2819,5 +2819,41 @@ describe('replaceExtensions', () => {
     expect(result).toBe(
       `// description — with em-dash\nimport type { Foo } from './other-component.mts';`
     );
+  });
+});
+
+describe('patchTs allowGjs singleton', () => {
+  it('updates allowGjs on each call after the initial patch', async () => {
+    vi.resetModules();
+    const { patchTs } = await import('../src/parser/ts-patch.js');
+
+    expect(patchTs({ allowGjs: false }).allowGjs).toBe(false);
+    // Each call should reflect the passed value, not the value from the first call
+    expect(patchTs({ allowGjs: true }).allowGjs).toBe(true);
+  });
+});
+
+describe('allowGjs mismatch warning', () => {
+  it('does not warn when tsconfig has allowJs:false and allowGjs is not explicitly set', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    try {
+      parseForESLint('export class Foo {}', {
+        filePath: new URL('./fixtures/foo.gts', import.meta.url).pathname,
+        project: new URL('./fixtures/tsconfig.no-allow-js.json', import.meta.url).pathname,
+        tsconfigRootDir: new URL('./fixtures', import.meta.url).pathname,
+        comment: true,
+        loc: true,
+        range: true,
+        tokens: true,
+      });
+
+      const mismatchWarnings = warnSpy.mock.calls.filter(
+        ([msg]) => typeof msg === 'string' && msg.includes('allowJs does not match')
+      );
+      expect(mismatchWarnings).toHaveLength(0);
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 });
