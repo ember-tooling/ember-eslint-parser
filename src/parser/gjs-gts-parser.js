@@ -2,9 +2,8 @@ import { createRequire } from 'node:module';
 import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
 import { registerParsedFile } from '../preprocessor/noop.js';
 import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
-import { buildGlimmerVisitors } from './transforms.js';
+import { buildGlimmerVisitors, registerGlimmerScopes } from './transforms.js';
 import { toTree } from 'ember-estree';
-import { parseSync } from 'oxc-parser';
 import * as eslintScope from 'eslint-scope';
 
 const require = createRequire(import.meta.url);
@@ -161,9 +160,9 @@ export function parseForESLint(code, options) {
   const filePath = options.filePath;
   const useTS = isTypescript || useTypescript;
 
-  // scopeManager is captured by the parser callback and used by visitors.
-  // Both TS and JS paths create it inside the parser callback so it's
-  // available when toTree invokes visitors during the splice traversal.
+  // For the TS path, scopeManager comes from the parser callback
+  // and is available when visitors fire during toTree's splice traversal.
+  // For the JS path, scopeManager is created after toTree returns.
   let scopeManager = null;
 
   try {
@@ -184,48 +183,51 @@ export function parseForESLint(code, options) {
             scopeManager = tsResult.scopeManager;
             return tsResult;
           }
-        : (placeholderJS) => {
-            // JS path: parse with oxc, create scope manager before visitors run
-            const oxcResult = parseSync(filePath || 'input.js', placeholderJS);
-            const program = oxcResult.program;
-            program.tokens = oxcResult.tokens || [];
-            program.comments = oxcResult.comments || [];
-            scopeManager = eslintScope.analyze(program, {
-              ecmaVersion: 2022,
-              sourceType: 'module',
-              range: true,
-            });
-            return { ast: program, scopeManager };
-          },
-      visitors: buildGlimmerVisitors(() => scopeManager, useTS),
+        : undefined,
+      // TS path: visitors fire during splice (scopeManager available from parser callback)
+      // JS path: visitors fire after splice but scopeManager is null — handled below
+      visitors: useTS ? buildGlimmerVisitors(() => scopeManager, useTS) : undefined,
     });
 
-    if (!result.scopeManager) {
-      result.scopeManager = scopeManager;
-    }
+    if (useTS) {
+      // TS path: result is { ast, scopeManager, visitorKeys, services, ... }
+      if (!result.scopeManager) result.scopeManager = scopeManager;
 
-    if (result.services?.program) {
-      const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
-      if (
-        !allowGjsWasSet &&
-        programAllowJs !== undefined &&
-        actualAllowGjs !== undefined &&
-        actualAllowGjs !== programAllowJs
-      ) {
-        // eslint-disable-next-line no-console
-        console.warn(
-          '[ember-eslint-parser] allowJs does not match the actual program. Consider setting allowGjs explicitly.\n' +
-            `    Current: ${allowGjs}, Program: ${programAllowJs}`
-        );
+      if (result.services?.program) {
+        const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
+        if (
+          !allowGjsWasSet &&
+          programAllowJs !== undefined &&
+          actualAllowGjs !== undefined &&
+          actualAllowGjs !== programAllowJs
+        ) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            '[ember-eslint-parser] allowJs does not match the actual program. Consider setting allowGjs explicitly.\n' +
+              `    Current: ${allowGjs}, Program: ${programAllowJs}`
+          );
+        }
+        syncMtsGtsSourceFiles(result.services.program);
       }
-      syncMtsGtsSourceFiles(result.services.program);
+
+      delete result.templateInfos;
+      delete result.isTypescript;
+
+      return result;
     }
 
-    // Clean up internal properties before returning to ESLint
-    delete result.templateInfos;
-    delete result.isTypescript;
+    // JS/oxc path: result is bare AST (File node) with visitorKeys attached.
+    // Create scope manager and register Glimmer scopes, then wrap for ESLint.
+    const program = result.program || result;
+    const visitorKeys = result.visitorKeys;
+    scopeManager = eslintScope.analyze(program, {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      range: true,
+    });
+    registerGlimmerScopes({ ast: program, scopeManager, visitorKeys, isTypescript: false });
 
-    return result;
+    return { ast: program, scopeManager, visitorKeys };
   } catch (e) {
     // eslint-disable-next-line no-console
     console.error(e);
