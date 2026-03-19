@@ -31,14 +31,14 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@babel/eslint-parser": "^7.28.6",
     "@glimmer/syntax": ">= 0.92.0",
     "@typescript-eslint/tsconfig-utils": "^8.38.0",
     "content-tag": "^4.1.0",
-    "ember-estree": "github:NullVoxPopuli-ai-agent/ember-estree#5d1e051",
+    "ember-estree": "github:NullVoxPopuli-ai-agent/ember-estree#80a0b92",
     "eslint-scope": "^9.1.1",
     "html-tags": "^5.1.0",
     "mathml-tag-names": "^4.0.0",
+    "oxc-parser": "^0.119.0",
     "svg-tags": "^1.0.0"
   },
   "devDependencies": {
@@ -65,7 +65,6 @@
     "vitest": "^1.2.2"
   },
   "peerDependencies": {
-    "@babel/core": "^7.23.6",
     "@typescript-eslint/parser": "*"
   },
   "peerDependenciesMeta": {

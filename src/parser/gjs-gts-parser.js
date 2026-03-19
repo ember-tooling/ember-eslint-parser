@@ -2,8 +2,9 @@ import { createRequire } from 'node:module';
 import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
 import { registerParsedFile } from '../preprocessor/noop.js';
 import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
-import { buildGlimmerVisitors, registerGlimmerScopes } from './transforms.js';
+import { buildGlimmerVisitors } from './transforms.js';
 import { toTree } from 'ember-estree';
+import { parseSync } from 'oxc-parser';
 import * as eslintScope from 'eslint-scope';
 
 const require = createRequire(import.meta.url);
@@ -160,7 +161,9 @@ export function parseForESLint(code, options) {
   const filePath = options.filePath;
   const useTS = isTypescript || useTypescript;
 
-  // scopeManager is captured by the parser callback and used by visitors
+  // scopeManager is captured by the parser callback and used by visitors.
+  // Both TS and JS paths create it inside the parser callback so it's
+  // available when toTree invokes visitors during the splice traversal.
   let scopeManager = null;
 
   try {
@@ -181,28 +184,22 @@ export function parseForESLint(code, options) {
             scopeManager = tsResult.scopeManager;
             return tsResult;
           }
-        : undefined,
-      // Visitors run during toTree's traversal — eliminates a second pass
-      visitors: useTS ? buildGlimmerVisitors(() => scopeManager, useTS) : undefined,
+        : (_source, _parseResults, placeholderJS) => {
+            // JS path: parse with oxc, create scope manager before visitors run
+            const oxcResult = parseSync(filePath || 'input.js', placeholderJS);
+            const program = oxcResult.program;
+            program.tokens = oxcResult.tokens || [];
+            program.comments = oxcResult.comments || [];
+            scopeManager = eslintScope.analyze(program, {
+              ecmaVersion: 2022,
+              sourceType: 'module',
+              range: true,
+            });
+            return { ast: program, scopeManager };
+          },
+      visitors: buildGlimmerVisitors(() => scopeManager, useTS),
     });
 
-    // For JS/oxc path: create scope manager and register Glimmer scopes
-    if (!useTS) {
-      const ast = result.ast || result;
-      const program = ast.program || ast;
-      scopeManager = eslintScope.analyze(program, {
-        ecmaVersion: 2022,
-        sourceType: 'module',
-        range: true,
-      });
-      if (result.templateInfos?.length) {
-        result.scopeManager = scopeManager;
-        result.isTypescript = false;
-        registerGlimmerScopes(result);
-      }
-    }
-
-    // Ensure result has scopeManager
     if (!result.scopeManager) {
       result.scopeManager = scopeManager;
     }

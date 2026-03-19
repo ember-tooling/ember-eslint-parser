@@ -11,9 +11,6 @@ importers:
 
   .:
     dependencies:
-      '@babel/eslint-parser':
-        specifier: ^7.28.6
-        version: 7.28.6(@babel/core@7.26.0)(eslint@8.57.1)
       '@glimmer/syntax':
         specifier: '>= 0.92.0'
         version: 0.92.3
@@ -24,8 +21,8 @@ importers:
         specifier: ^4.1.0
         version: 4.1.0
       ember-estree:
-        specifier: github:NullVoxPopuli-ai-agent/ember-estree#5d1e051
-        version: https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/5d1e051
+        specifier: github:NullVoxPopuli-ai-agent/ember-estree#80a0b92
+        version: https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/80a0b92
       eslint-scope:
         specifier: ^9.1.1
         version: 9.1.1
@@ -35,6 +32,9 @@ importers:
       mathml-tag-names:
         specifier: ^4.0.0
         version: 4.0.0
+      oxc-parser:
+        specifier: ^0.119.0
+        version: 0.119.0
       svg-tags:
         specifier: ^1.0.0
         version: 1.0.0
@@ -2786,8 +2786,8 @@ packages:
     resolution: {integrity: sha512-BtkjulweiXo9c3yVWrtexw2dTmBrvavD/xixNC6TKOBdrixUwU+6nuOO9dufDWsMxoid7MvtmDpzc9+mE8PdaA==}
     engines: {node: 10.* || >= 12.*}
 
-  ember-estree@https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/5d1e051:
-    resolution: {tarball: https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/5d1e051}
+  ember-estree@https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/80a0b92:
+    resolution: {tarball: https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/80a0b92}
     version: 0.3.0
 
   ember-rfc176-data@0.3.18:
@@ -8665,7 +8665,7 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-estree@https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/5d1e051:
+  ember-estree@https://codeload.github.com/NullVoxPopuli-ai-agent/ember-estree/tar.gz/80a0b92:
     dependencies:
       '@glimmer/env': 0.1.7
       '@glimmer/syntax': 0.95.0
@@ -10408,7 +10408,7 @@ snapshots:
 
   lower-case@2.0.2:
     dependencies:
-      tslib: 2.6.2
+      tslib: 2.8.1
 
   lru-cache@10.4.3: {}
 
