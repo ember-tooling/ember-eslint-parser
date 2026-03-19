@@ -170,7 +170,7 @@ export function parseForESLint(code, options) {
     const result = toTree(code, {
       filePath,
       parser: useTS
-        ? (_source, _parseResults, placeholderJS) => {
+        ? (placeholderJS) => {
             let parseCode = placeholderJS;
             if (options.project || options.projectService) {
               parseCode = replaceExtensions(parseCode);
@@ -184,7 +184,7 @@ export function parseForESLint(code, options) {
             scopeManager = tsResult.scopeManager;
             return tsResult;
           }
-        : (_source, _parseResults, placeholderJS) => {
+        : (placeholderJS) => {
             // JS path: parse with oxc, create scope manager before visitors run
             const oxcResult = parseSync(filePath || 'input.js', placeholderJS);
             const program = oxcResult.program;
