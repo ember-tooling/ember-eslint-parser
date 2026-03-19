@@ -3,7 +3,7 @@ import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
 import { registerParsedFile } from '../preprocessor/noop.js';
 import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
 import { buildGlimmerVisitors, registerGlimmerScopes } from './transforms.js';
-import { toTree } from 'ember-estree';
+import { toTree, glimmerVisitorKeys } from 'ember-estree';
 import * as eslintScope from 'eslint-scope';
 
 const require = createRequire(import.meta.url);
@@ -223,6 +223,9 @@ export function parseForESLint(code, options) {
       }
       syncMtsGtsSourceFiles(result.services.program);
     }
+
+    // Merge Glimmer visitor keys so ESLint traverses template nodes
+    result.visitorKeys = { ...result.visitorKeys, ...glimmerVisitorKeys };
 
     // Clean up internal properties before returning to ESLint
     delete result.templateInfos;
