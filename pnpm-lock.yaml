@@ -196,6 +196,12 @@ importers:
 
   test-projects/gjs-experimental-worker:
     devDependencies:
+      '@babel/core':
+        specifier: ^7.23.6
+        version: 7.26.0
+      '@babel/eslint-parser':
+        specifier: ^7.28.6
+        version: 7.28.6(@babel/core@7.26.0)(eslint@8.57.1)
       '@babel/plugin-transform-runtime':
         specifier: ^7.28.5
         version: 7.28.5(@babel/core@7.26.0)
@@ -295,6 +301,12 @@ importers:
 
   test-projects/gts-experimental-worker:
     devDependencies:
+      '@babel/core':
+        specifier: ^7.23.6
+        version: 7.26.0
+      '@babel/eslint-parser':
+        specifier: ^7.28.6
+        version: 7.28.6(@babel/core@7.26.0)(eslint@8.57.1)
       '@babel/plugin-transform-runtime':
         specifier: ^7.28.5
         version: 7.28.5(@babel/core@7.26.0)

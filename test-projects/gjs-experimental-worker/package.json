@@ -8,6 +8,8 @@
     "test:fix": "eslint --fix --format compact . | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1"
   },
   "devDependencies": {
+    "@babel/core": "^7.23.6",
+    "@babel/eslint-parser": "^7.28.6",
     "@babel/plugin-transform-runtime": "^7.28.5",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",
