@@ -595,8 +595,6 @@ export function preprocessGlimmerTemplatesFromCharOffsets(glintTemplateInfos, co
 export function convertAst(result, preprocessedResult, visitorKeys, options) {
   const templateInfos = preprocessedResult.templateInfos;
   const matchByRangeOnly = options?.matchByRangeOnly || false;
-  // Track which templates have been matched to avoid double-matching
-  const matchedTemplates = new Set();
   let counter = 0;
   result.ast.comments.push(...preprocessedResult.comments);
 
@@ -640,7 +638,6 @@ export function convertAst(result, preprocessedResult, visitorKeys, options) {
       ) {
         return null;
       }
-      matchedTemplates.add(template);
       counter++;
       const ast = template.ast;
       Object.assign(node, ast);

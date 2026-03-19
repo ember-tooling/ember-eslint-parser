@@ -1,3 +1,7 @@
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+
 let glintAvailable = false;
 let rewriteModule, ConfigLoader;
 
@@ -6,7 +10,7 @@ try {
   ({ ConfigLoader } = require('@glint/ember-tsc'));
   glintAvailable = true;
 } catch {
-  // @glint/ember-tsc not installed or Node too old for ESM require()
+  // @glint/ember-tsc not installed
 }
 
 const configLoader = glintAvailable ? new ConfigLoader() : null;
@@ -14,7 +18,7 @@ const configLoader = glintAvailable ? new ConfigLoader() : null;
 /**
  * @returns {boolean}
  */
-function isGlintAvailable() {
+export function isGlintAvailable() {
   return glintAvailable;
 }
 
@@ -25,7 +29,7 @@ function isGlintAvailable() {
  * @param {string} filePath
  * @returns {import('@glint/ember-tsc').GlintConfig | null}
  */
-function getGlintConfig(filePath) {
+export function getGlintConfig(filePath) {
   if (!configLoader) return null;
   try {
     const config = configLoader.configForFile(filePath);
@@ -45,7 +49,7 @@ function getGlintConfig(filePath) {
  * @param {import('@glint/ember-tsc').GlintConfig} config - Glint config
  * @returns {{ transformedContents: string } | null}
  */
-function glintRewriteModule(code, filePath, ts, config) {
+export function glintRewriteModule(code, filePath, ts, config) {
   if (!rewriteModule) return null;
   return rewriteModule(
     ts,
@@ -63,7 +67,7 @@ function glintRewriteModule(code, filePath, ts, config) {
  * @param {string} originalFileName - original file path
  * @returns {Array<{ range: [number, number], contentRange: [number, number] }>}
  */
-function buildTemplateInfoFromGlint(transformedModule, originalFileName) {
+export function buildTemplateInfoFromGlint(transformedModule, originalFileName) {
   const result = [];
   const seen = new Set();
   for (const span of transformedModule.correlatedSpans) {
@@ -87,5 +91,3 @@ function buildTemplateInfoFromGlint(transformedModule, originalFileName) {
   }
   return result;
 }
-
-module.exports = { isGlintAvailable, getGlintConfig, glintRewriteModule, buildTemplateInfoFromGlint };

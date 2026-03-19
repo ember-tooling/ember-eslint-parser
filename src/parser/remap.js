@@ -1,4 +1,4 @@
-const DocumentLines = require('../utils/document');
+import DocumentLines from '../utils/document.js';
 
 /**
  * Extract template spans (those with glimmerAstMapping) from correlatedSpans.
@@ -201,4 +201,4 @@ function remapTokens(tokens, correlatedSpans, templateSpans, originalCode) {
   return remapped;
 }
 
-module.exports = { getTemplateSpans, remapOffset, remapAstPositions, remapTokens };
+export { getTemplateSpans, remapOffset, remapAstPositions, remapTokens };
