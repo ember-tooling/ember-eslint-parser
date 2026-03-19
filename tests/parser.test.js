@@ -723,7 +723,7 @@ export const NotFound = <template>
         "type": "Identifier",
       }
     `);
-    expect(i).toBeLessThanOrEqual(nodes.length);
+    expect(i).toBe(nodes.length);
   });
 
   it('node tokens are correct', () => {
@@ -2359,7 +2359,7 @@ export const NotFound = <template>
           "type": "Identifier",
         }
       `);
-    expect(i).toBeLessThanOrEqual(nodes.length);
+    expect(i).toBe(nodes.length);
   });
 
   it('throws eslint syntax error', () => {
