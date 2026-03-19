@@ -224,6 +224,10 @@ export function parseForESLint(code, options) {
       ecmaVersion: 2022,
       sourceType: 'module',
       range: true,
+      // Skip Glimmer nodes during scope analysis — they have getter-based
+      // properties that crash esrecurse. Glimmer scopes are registered
+      // separately via registerGlimmerScopes.
+      fallback: (node) => (node.type?.startsWith('Glimmer') ? [] : Object.keys(node)),
     });
     registerGlimmerScopes({ ast: program, scopeManager, visitorKeys, isTypescript: false });
 
