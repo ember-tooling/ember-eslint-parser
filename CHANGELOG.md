@@ -2,6 +2,17 @@
 
 ## Release (2026-03-20)
 
+* ember-eslint-parser 0.9.1 (patch)
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#187](https://github.com/ember-tooling/ember-eslint-parser/pull/187) Increase benchmark sampling 5x for CI stability ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
+#### Committers: 1
+- NullVoxPopuli's reduced-access account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
+## Release (2026-03-20)
+
 * ember-eslint-parser 0.9.0 (minor)
 
 #### :rocket: Enhancement
