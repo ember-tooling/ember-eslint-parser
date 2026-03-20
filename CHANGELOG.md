@@ -1,5 +1,29 @@
 # Changelog
 
+## Release (2026-03-20)
+
+* ember-eslint-parser 0.9.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#185](https://github.com/ember-tooling/ember-eslint-parser/pull/185) Update dependencies ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#181](https://github.com/ember-tooling/ember-eslint-parser/pull/181) Extract to ember-estree ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+  * [#176](https://github.com/ember-tooling/ember-eslint-parser/pull/176) Convert library to ESM ([@Copilot](https://github.com/apps/copilot-swe-agent))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#186](https://github.com/ember-tooling/ember-eslint-parser/pull/186) Improve benchmark output indicators ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#183](https://github.com/ember-tooling/ember-eslint-parser/pull/183) Print benchmark comment body to stdout on fork PRs ([@Copilot](https://github.com/apps/copilot-swe-agent))
+  * [#182](https://github.com/ember-tooling/ember-eslint-parser/pull/182) Fix bench-compare workflow for fork PRs ([@Copilot](https://github.com/apps/copilot-swe-agent))
+  * [#177](https://github.com/ember-tooling/ember-eslint-parser/pull/177) Make it easier to get a summary of the bench results locally ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+  * [#179](https://github.com/ember-tooling/ember-eslint-parser/pull/179) Fix trailing whitespace lint error in parser.bench.mjs ([@Copilot](https://github.com/apps/copilot-swe-agent))
+  * [#172](https://github.com/ember-tooling/ember-eslint-parser/pull/172) Switch to mitata for benchmark comparison with built-in boxplots and summaries ([@Copilot](https://github.com/apps/copilot-swe-agent))
+
+#### Committers: 3
+- Copilot [Bot] ([@copilot-swe-agent](https://github.com/apps/copilot-swe-agent))
+- NullVoxPopuli's reduced-access account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2026-03-14)
 
 * ember-eslint-parser 0.8.0 (minor)
