@@ -15,7 +15,7 @@ import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
-import { run, bench, boxplot, summary, do_not_optimize } from 'mitata';
+import { run, bench, boxplot, summary, do_not_optimize as doNotOptimize } from 'mitata';
 
 // ---------------------------------------------------------------------------
 // CLI args
@@ -130,17 +130,17 @@ for (const { type, ext, experimentParse, controlParse } of PARSERS) {
       boxplot(() => {
         summary(() => {
           bench(`${type} ${size} (control)`, () => {
-            for (let i = 0; i < iters; i++) do_not_optimize(controlParse(code, opts));
+            for (let i = 0; i < iters; i++) doNotOptimize(controlParse(code, opts));
           });
           bench(`${type} ${size} (experiment)`, () => {
-            for (let i = 0; i < iters; i++) do_not_optimize(experimentParse(code, opts));
+            for (let i = 0; i < iters; i++) doNotOptimize(experimentParse(code, opts));
           });
         });
       });
     } else {
       // Standalone mode — just benchmark the local parsers
       bench(`${type} ${size}`, () => {
-        for (let i = 0; i < iters; i++) do_not_optimize(experimentParse(code, opts));
+        for (let i = 0; i < iters; i++) doNotOptimize(experimentParse(code, opts));
       });
     }
   }
