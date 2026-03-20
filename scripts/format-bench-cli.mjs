@@ -6,7 +6,7 @@
  *   BENCH_JSON_OUTPUT - Path to the JSON bench results
  */
 
-import { readFileSync } from 'node:fs';
+import { formatTime, deltaEmoji, parsePairs, readBenchJSON } from './bench-utils.mjs';
 
 const jsonPath = process.env.BENCH_JSON_OUTPUT;
 
@@ -18,67 +18,13 @@ if (!jsonPath) {
 let json;
 
 try {
-  json = JSON.parse(readFileSync(jsonPath, 'utf8'));
+  json = readBenchJSON(jsonPath);
 } catch (e) {
   console.error(`Could not read ${jsonPath}: ${e.message}`);
   process.exit(1);
 }
 
-function formatTime(ns) {
-  if (ns >= 1e6) return `${(ns / 1e6).toFixed(2)} ms`;
-  if (ns >= 1e3) return `${(ns / 1e3).toFixed(2)} µs`;
-
-  return `${ns.toFixed(2)} ns`;
-}
-
-function deltaEmoji(pct) {
-  const abs = Math.abs(pct);
-
-  if (abs < 2) return '⚪';
-  if (pct <= -5) return '🟢';
-  if (pct >= 5) return '🔴';
-  if (pct < 0) return '🟢';
-
-  return '🟠';
-}
-
-// Group control/experiment pairs
-const pairs = new Map();
-
-for (const trial of json.benchmarks || []) {
-  for (const r of trial.runs || []) {
-    if (!r.stats) continue;
-
-    const m = r.name.match(/^(.+)\s+\((control|experiment)\)$/);
-
-    if (!m) continue;
-
-    const [, key, role] = m;
-
-    if (!pairs.has(key)) pairs.set(key, {});
-
-    pairs.get(key)[role] = r.stats;
-  }
-}
-
-if (pairs.size === 0) {
-  console.log('No comparison data found.');
-  process.exit(0);
-}
-
-// Build rows — use median (p50) which is far more robust to outliers from
-// CPU frequency scaling, GC pauses, and other system noise than the mean.
-const rows = [];
-
-for (const [name, { control, experiment }] of pairs) {
-  if (!control || !experiment) continue;
-
-  const ctrlVal = control.p50 ?? control.avg;
-  const expVal = experiment.p50 ?? experiment.avg;
-  const delta = ((expVal - ctrlVal) / ctrlVal) * 100;
-
-  rows.push({ name, control: ctrlVal, experiment: expVal, delta });
-}
+const rows = parsePairs(json);
 
 if (rows.length === 0) {
   console.log('No comparison data found.');
@@ -96,7 +42,6 @@ const deltaW = Math.max(
   'Δ'.length,
   ...rows.map((r) => {
     const sign = r.delta > 0 ? '+' : '';
-
     return `${sign}${r.delta.toFixed(1)}%`.length;
   })
 );

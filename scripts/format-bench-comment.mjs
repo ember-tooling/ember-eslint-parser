@@ -13,6 +13,7 @@
  */
 
 import { readFileSync } from 'node:fs';
+import { formatTime, deltaEmoji, parsePairs, readBenchJSON } from './bench-utils.mjs';
 
 const marker = '<!-- bench-compare -->';
 
@@ -43,72 +44,28 @@ const jsonPath = process.env.BENCH_JSON_OUTPUT;
 
 if (jsonPath) {
   try {
-    const json = JSON.parse(readFileSync(jsonPath, 'utf8'));
-    summarySection = buildSummary(json);
+    const rows = parsePairs(readBenchJSON(jsonPath));
+
+    if (rows.length > 0) {
+      const tableRows = rows.map(({ name, control, experiment, delta }) => {
+        const emoji = deltaEmoji(delta);
+        const sign = delta > 0 ? '+' : '';
+        return `| ${emoji} | ${name} | ${formatTime(control)} | ${formatTime(experiment)} | ${sign}${delta.toFixed(1)}% |`;
+      });
+
+      summarySection = [
+        '',
+        '| | Benchmark | Control (p50) | Experiment (p50) | Δ |',
+        '|---|---|---:|---:|---:|',
+        ...tableRows,
+        '',
+        '> 🟢 faster · 🔴 slower · 🟠 slightly slower · ⚪ within 2%',
+        '',
+      ].join('\n');
+    }
   } catch {
     // JSON not available or malformed — skip summary
   }
-}
-
-function formatTime(ns) {
-  if (ns >= 1e6) return `${(ns / 1e6).toFixed(2)} ms`;
-  if (ns >= 1e3) return `${(ns / 1e3).toFixed(2)} µs`;
-  return `${ns.toFixed(2)} ns`;
-}
-
-function deltaEmoji(pct) {
-  const abs = Math.abs(pct);
-  // negative pct means experiment is faster (lower time = better)
-  if (abs < 2) return '⚪';
-  if (pct <= -5) return '🟢';
-  if (pct >= 5) return '🔴';
-  if (pct < 0) return '🟢';
-  return '🟠';
-}
-
-function buildSummary(json) {
-  const benchmarks = json.benchmarks || [];
-
-  // In comparison mode, benchmarks come in pairs inside summary groups.
-  // Each benchmark alias is like "gts small (control)" / "gts small (experiment)".
-  // Group them by stripping the suffix.
-  const pairs = new Map();
-
-  for (const trial of benchmarks) {
-    for (const r of trial.runs || []) {
-      if (!r.stats) continue;
-      const m = r.name.match(/^(.+)\s+\((control|experiment)\)$/);
-      if (!m) continue;
-      const [, key, role] = m;
-      if (!pairs.has(key)) pairs.set(key, {});
-      pairs.get(key)[role] = r.stats;
-    }
-  }
-
-  if (pairs.size === 0) return '';
-
-  const rows = [];
-  for (const [name, { control, experiment }] of pairs) {
-    if (!control || !experiment) continue;
-    const delta = ((experiment.avg - control.avg) / control.avg) * 100;
-    const emoji = deltaEmoji(delta);
-    const sign = delta > 0 ? '+' : '';
-    rows.push(
-      `| ${emoji} | ${name} | ${formatTime(control.avg)} | ${formatTime(experiment.avg)} | ${sign}${delta.toFixed(1)}% |`
-    );
-  }
-
-  if (rows.length === 0) return '';
-
-  return [
-    '',
-    '| | Benchmark | Control (avg) | Experiment (avg) | Δ |',
-    '|---|---|---:|---:|---:|',
-    ...rows,
-    '',
-    '> 🟢 faster · 🔴 slower · 🟠 slightly slower · ⚪ within 2%',
-    '',
-  ].join('\n');
 }
 
 // ---------------------------------------------------------------------------
