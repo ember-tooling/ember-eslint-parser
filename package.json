@@ -25,7 +25,7 @@
     "lint:js": "eslint . --max-warnings=0",
     "lint:js:fix": "eslint . --fix --max-warnings=0",
     "lint:package": "publint",
-    "bench": "node --expose-gc tests/parser.bench.mjs",
+    "bench": "node --expose-gc --import ./tests/bench-sampler.mjs tests/parser.bench.mjs",
     "bench:compare": "node scripts/bench-compare.mjs",
     "bench:summary": "./scripts/local-bench-summary.sh",
     "test": "vitest run"
