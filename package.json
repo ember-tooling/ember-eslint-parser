@@ -31,11 +31,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@glimmer/syntax": ">= 0.92.0",
-    "@typescript-eslint/tsconfig-utils": "^8.38.0",
-    "content-tag": "^4.1.0",
-    "ember-estree": "^0.4.1",
-    "eslint-scope": "^9.1.1",
+    "@glimmer/syntax": "^0.95.0",
+    "@typescript-eslint/tsconfig-utils": "^8.57.1",
+    "content-tag": "^4.1.1",
+    "ember-estree": "^0.4.2",
+    "eslint-scope": "^9.1.2",
     "html-tags": "^5.1.0",
     "mathml-tag-names": "^4.0.0",
     "svg-tags": "^1.0.0"
