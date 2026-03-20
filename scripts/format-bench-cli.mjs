@@ -34,11 +34,12 @@ function formatTime(ns) {
 function deltaEmoji(pct) {
   const abs = Math.abs(pct);
 
-  if (abs < 1) return '⚪';
+  if (abs < 2) return '⚪';
   if (pct <= -5) return '🟢';
   if (pct >= 5) return '🔴';
+  if (pct < 0) return '🟢';
 
-  return '🟡';
+  return '🟠';
 }
 
 // Group control/experiment pairs
@@ -122,5 +123,5 @@ for (const row of rows) {
 }
 
 console.log();
-console.log('🟢 faster · 🔴 slower · 🟡 within 5% · ⚪ within 1%');
+console.log('🟢 faster · 🔴 slower · 🟠 slightly slower · ⚪ within 2%');
 console.log();
