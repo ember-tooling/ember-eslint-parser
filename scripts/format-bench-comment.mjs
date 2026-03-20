@@ -59,10 +59,11 @@ function formatTime(ns) {
 function deltaEmoji(pct) {
   const abs = Math.abs(pct);
   // negative pct means experiment is faster (lower time = better)
-  if (abs < 1) return '⚪';
+  if (abs < 2) return '⚪';
   if (pct <= -5) return '🟢';
   if (pct >= 5) return '🔴';
-  return '🟡';
+  if (pct < 0) return '🟢';
+  return '🟠';
 }
 
 function buildSummary(json) {
@@ -105,7 +106,7 @@ function buildSummary(json) {
     '|---|---|---:|---:|---:|',
     ...rows,
     '',
-    '> 🟢 faster · 🔴 slower · 🟡 within 5% · ⚪ within 1%',
+    '> 🟢 faster · 🔴 slower · 🟠 slightly slower · ⚪ within 2%',
     '',
   ].join('\n');
 }
