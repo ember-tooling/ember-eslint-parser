@@ -114,7 +114,7 @@ globalThis.gc?.();
 // More iterations per sample → individual GC spikes get diluted, reducing
 // variance on noisy CI runners.  Scale down for larger fixtures so each
 // sample doesn't take too long (mitata needs many samples for stable stats).
-const BENCH_ITERS = { small: 1000, medium: 200, large: 100 };
+const BENCH_ITERS = { small: 2000, medium: 500, large: 100 };
 
 for (const { type, ext, experimentParse, controlParse } of PARSERS) {
   for (const size of SIZES) {
