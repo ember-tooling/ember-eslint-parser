@@ -123,13 +123,13 @@ for (const { type, ext, experimentParse, controlParse } of PARSERS) {
       // Side-by-side comparison with boxplots
       boxplot(() => {
         summary(() => {
-          bench(`${type} ${size} (control)`, () => controlParse(code, opts));
-          bench(`${type} ${size} (experiment)`, () => experimentParse(code, opts));
+          bench(`${type} ${size} (control)`, () => controlParse(code, opts)).gc('inner');
+          bench(`${type} ${size} (experiment)`, () => experimentParse(code, opts)).gc('inner');
         });
       });
     } else {
       // Standalone mode — just benchmark the local parsers
-      bench(`${type} ${size}`, () => experimentParse(code, opts));
+      bench(`${type} ${size}`, () => experimentParse(code, opts)).gc('inner');
     }
   }
 }
