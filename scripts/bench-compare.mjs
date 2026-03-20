@@ -105,10 +105,9 @@ try {
     CONTROL_DIR,
   ];
 
-  // CPU pinning + high priority on Linux for lower variance
+  // CPU pinning on Linux to reduce cross-core migration variance
   const IS_LINUX = process.platform === 'linux';
   const HAS_TASKSET = IS_LINUX && spawnSync('which', ['taskset'], { stdio: 'pipe' }).status === 0;
-  const HAS_NICE = IS_LINUX && spawnSync('which', ['nice'], { stdio: 'pipe' }).status === 0;
 
   let cmd = 'node';
   let fullArgs = benchArgs;
@@ -116,25 +115,8 @@ try {
   if (HAS_TASKSET) {
     cmd = 'taskset';
     fullArgs = ['-c', '0', 'node', ...benchArgs];
-    console.error('📌  CPU pinning enabled (taskset -c 0)');
+    console.error('📌  CPU pinning enabled (taskset -c 0)\n');
   }
-
-  const IS_ROOT = process.getuid?.() === 0;
-  const HAS_SUDO = IS_LINUX && spawnSync('sudo', ['-n', 'true'], { stdio: 'pipe' }).status === 0;
-
-  if (HAS_NICE && IS_ROOT) {
-    fullArgs = ['-n', '-20', cmd, ...fullArgs];
-    cmd = 'nice';
-    console.error('⚡  High priority enabled (nice -n -20)');
-  } else if (HAS_NICE && HAS_SUDO) {
-    fullArgs = ['nice', '-n', '-20', cmd, ...fullArgs];
-    cmd = 'sudo';
-    console.error('⚡  High priority enabled (sudo nice -n -20)');
-  } else if (HAS_NICE) {
-    console.error('💡  High priority unavailable (needs passwordless sudo)');
-  }
-
-  console.error('');
 
   const result = spawnSync(cmd, fullArgs, {
     stdio: 'inherit',
