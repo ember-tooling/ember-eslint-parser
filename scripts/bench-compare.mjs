@@ -119,12 +119,19 @@ try {
     console.error('📌  CPU pinning enabled (taskset -c 0)');
   }
 
-  if (HAS_NICE && process.getuid?.() === 0) {
+  const IS_ROOT = process.getuid?.() === 0;
+  const HAS_SUDO = IS_LINUX && spawnSync('sudo', ['-n', 'true'], { stdio: 'pipe' }).status === 0;
+
+  if (HAS_NICE && IS_ROOT) {
     fullArgs = ['-n', '-20', cmd, ...fullArgs];
     cmd = 'nice';
     console.error('⚡  High priority enabled (nice -n -20)');
+  } else if (HAS_NICE && HAS_SUDO) {
+    fullArgs = ['nice', '-n', '-20', cmd, ...fullArgs];
+    cmd = 'sudo';
+    console.error('⚡  High priority enabled (sudo nice -n -20)');
   } else if (HAS_NICE) {
-    console.error('💡  Run with sudo for high scheduling priority (nice -n -20)');
+    console.error('💡  High priority unavailable (needs passwordless sudo)');
   }
 
   console.error('');

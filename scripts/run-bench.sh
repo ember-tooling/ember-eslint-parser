@@ -17,13 +17,16 @@ if command -v taskset &>/dev/null; then
   echo "📌  CPU pinning enabled (taskset -c 0)" >&2
 fi
 
-# High scheduling priority (best-effort, needs root for negative values)
+# High scheduling priority (best-effort, negative nice needs root)
 if command -v nice &>/dev/null; then
   if [ "$(id -u)" = "0" ]; then
     CMD=(nice -n -20 "${CMD[@]}")
     echo "⚡  High priority enabled (nice -n -20)" >&2
+  elif command -v sudo &>/dev/null && sudo -n true 2>/dev/null; then
+    CMD=(sudo nice -n -20 "${CMD[@]}")
+    echo "⚡  High priority enabled (sudo nice -n -20)" >&2
   else
-    echo "💡  Run with sudo for high scheduling priority (nice -n -20)" >&2
+    echo "💡  High priority unavailable (needs passwordless sudo)" >&2
   fi
 fi
 
