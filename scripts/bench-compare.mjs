@@ -97,12 +97,9 @@ try {
   console.error(`\n🏎️  Running benchmarks (experiment vs control)…\n`);
 
   const benchScript = join(ROOT, 'tests/parser.bench.mjs');
-  const samplerHook = join(ROOT, 'tests/bench-sampler.mjs');
   const benchArgs = [
     '--expose-gc',
     '--max-old-space-size=4096',
-    '--import',
-    samplerHook,
     benchScript,
     '--control-dir',
     CONTROL_DIR,

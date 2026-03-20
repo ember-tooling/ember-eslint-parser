@@ -111,10 +111,16 @@ for (const { type, ext, experimentParse, controlParse } of PARSERS) {
 
 globalThis.gc?.();
 
+// More iterations per sample → individual GC spikes get diluted, reducing
+// variance on noisy CI runners.  Scale down for larger fixtures so each
+// sample doesn't take too long (mitata needs many samples for stable stats).
+const BENCH_ITERS = { small: 1000, medium: 200, large: 100 };
+
 for (const { type, ext, experimentParse, controlParse } of PARSERS) {
   for (const size of SIZES) {
     const code = FIXTURES[type][size];
     const opts = { ...PARSE_OPTIONS, filePath: `${size}${ext}` };
+    const iters = BENCH_ITERS[size];
 
     // Force a full GC before each benchmark group to reduce GC-triggered variance
     globalThis.gc?.();
@@ -123,13 +129,19 @@ for (const { type, ext, experimentParse, controlParse } of PARSERS) {
       // Side-by-side comparison with boxplots
       boxplot(() => {
         summary(() => {
-          bench(`${type} ${size} (control)`, () => controlParse(code, opts)).gc('inner');
-          bench(`${type} ${size} (experiment)`, () => experimentParse(code, opts)).gc('inner');
+          bench(`${type} ${size} (control)`, () => {
+            for (let i = 0; i < iters; i++) controlParse(code, opts);
+          });
+          bench(`${type} ${size} (experiment)`, () => {
+            for (let i = 0; i < iters; i++) experimentParse(code, opts);
+          });
         });
       });
     } else {
       // Standalone mode — just benchmark the local parsers
-      bench(`${type} ${size}`, () => experimentParse(code, opts)).gc('inner');
+      bench(`${type} ${size}`, () => {
+        for (let i = 0; i < iters; i++) experimentParse(code, opts);
+      });
     }
   }
 }
