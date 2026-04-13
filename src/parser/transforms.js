@@ -5,8 +5,7 @@ import {
   preprocess as glimmerPreprocess,
   isKeyword as glimmerIsKeyword,
 } from '@glimmer/syntax';
-import { glimmerVisitorKeys } from 'ember-estree';
-import { DocumentLines } from 'ember-estree';
+import { glimmerVisitorKeys, DocumentLines } from 'ember-estree';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
 import htmlTags from 'html-tags';
 import svgTags from 'svg-tags';
