@@ -224,22 +224,29 @@ export function parseForESLint(code, options) {
   }
   registerParsedFile(options.filePath);
 
-  // Try Glint path for .gts/.gjs files when Glint is available
+  // For type-aware linting of .gts files, Glint is required.
+  // Basic linting (no project/projectService/programs) falls through to the legacy path.
   const isGts = options.filePath.endsWith('.gts');
-  const isGjs = options.filePath.endsWith('.gjs');
-  if ((isGts || isGjs) && isGlintAvailable() && ts && typescriptParser) {
-    try {
-      const glintConfig = getGlintConfig(options.filePath);
-      if (glintConfig) {
-        const glintTransform = glintRewriteModule(code, options.filePath, ts, glintConfig);
-        if (glintTransform) {
-          return parseWithGlint(code, options, glintTransform);
-        }
-      }
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn('[ember-eslint-parser] Glint path failed, falling back:', e.stack || e.message);
+  const isTypeAware = Boolean(options.project || options.projectService || options.programs);
+  if (isGts && isTypeAware) {
+    if (!isGlintAvailable()) {
+      throw new Error(
+        '[ember-eslint-parser] @glint/ember-tsc is required for type-aware linting of .gts files. ' +
+          'Install it as a dependency of your project.'
+      );
     }
+    const glintConfig = getGlintConfig(options.filePath);
+    if (!glintConfig) {
+      throw new Error(
+        '[ember-eslint-parser] No Glint environment found for this .gts file. ' +
+          'Ensure @glint/ember-tsc is configured in your tsconfig.'
+      );
+    }
+    const glintTransform = glintRewriteModule(code, options.filePath, ts, glintConfig);
+    if (glintTransform) {
+      return parseWithGlint(code, options, glintTransform);
+    }
+    // glintTransform === null means no templates — fall through to normal TS parse
   }
 
   const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');

@@ -52,33 +52,34 @@ try {
           }
           content = fs.readFileSync(fileName).toString();
         }
-        if (fileName.endsWith('.gts') || (allowGjs && fileName.endsWith('.gjs'))) {
-          let transformed = false;
-          if (isGlintAvailable()) {
-            try {
-              const config = getGlintConfig(fileName);
-              if (config) {
-                const result = glintRewriteModule(content, fileName, ts, config);
-                if (result) {
-                  content = result.transformedContents;
-                  transformed = true;
-                }
-              }
-            } catch (e) {
-              // Glint transform failed, fall through to transformForLint
-              console.warn(
-                '[ember-eslint-parser] Glint transform failed in readFile, falling back:',
-                e.message
-              );
-            }
+        if (fileName.endsWith('.gts')) {
+          // ts-patch.js is only active during type-aware linting (patchTs is called
+          // only when project/projectService/programs options are set). Glint is
+          // therefore required here — throw rather than silently produce wrong type info.
+          if (!isGlintAvailable()) {
+            throw new Error(
+              '[ember-eslint-parser] @glint/ember-tsc is required for type-aware linting of .gts files. ' +
+                'Install it as a dependency of your project.'
+            );
           }
-          if (!transformed) {
-            try {
-              content = transformForLint(content).output;
-            } catch (e) {
-              console.error('failed to transformForLint for gts/gjs processing');
-              console.error(e);
-            }
+          const config = getGlintConfig(fileName);
+          if (!config) {
+            throw new Error(
+              '[ember-eslint-parser] No Glint environment found for ' +
+                fileName +
+                '. Ensure @glint/ember-tsc is configured in your tsconfig.'
+            );
+          }
+          const result = glintRewriteModule(content, fileName, ts, config);
+          if (result) {
+            content = result.transformedContents;
+          }
+        } else if (allowGjs && fileName.endsWith('.gjs')) {
+          try {
+            content = transformForLint(content).output;
+          } catch (e) {
+            console.error('failed to transformForLint for .gjs processing');
+            console.error(e);
           }
         }
         if (

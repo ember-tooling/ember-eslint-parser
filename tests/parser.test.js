@@ -2508,10 +2508,10 @@ describe('patchTs allowGjs singleton', () => {
 });
 
 describe('allowGjs mismatch warning', () => {
-  it('does not warn when tsconfig has allowJs:false and allowGjs is not explicitly set', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-    try {
+  it('does not warn when tsconfig has allowJs:false — throws Glint required error instead', () => {
+    // With project-based linting, Glint is required; since @glint/ember-tsc is not
+    // installed in the main project, this throws a clear install error (not a warning).
+    expect(() =>
       parseForESLint('export class Foo {}', {
         filePath: new URL('./fixtures/foo.gts', import.meta.url).pathname,
         project: new URL('./fixtures/tsconfig.no-allow-js.json', import.meta.url).pathname,
@@ -2520,14 +2520,103 @@ describe('allowGjs mismatch warning', () => {
         loc: true,
         range: true,
         tokens: true,
-      });
+      })
+    ).toThrow('@glint/ember-tsc is required');
+  });
+});
 
-      const mismatchWarnings = warnSpy.mock.calls.filter(
-        ([msg]) => typeof msg === 'string' && msg.includes('allowJs does not match')
-      );
-      expect(mismatchWarnings).toHaveLength(0);
+describe('Glint required for type-aware .gts linting', () => {
+  it('throws a clear error when @glint/ember-tsc is not installed', async () => {
+    vi.resetModules();
+    vi.doMock('../src/parser/glint-utils.js', () => ({
+      isGlintAvailable: () => false,
+      getGlintConfig: () => null,
+      glintRewriteModule: () => null,
+      buildTemplateInfoFromGlint: () => [],
+    }));
+    try {
+      const { parseForESLint: parse } = await import('../src/parser/gjs-gts-parser.js');
+      expect(() =>
+        parse('export class Foo {}', {
+          filePath: 'test.gts',
+          project: 'tsconfig.json',
+        })
+      ).toThrow('@glint/ember-tsc is required');
     } finally {
-      warnSpy.mockRestore();
+      vi.doUnmock('../src/parser/glint-utils.js');
+      vi.resetModules();
+    }
+  });
+
+  it('throws a clear error when Glint is available but not configured in tsconfig', async () => {
+    vi.resetModules();
+    vi.doMock('../src/parser/glint-utils.js', () => ({
+      isGlintAvailable: () => true,
+      getGlintConfig: () => null,
+      glintRewriteModule: () => null,
+      buildTemplateInfoFromGlint: () => [],
+    }));
+    try {
+      const { parseForESLint: parse } = await import('../src/parser/gjs-gts-parser.js');
+      expect(() =>
+        parse('export class Foo {}', {
+          filePath: 'test.gts',
+          project: 'tsconfig.json',
+        })
+      ).toThrow('No Glint environment found');
+    } finally {
+      vi.doUnmock('../src/parser/glint-utils.js');
+      vi.resetModules();
+    }
+  });
+
+  it('.gts without project option parses without requiring Glint', async () => {
+    vi.resetModules();
+    vi.doMock('../src/parser/glint-utils.js', () => ({
+      isGlintAvailable: () => false,
+      getGlintConfig: () => null,
+      glintRewriteModule: () => null,
+      buildTemplateInfoFromGlint: () => [],
+    }));
+    try {
+      const { parseForESLint: parse } = await import('../src/parser/gjs-gts-parser.js');
+      expect(() =>
+        parse('export class Foo {}', {
+          filePath: 'test.gts',
+          comment: true,
+          loc: true,
+          range: true,
+          tokens: true,
+        })
+      ).not.toThrow();
+    } finally {
+      vi.doUnmock('../src/parser/glint-utils.js');
+      vi.resetModules();
+    }
+  });
+
+  it('.gjs files parse without requiring Glint even with project option', async () => {
+    vi.resetModules();
+    vi.doMock('../src/parser/glint-utils.js', () => ({
+      isGlintAvailable: () => false,
+      getGlintConfig: () => null,
+      glintRewriteModule: () => null,
+      buildTemplateInfoFromGlint: () => [],
+    }));
+    try {
+      const { parseForESLint: parse } = await import('../src/parser/gjs-gts-parser.js');
+      expect(() =>
+        parse('const x = 1;', {
+          filePath: 'test.gjs',
+          comment: true,
+          loc: true,
+          range: true,
+          tokens: true,
+        })
+      ).not.toThrow();
+    } finally {
+      vi.doUnmock('../src/parser/glint-utils.js');
+      vi.resetModules();
     }
   });
 });
