@@ -6,7 +6,7 @@ import {
   isKeyword as glimmerIsKeyword,
 } from '@glimmer/syntax';
 import { glimmerVisitorKeys } from 'ember-estree';
-import DocumentLines from '../utils/document.js';
+import { DocumentLines } from 'ember-estree';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
 import htmlTags from 'html-tags';
 import svgTags from 'svg-tags';
@@ -513,46 +513,8 @@ function processGlimmerTemplate({ templateContent, codeLines, templateRange, tok
 }
 
 /**
- * Preprocesses the template info, parsing the template content to Glimmer AST,
- * fixing the offsets and locations of all nodes
- * also calculates the block params locations & ranges
- * and adding it to the info
- * @param info
- * @param code
- * @return {{templateVisitorKeys: {}, comments: *[], templateInfos: {templateRange: *, range: *, replacedRange: *}[]}}
- */
-export function preprocessGlimmerTemplates(info, code) {
-  const templateInfos = info.templateInfos.map((r) => ({
-    utf16Range: [r.range.startUtf16Codepoint, r.range.endUtf16Codepoint],
-  }));
-  const codeLines = new DocumentLines(code);
-  const allComments = [];
-
-  for (const tpl of templateInfos) {
-    const template = code.slice(...tpl.utf16Range);
-
-    const { ast, comments } = processGlimmerTemplate({
-      templateContent: template,
-      codeLines,
-      templateRange: [...tpl.utf16Range],
-    });
-
-    ast.content = template;
-    allComments.push(...comments);
-    tpl.ast = ast;
-  }
-
-  return {
-    templateVisitorKeys: glimmerVisitorKeys,
-    templateInfos,
-    comments: allComments,
-  };
-}
-
-/**
- * Variant of preprocessGlimmerTemplates for the Glint path.
  * Template infos already have character (UTF-16) offsets — no byte→char conversion needed.
- * @param {Array<{ range: [number, number], contentRange: [number, number] }>} glintTemplateInfos
+ * @param {Array<{ range: [number, number] }>} glintTemplateInfos
  * @param {string} code - original source code
  */
 export function preprocessGlimmerTemplatesFromCharOffsets(glintTemplateInfos, code) {
@@ -592,10 +554,9 @@ export function preprocessGlimmerTemplatesFromCharOffsets(glintTemplateInfos, co
  * @param preprocessedResult
  * @param visitorKeys
  */
-export function convertAst(result, preprocessedResult, visitorKeys, options) {
+export function convertAst(result, preprocessedResult, options) {
   const templateInfos = preprocessedResult.templateInfos;
   const matchByRangeOnly = options?.matchByRangeOnly || false;
-  let counter = 0;
   result.ast.comments.push(...preprocessedResult.comments);
 
   for (const ti of templateInfos) {
@@ -638,7 +599,6 @@ export function convertAst(result, preprocessedResult, visitorKeys, options) {
       ) {
         return null;
       }
-      counter++;
       const ast = template.ast;
       Object.assign(node, ast);
     }

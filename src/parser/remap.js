@@ -1,4 +1,4 @@
-import DocumentLines from '../utils/document.js';
+import { DocumentLines } from 'ember-estree';
 
 /**
  * Extract template spans (those with glimmerAstMapping) from correlatedSpans.
@@ -14,7 +14,6 @@ function getTemplateSpans(correlatedSpans) {
         transformedEnd: span.transformedStart + span.transformedLength,
         originalStart: span.originalStart,
         originalEnd: span.originalStart + span.originalLength,
-        span,
       });
     }
   }
@@ -201,4 +200,4 @@ function remapTokens(tokens, correlatedSpans, templateSpans, originalCode) {
   return remapped;
 }
 
-export { getTemplateSpans, remapOffset, remapAstPositions, remapTokens };
+export { remapAstPositions, remapTokens };

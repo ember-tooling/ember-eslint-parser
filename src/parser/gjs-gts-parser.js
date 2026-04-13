@@ -168,7 +168,7 @@ function parseWithGlint(code, options, transformedModule) {
   });
 
   // Build template infos from Glint's correlatedSpans
-  const glintTemplateInfos = buildTemplateInfoFromGlint(transformedModule, filePath);
+  const glintTemplateInfos = buildTemplateInfoFromGlint(transformedModule);
 
   // Always remap positions even if no templates — Glint may have changed code length
   // for non-template spans (e.g., directive placeholders)
@@ -199,7 +199,7 @@ function parseWithGlint(code, options, transformedModule) {
 
   // Splice Glimmer AST into the remapped TS AST (matchByRangeOnly because
   // Glint produces different node types than transformForLint)
-  convertAst(result, preprocessedResult, visitorKeys, { matchByRangeOnly: true });
+  convertAst(result, preprocessedResult, { matchByRangeOnly: true });
 
   if (result.services?.program) {
     syncMtsGtsSourceFiles(result.services.program);

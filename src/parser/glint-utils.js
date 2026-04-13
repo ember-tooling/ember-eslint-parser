@@ -61,9 +61,9 @@ export function glintRewriteModule(code, filePath, ts, config) {
  *
  * @param {object} transformedModule - Glint TransformedModule
  * @param {string} originalFileName - original file path
- * @returns {Array<{ range: [number, number], contentRange: [number, number] }>}
+ * @returns {Array<{ range: [number, number] }>}
  */
-export function buildTemplateInfoFromGlint(transformedModule, originalFileName) {
+export function buildTemplateInfoFromGlint(transformedModule) {
   const result = [];
   const seen = new Set();
   for (const span of transformedModule.correlatedSpans) {
@@ -76,13 +76,8 @@ export function buildTemplateInfoFromGlint(transformedModule, originalFileName) 
 
     const fullEnd = span.originalStart + span.originalLength;
 
-    // Use findTemplateAtOriginalOffset to get content bounds (excludes <template> tags)
-    const tplInfo = transformedModule.findTemplateAtOriginalOffset(originalFileName, fullStart);
-    if (!tplInfo) continue;
-
     result.push({
       range: [fullStart, fullEnd],
-      contentRange: [tplInfo.originalContentStart, tplInfo.originalContentEnd],
     });
   }
   return result;

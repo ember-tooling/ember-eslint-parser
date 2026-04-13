@@ -66,6 +66,10 @@ try {
               }
             } catch (e) {
               // Glint transform failed, fall through to transformForLint
+              console.warn(
+                '[ember-eslint-parser] Glint transform failed in readFile, falling back:',
+                e.message
+              );
             }
           }
           if (!transformed) {
