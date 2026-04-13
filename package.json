@@ -35,7 +35,6 @@
     "@typescript-eslint/tsconfig-utils": "^8.57.1",
     "content-tag": "^4.1.1",
     "ember-estree": "^0.4.2",
-    "oxc-parser": "^0.119.0",
     "eslint-scope": "^9.1.2",
     "html-tags": "^5.1.0",
     "mathml-tag-names": "^4.0.0",

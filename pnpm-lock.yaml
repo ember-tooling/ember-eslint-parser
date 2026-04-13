@@ -35,9 +35,6 @@ importers:
       mathml-tag-names:
         specifier: ^4.0.0
         version: 4.0.0
-      oxc-parser:
-        specifier: ^0.119.0
-        version: 0.119.0(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)
       svg-tags:
         specifier: ^1.0.0
         version: 1.0.0
