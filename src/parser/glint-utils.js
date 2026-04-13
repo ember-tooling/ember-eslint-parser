@@ -60,7 +60,6 @@ export function glintRewriteModule(code, filePath, ts, config) {
  * preprocessGlimmerTemplatesFromCharOffsets.
  *
  * @param {object} transformedModule - Glint TransformedModule
- * @param {string} originalFileName - original file path
  * @returns {Array<{ range: [number, number] }>}
  */
 export function buildTemplateInfoFromGlint(transformedModule) {

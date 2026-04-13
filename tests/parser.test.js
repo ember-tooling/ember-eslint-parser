@@ -2595,7 +2595,7 @@ describe('Glint required for type-aware .gts linting', () => {
     }
   });
 
-  it('.gjs files parse without requiring Glint even with project option', async () => {
+  it('.gjs files are not gated on Glint even with project option', async () => {
     vi.resetModules();
     vi.doMock('../src/parser/glint-utils.js', () => ({
       isGlintAvailable: () => false,
@@ -2605,15 +2605,21 @@ describe('Glint required for type-aware .gts linting', () => {
     }));
     try {
       const { parseForESLint: parse } = await import('../src/parser/gjs-gts-parser.js');
-      expect(() =>
+      // The TS parser may throw for other reasons (e.g. file not in project),
+      // but it must NOT throw the Glint-required error.
+      try {
         parse('const x = 1;', {
-          filePath: 'test.gjs',
+          filePath: new URL('./fixtures/foo.gjs', import.meta.url).pathname,
+          project: new URL('./fixtures/tsconfig.no-allow-js.json', import.meta.url).pathname,
+          tsconfigRootDir: new URL('./fixtures', import.meta.url).pathname,
           comment: true,
           loc: true,
           range: true,
           tokens: true,
-        })
-      ).not.toThrow();
+        });
+      } catch (e) {
+        expect(e.message).not.toContain('@glint/ember-tsc is required');
+      }
     } finally {
       vi.doUnmock('../src/parser/glint-utils.js');
       vi.resetModules();
