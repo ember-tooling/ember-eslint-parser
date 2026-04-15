@@ -201,6 +201,39 @@ function parseWithGlint(code, options, transformedModule) {
   // Glint produces different node types than transformForLint)
   convertAst(result, preprocessedResult, { matchByRangeOnly: true });
 
+  // remapAstPositions marks nodes entirely inside a template span with
+  // __glintOrphaned=true (it skips remapping them since they will be replaced).
+  // After convertAst replaces the static block with the Glimmer AST, those nodes
+  // are gone from the tree — ESLint never traverses them so .parent stays
+  // undefined. Scope entries pointing to them crash rules like no-unused-vars.
+  // Remove those entries; they are Glint DSL artifacts, not user-authored code.
+  if (result.scopeManager && templateSpans.length > 0) {
+    const isOrphanedNode = (node) => node?.__glintOrphaned === true;
+    for (const scope of result.scopeManager.scopes) {
+      // Filter references whose identifier nodes are Glint-orphaned
+      const isOrphanedRef = (ref) => isOrphanedNode(ref.identifier);
+      scope.references = scope.references.filter((ref) => !isOrphanedRef(ref));
+      if (scope.through) {
+        scope.through = scope.through.filter((ref) => !isOrphanedRef(ref));
+      }
+      // Filter variables whose definition identifiers are Glint-orphaned
+      // (Glint DSL vars like __glintY__ are defined inside the template span)
+      const removedVarNames = new Set();
+      scope.variables = scope.variables.filter((variable) => {
+        const isOrphaned = variable.defs.some((def) => isOrphanedNode(def.name));
+        if (isOrphaned) removedVarNames.add(variable.name);
+        return !isOrphaned;
+      });
+      for (const name of removedVarNames) {
+        scope.set?.delete(name);
+      }
+      // Also clean up orphaned references on remaining variables
+      for (const variable of scope.variables) {
+        variable.references = variable.references.filter((ref) => !isOrphanedRef(ref));
+      }
+    }
+  }
+
   if (result.services?.program) {
     syncMtsGtsSourceFiles(result.services.program);
   }

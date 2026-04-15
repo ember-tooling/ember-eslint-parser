@@ -2,9 +2,6 @@
 
 module.exports = {
   root: true,
-  rules: {
-    'no-unused-vars': ['error'],
-  },
   overrides: [
     {
       files: ['**/*.{js,ts}'],
@@ -15,8 +12,17 @@ module.exports = {
     {
       files: ['**/*.gts'],
       parser: 'ember-eslint-parser',
-      plugins: ['ember'],
-      extends: ['eslint:recommended', 'plugin:ember/recommended', 'plugin:ember/recommended-gts'],
+      parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: __dirname,
+      },
+      plugins: ['ember', '@typescript-eslint'],
+      extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended-type-checked',
+        'plugin:ember/recommended',
+        'plugin:ember/recommended-gts',
+      ],
     },
   ],
 };

@@ -2508,9 +2508,9 @@ describe('patchTs allowGjs singleton', () => {
 });
 
 describe('allowGjs mismatch warning', () => {
-  it('does not warn when tsconfig has allowJs:false — throws Glint required error instead', () => {
-    // With project-based linting, Glint is required; since @glint/ember-tsc is not
-    // installed in the main project, this throws a clear install error (not a warning).
+  it('does not warn when tsconfig has allowJs:false — throws Glint environment error instead', () => {
+    // With project-based linting, Glint is required. Since the fixture tsconfig has no
+    // Glint environment configured, this throws a clear config error (not an allowGjs warning).
     expect(() =>
       parseForESLint('export class Foo {}', {
         filePath: new URL('./fixtures/foo.gts', import.meta.url).pathname,
@@ -2521,7 +2521,7 @@ describe('allowGjs mismatch warning', () => {
         range: true,
         tokens: true,
       })
-    ).toThrow('@glint/ember-tsc is required');
+    ).toThrow('No Glint environment found');
   });
 });
 

@@ -2,7 +2,7 @@
   "name": "@test-project/gts-glint",
   "private": true,
   "scripts": {
-    "test:check": "eslint src --max-warnings=0"
+    "test:check": "eslint src/greeter.gts src/consumer.ts --max-warnings=0"
   },
   "devDependencies": {
     "@ember/test-waiters": "^3.1.0",

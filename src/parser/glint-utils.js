@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
@@ -6,8 +7,8 @@ let glintAvailable = false;
 let rewriteModule, ConfigLoader;
 
 try {
-  ({ rewriteModule } = require('@glint/ember-tsc/transform'));
-  ({ ConfigLoader } = require('@glint/ember-tsc'));
+  ({ rewriteModule } = require('@glint/ember-tsc/transform/index'));
+  ({ ConfigLoader } = require('@glint/ember-tsc/config/index'));
   glintAvailable = true;
 } catch {
   // @glint/ember-tsc not installed
@@ -23,6 +24,31 @@ export function isGlintAvailable() {
 }
 
 /**
+ * Returns true if the tsconfig at tsconfigPath has an explicit "glint" section.
+ * Glint's ConfigLoader can auto-detect environments without explicit config, so
+ * we use this check to avoid silently activating Glint for projects that don't
+ * opt in.
+ * @param {string} tsconfigPath
+ * @returns {boolean}
+ */
+function tsconfigHasGlintSection(tsconfigPath) {
+  try {
+    // TypeScript supports JSONC (comments + trailing commas), so use a permissive
+    // parse that strips comments before JSON.parse.
+    const raw = fs.readFileSync(tsconfigPath, 'utf8');
+    // Strip single-line and block comments, trailing commas
+    const stripped = raw
+      .replace(/\/\/.*$/gm, '')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/,(\s*[}\]])/g, '$1');
+    const parsed = JSON.parse(stripped);
+    return Object.prototype.hasOwnProperty.call(parsed, 'glint');
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Loads and caches GlintConfig for the project containing filePath.
  * Returns null if @glint/ember-tsc is not available or no glint
  * environment is configured in the project's tsconfig.
@@ -34,6 +60,10 @@ export function getGlintConfig(filePath) {
   try {
     const config = configLoader.configForFile(filePath);
     if (!config || config.environment.names.length === 0) return null;
+    // Glint's ConfigLoader can auto-detect environments when @glint/ember-tsc is
+    // installed without the user explicitly configuring it in their tsconfig.
+    // Only activate Glint processing when the tsconfig has an explicit "glint" key.
+    if (!tsconfigHasGlintSection(config.configPath)) return null;
     return config;
   } catch {
     return null;

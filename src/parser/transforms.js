@@ -176,8 +176,6 @@ export function buildGlimmerVisitors(getScopeManager, isTypescript) {
   };
 }
 
-// ── registerGlimmerScopes (fallback for JS/oxc path) ──────────────────
-
 function traverse(visitorKeys, node, visitor) {
   const allVisitorKeys = { ...visitorKeys, ...glimmerVisitorKeys };
   const queue = [];
@@ -221,27 +219,6 @@ function traverse(visitorKeys, node, visitor) {
       }
     }
   }
-}
-
-/**
- * Full AST traversal for scope registration — used as fallback for JS/oxc path.
- * For the TS path, toTree's visitor API handles this during splicing.
- */
-export function registerGlimmerScopes(result) {
-  // eslint-disable-next-line complexity
-  traverse(result.visitorKeys, result.ast, (path) => {
-    const node = path.node;
-    if (!node) return;
-    if (node.type === 'GlimmerPathExpression') {
-      registerPathExpression(node, path, result.scopeManager);
-    }
-    if (node.type === 'GlimmerElementNode') {
-      registerElementNode(node, path, result.scopeManager);
-    }
-    if ('blockParams' in node && node.type?.startsWith('Glimmer')) {
-      registerBlockParams(node, path, result.scopeManager, result.isTypescript);
-    }
-  });
 }
 
 // ── Glint template processing helpers ─────────────────────────────────
@@ -707,4 +684,4 @@ export function transformForLint(code, fileName) {
   };
 }
 
-export { traverse, glimmerVisitorKeys };
+export { traverse };

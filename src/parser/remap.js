@@ -91,6 +91,7 @@ function remapAstPositions(ast, visitorKeys, correlatedSpans, originalCode) {
 
     // If both endpoints are inside a template span, skip — will be replaced
     if (startOriginal === null && endOriginal === null) {
+      node.__glintOrphaned = true;
       return;
     }
 
