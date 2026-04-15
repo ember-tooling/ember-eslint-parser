@@ -1,5 +1,6 @@
 import * as eslintScope from 'eslint-scope';
 import { toTree, glimmerVisitorKeys, DocumentLines } from 'ember-estree';
+import { registerGlimmerScopes } from './transforms.js';
 
 // Constant: Program + all Glimmer node types. Computed once at module load.
 const hbsVisitorKeys = { Program: ['body'], ...glimmerVisitorKeys };
@@ -64,26 +65,30 @@ export function parseForESLint(code, options) {
     },
   };
 
-  // Build visitor keys: Program + all Glimmer node types
-  const visitorKeys = hbsVisitorKeys;
+  // Analyze a stub Program then rebind the resulting global scope to the real
+  // Program. Analyzing the real Program directly causes infinite recursion in
+  // esrecurse because Glimmer subtree nodes carry parent back-links.
+  const stubProgram = {
+    type: 'Program',
+    body: [],
+    range: [0, code.length],
+    loc: program.loc,
+  };
+  const scopeManager = eslintScope.analyze(stubProgram, { range: true });
+  const globalScope = scopeManager.acquire(stubProgram);
+  globalScope.block = program;
+  scopeManager.__nodeToScope.delete(stubProgram);
+  scopeManager.__nodeToScope.set(program, [globalScope]);
 
-  // Create an empty scope manager.
-  // For HBS, all locals are assumed to be defined at runtime,
-  // so we don't track variable references (no no-undef errors).
-  const scopeManager = eslintScope.analyze(
-    {
-      type: 'Program',
-      body: [],
-      range: [0, code.length],
-      loc: program.loc,
-    },
-    { range: true }
+  registerGlimmerScopes(
+    { ast: program, scopeManager, visitorKeys: hbsVisitorKeys, isTypescript: false },
+    { blockParamsOnly: true }
   );
 
   return {
     ast: program,
     scopeManager,
-    visitorKeys,
+    visitorKeys: hbsVisitorKeys,
     services: {},
   };
 }

@@ -118,6 +118,48 @@ describe('hbs-parser', () => {
     });
   });
 
+  describe('block-param scope', () => {
+    function findBlockParamVar(scopeManager, name) {
+      for (const scope of scopeManager.scopes) {
+        if (scope.type !== 'block') continue;
+        const v = scope.set.get(name);
+        if (v) return { scope, variable: v };
+      }
+      return null;
+    }
+
+    it('registers block params from <Foo as |x|>', () => {
+      const r = parseForESLint('<Foo as |x|>{{x}}</Foo>', { filePath: 'bp.hbs' });
+      const found = findBlockParamVar(r.scopeManager, 'x');
+      expect(found).not.toBeNull();
+      expect(found.variable.defs).toHaveLength(2);
+      expect(found.variable.defs[0].type).toBe('Parameter');
+    });
+
+    it('registers block params from {{#let ... as |router|}}', () => {
+      const r = parseForESLint('{{#let foo as |router|}}{{router}}{{/let}}', {
+        filePath: 'let.hbs',
+      });
+      const found = findBlockParamVar(r.scopeManager, 'router');
+      expect(found).not.toBeNull();
+    });
+
+    it('registers multiple block params', () => {
+      const r = parseForESLint('<Foo as |a b c|>{{a}}{{b}}{{c}}</Foo>', {
+        filePath: 'multi.hbs',
+      });
+      expect(findBlockParamVar(r.scopeManager, 'a')).not.toBeNull();
+      expect(findBlockParamVar(r.scopeManager, 'b')).not.toBeNull();
+      expect(findBlockParamVar(r.scopeManager, 'c')).not.toBeNull();
+    });
+
+    it('does not create block scopes for elements without `as |...|`', () => {
+      const r = parseForESLint('<Foo>hi</Foo>', { filePath: 'noparams.hbs' });
+      const blockScopes = r.scopeManager.scopes.filter((s) => s.type === 'block');
+      expect(blockScopes).toHaveLength(0);
+    });
+  });
+
   describe('lint rules', () => {
     let linter;
 
