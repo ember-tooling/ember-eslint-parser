@@ -221,29 +221,38 @@ function traverse(visitorKeys, node, visitor) {
 }
 
 /**
- * Full AST traversal for scope registration — used as fallback for JS/oxc path
- * and for the HBS parser. For the TS path, toTree's visitor API handles this
- * during splicing.
- *
- * Pass `{ blockParamsOnly: true }` to skip PathExpression/ElementNode
- * reference registration — used by HBS where free identifiers are treated as
- * runtime-defined and must not surface as no-undef errors.
+ * Full AST traversal for scope registration — used as fallback for JS/oxc path.
+ * For the TS path, toTree's visitor API handles this during splicing.
  */
-export function registerGlimmerScopes(result, { blockParamsOnly = false } = {}) {
+export function registerGlimmerScopes(result) {
   // eslint-disable-next-line complexity
   traverse(result.visitorKeys, result.ast, (path) => {
     const node = path.node;
     if (!node) return;
-    if (!blockParamsOnly) {
-      if (node.type === 'GlimmerPathExpression') {
-        registerPathExpression(node, path, result.scopeManager);
-      }
-      if (node.type === 'GlimmerElementNode') {
-        registerElementNode(node, path, result.scopeManager);
-      }
+    if (node.type === 'GlimmerPathExpression') {
+      registerPathExpression(node, path, result.scopeManager);
     }
-    if ('blockParams' in node && node.type.startsWith('Glimmer')) {
+    if (node.type === 'GlimmerElementNode') {
+      registerElementNode(node, path, result.scopeManager);
+    }
+    if ('blockParams' in node && node.type?.startsWith('Glimmer')) {
       registerBlockParams(node, path, result.scopeManager, result.isTypescript);
+    }
+  });
+}
+
+/**
+ * Scope registration for the HBS parser. Unlike the gjs/gts path, we do not
+ * register references for free identifiers (`{{path}}`, `<Tag>`) — all
+ * template locals are treated as runtime-defined, so no-undef stays quiet.
+ * Only block params from `as |x|` constructs are declared.
+ */
+export function registerHBSScopes(result) {
+  traverse(result.visitorKeys, result.ast, (path) => {
+    const node = path.node;
+    if (!node) return;
+    if ('blockParams' in node && node.type.startsWith('Glimmer')) {
+      registerBlockParams(node, path, result.scopeManager, false);
     }
   });
 }

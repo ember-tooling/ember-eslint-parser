@@ -1,6 +1,6 @@
 import * as eslintScope from 'eslint-scope';
 import { toTree, glimmerVisitorKeys, DocumentLines } from 'ember-estree';
-import { registerGlimmerScopes } from './transforms.js';
+import { registerHBSScopes } from './transforms.js';
 
 // Constant: Program + all Glimmer node types. Computed once at module load.
 const hbsVisitorKeys = { Program: ['body'], ...glimmerVisitorKeys };
@@ -80,10 +80,7 @@ export function parseForESLint(code, options) {
   scopeManager.__nodeToScope.delete(stubProgram);
   scopeManager.__nodeToScope.set(program, [globalScope]);
 
-  registerGlimmerScopes(
-    { ast: program, scopeManager, visitorKeys: hbsVisitorKeys, isTypescript: false },
-    { blockParamsOnly: true }
-  );
+  registerHBSScopes({ ast: program, scopeManager, visitorKeys: hbsVisitorKeys });
 
   return {
     ast: program,
