@@ -82,6 +82,7 @@ function isUpperCase(char) {
 
 function registerBlockParams(node, path, scopeManager, isTypescript) {
   const blockParamNodes = node.blockParamNodes || [];
+  if (blockParamNodes.length === 0) return;
   const upperScope = findParentScope(scopeManager, path);
   const scope = isTypescript
     ? new TypescriptScope.BlockScope(scopeManager, upperScope, node)
@@ -236,6 +237,22 @@ export function registerGlimmerScopes(result) {
     }
     if ('blockParams' in node && node.type?.startsWith('Glimmer')) {
       registerBlockParams(node, path, result.scopeManager, result.isTypescript);
+    }
+  });
+}
+
+/**
+ * Scope registration for the HBS parser. Unlike the gjs/gts path, we do not
+ * register references for free identifiers (`{{path}}`, `<Tag>`) — all
+ * template locals are treated as runtime-defined, so no-undef stays quiet.
+ * Only block params from `as |x|` constructs are declared.
+ */
+export function registerHBSScopes(result) {
+  traverse(result.visitorKeys, result.ast, (path) => {
+    const node = path.node;
+    if (!node) return;
+    if ('blockParams' in node && node.type.startsWith('Glimmer')) {
+      registerBlockParams(node, path, result.scopeManager, false);
     }
   });
 }
