@@ -8,10 +8,8 @@
     "allowJs": true,
     "strictNullChecks": true
   },
-  "include": [
-    "**/*.ts",
-    "**/*.gts",
-    "index.d.ts"
-  ],
+  "glint": {
+    "environment": "ember-template-imports"
+  },
+  "include": ["**/*.ts", "**/*.gts", "index.d.ts"]
 }
-  

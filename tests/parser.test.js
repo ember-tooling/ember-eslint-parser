@@ -2508,12 +2508,12 @@ describe('patchTs allowGjs singleton', () => {
 });
 
 describe('allowGjs mismatch warning', () => {
-  it('does not warn when tsconfig has allowJs:false — throws Glint environment error instead', () => {
-    // With project-based linting, Glint is required. Since the fixture tsconfig has no
-    // Glint environment configured, this throws a clear config error (not an allowGjs warning).
+  it('does not warn when tsconfig has allowJs:false', () => {
+    // When allowJs:false, patchTs is called with allowGjs:false — no spurious warning.
+    // Use a .ts file so the Glint gate (type-aware .gts requires Glint) doesn't trigger.
     expect(() =>
       parseForESLint('export class Foo {}', {
-        filePath: new URL('./fixtures/foo.gts', import.meta.url).pathname,
+        filePath: new URL('./fixtures/baz.ts', import.meta.url).pathname,
         project: new URL('./fixtures/tsconfig.no-allow-js.json', import.meta.url).pathname,
         tsconfigRootDir: new URL('./fixtures', import.meta.url).pathname,
         comment: true,
@@ -2521,7 +2521,7 @@ describe('allowGjs mismatch warning', () => {
         range: true,
         tokens: true,
       })
-    ).toThrow('No Glint environment found');
+    ).not.toThrow('[ember-eslint-parser]');
   });
 });
 

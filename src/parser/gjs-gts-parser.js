@@ -257,8 +257,9 @@ export function parseForESLint(code, options) {
   }
   registerParsedFile(options.filePath);
 
-  // For type-aware linting of .gts files, Glint is required.
-  // Basic linting (no project/projectService/programs) falls through to the legacy path.
+  // Type-aware .gts linting requires Glint. @glint/ember-tsc must be installed and
+  // tsconfig must have an explicit "glint" key. Without Glint, the legacy
+  // transformForLint path cannot produce correct type information for templates.
   const isGts = options.filePath.endsWith('.gts');
   const isTypeAware = Boolean(options.project || options.projectService || options.programs);
   if (isGts && isTypeAware) {
