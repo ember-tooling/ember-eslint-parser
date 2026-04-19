@@ -20,14 +20,14 @@
     "src"
   ],
   "scripts": {
+    "bench": "./scripts/run-bench.sh tests/parser.bench.mjs",
+    "bench:compare": "node scripts/bench-compare.mjs",
+    "bench:summary": "./scripts/local-bench-summary.sh",
     "lint": "concurrently \"npm:lint:*(!fix)\" --names \"lint:\"",
     "lint:fix": "concurrently \"npm:lint:*:fix\" --names \"fix:\"",
     "lint:js": "eslint . --max-warnings=0",
     "lint:js:fix": "eslint . --fix --max-warnings=0",
     "lint:package": "publint",
-    "bench": "./scripts/run-bench.sh tests/parser.bench.mjs",
-    "bench:compare": "node scripts/bench-compare.mjs",
-    "bench:summary": "./scripts/local-bench-summary.sh",
     "test": "vitest run"
   },
   "dependencies": {
@@ -58,7 +58,7 @@
     "mitata": "1.0.34",
     "prettier": "^3.2.5",
     "publint": "^0.2.6",
-    "release-plan": "^0.17.4",
+    "release-plan": "^0.18.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.12",
     "vitest": "^1.2.2"
