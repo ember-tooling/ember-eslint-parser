@@ -1,21 +1,5 @@
 # Changelog
 
-## Release (2026-04-16)
-
-* ember-eslint-parser 0.10.0 (minor)
-
-#### :rocket: Enhancement
-* `ember-eslint-parser`
-  * [#189](https://github.com/ember-tooling/ember-eslint-parser/pull/189) hbs-parser: register block-param scope for `as |x|` ([@johanrd](https://github.com/johanrd))
-
-#### :house: Internal
-* `ember-eslint-parser`
-  * [#187](https://github.com/ember-tooling/ember-eslint-parser/pull/187) Increase benchmark sampling 5x for CI stability ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
-
-#### Committers: 2
-- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
-- [@johanrd](https://github.com/johanrd)
-
 ## Release (2026-03-20)
 
 * ember-eslint-parser 0.9.0 (minor)

@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "minor",
-      "oldVersion": "0.9.0",
-      "newVersion": "0.10.0",
+      "oldVersion": "0.8.0",
+      "newVersion": "0.9.0",
       "tagName": "latest",
       "constraints": [
         {
@@ -18,5 +18,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-04-16)\n\n* ember-eslint-parser 0.10.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#189](https://github.com/ember-tooling/ember-eslint-parser/pull/189) hbs-parser: register block-param scope for `as |x|` ([@johanrd](https://github.com/johanrd))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#187](https://github.com/ember-tooling/ember-eslint-parser/pull/187) Increase benchmark sampling 5x for CI stability ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### Committers: 2\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n- [@johanrd](https://github.com/johanrd)\n"
+  "description": "## Release (2026-03-20)\n\n* ember-eslint-parser 0.9.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#185](https://github.com/ember-tooling/ember-eslint-parser/pull/185) Update dependencies ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#181](https://github.com/ember-tooling/ember-eslint-parser/pull/181) Extract to ember-estree ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n  * [#176](https://github.com/ember-tooling/ember-eslint-parser/pull/176) Convert library to ESM ([@Copilot](https://github.com/apps/copilot-swe-agent))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#186](https://github.com/ember-tooling/ember-eslint-parser/pull/186) Improve benchmark output indicators ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#183](https://github.com/ember-tooling/ember-eslint-parser/pull/183) Print benchmark comment body to stdout on fork PRs ([@Copilot](https://github.com/apps/copilot-swe-agent))\n  * [#182](https://github.com/ember-tooling/ember-eslint-parser/pull/182) Fix bench-compare workflow for fork PRs ([@Copilot](https://github.com/apps/copilot-swe-agent))\n  * [#177](https://github.com/ember-tooling/ember-eslint-parser/pull/177) Make it easier to get a summary of the bench results locally ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#179](https://github.com/ember-tooling/ember-eslint-parser/pull/179) Fix trailing whitespace lint error in parser.bench.mjs ([@Copilot](https://github.com/apps/copilot-swe-agent))\n  * [#172](https://github.com/ember-tooling/ember-eslint-parser/pull/172) Switch to mitata for benchmark comparison with built-in boxplots and summaries ([@Copilot](https://github.com/apps/copilot-swe-agent))\n\n#### Committers: 3\n- Copilot [Bot] ([@copilot-swe-agent](https://github.com/apps/copilot-swe-agent))\n- NullVoxPopuli's reduced-access account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }
