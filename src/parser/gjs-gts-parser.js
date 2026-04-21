@@ -1,8 +1,25 @@
 import { createRequire } from 'node:module';
 import tsconfigUtils from '@typescript-eslint/tsconfig-utils';
 import { registerParsedFile } from '../preprocessor/noop.js';
-import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
-import { buildGlimmerVisitors } from './transforms.js';
+import {
+  patchTs,
+  replaceExtensions,
+  syncMtsGtsSourceFiles,
+  typescriptParser,
+  ts,
+} from './ts-patch.js';
+import {
+  buildGlimmerVisitors,
+  preprocessGlimmerTemplatesFromCharOffsets,
+  convertAst,
+} from './transforms.js';
+import {
+  isGlintAvailable,
+  getGlintConfig,
+  glintRewriteModule,
+  buildTemplateInfoFromGlint,
+} from './glint-utils.js';
+import { remapAstPositions, remapTokens } from './remap.js';
 import { toTree } from 'ember-estree';
 import * as eslintScope from 'eslint-scope';
 
@@ -129,6 +146,102 @@ function getAllowJs(options) {
 }
 
 /**
+ * Parse using Glint's transform for full type-aware template support.
+ * Glint transforms templates into __glintDSL__ calls that TS understands,
+ * then we remap AST positions back to original source and splice in Glimmer AST.
+ */
+function parseWithGlint(code, options, transformedModule) {
+  const filePath = options.filePath;
+
+  // Get transformed TS code and replace .gts→.mts imports
+  let tsCode = transformedModule.transformedContents;
+  if (options.project || options.projectService) {
+    tsCode = replaceExtensions(tsCode);
+  }
+
+  // Parse the transformed code with TS parser (positions in transformed-space)
+  const result = typescriptParser.parseForESLint(tsCode, {
+    ...options,
+    ranges: true,
+    extraFileExtensions: ['.gts', '.gjs'],
+    filePath,
+  });
+
+  // Build template infos from Glint's correlatedSpans
+  const glintTemplateInfos = buildTemplateInfoFromGlint(transformedModule);
+
+  // Always remap positions even if no templates — Glint may have changed code length
+  // for non-template spans (e.g., directive placeholders)
+  const { templateSpans } = remapAstPositions(
+    result.ast,
+    result.visitorKeys,
+    transformedModule.correlatedSpans,
+    code
+  );
+
+  // Remap tokens
+  result.ast.tokens = remapTokens(
+    result.ast.tokens,
+    transformedModule.correlatedSpans,
+    templateSpans,
+    code
+  );
+
+  if (!glintTemplateInfos.length) {
+    return result;
+  }
+
+  // Preprocess Glimmer templates (parse to Glimmer AST with correct positions)
+  const preprocessedResult = preprocessGlimmerTemplatesFromCharOffsets(glintTemplateInfos, code);
+  const { templateVisitorKeys } = preprocessedResult;
+  const visitorKeys = { ...result.visitorKeys, ...templateVisitorKeys };
+  result.isTypescript = true;
+
+  // Splice Glimmer AST into the remapped TS AST (matchByRangeOnly because
+  // Glint produces different node types than transformForLint)
+  convertAst(result, preprocessedResult, { matchByRangeOnly: true });
+
+  // remapAstPositions marks nodes entirely inside a template span with
+  // __glintOrphaned=true (it skips remapping them since they will be replaced).
+  // After convertAst replaces the static block with the Glimmer AST, those nodes
+  // are gone from the tree — ESLint never traverses them so .parent stays
+  // undefined. Scope entries pointing to them crash rules like no-unused-vars.
+  // Remove those entries; they are Glint DSL artifacts, not user-authored code.
+  if (result.scopeManager && templateSpans.length > 0) {
+    const isOrphanedNode = (node) => node?.__glintOrphaned === true;
+    for (const scope of result.scopeManager.scopes) {
+      // Filter references whose identifier nodes are Glint-orphaned
+      const isOrphanedRef = (ref) => isOrphanedNode(ref.identifier);
+      scope.references = scope.references.filter((ref) => !isOrphanedRef(ref));
+      if (scope.through) {
+        scope.through = scope.through.filter((ref) => !isOrphanedRef(ref));
+      }
+      // Filter variables whose definition identifiers are Glint-orphaned
+      // (Glint DSL vars like __glintY__ are defined inside the template span)
+      const removedVarNames = new Set();
+      scope.variables = scope.variables.filter((variable) => {
+        const isOrphaned = variable.defs.some((def) => isOrphanedNode(def.name));
+        if (isOrphaned) removedVarNames.add(variable.name);
+        return !isOrphaned;
+      });
+      for (const name of removedVarNames) {
+        scope.set?.delete(name);
+      }
+      // Also clean up orphaned references on remaining variables
+      for (const variable of scope.variables) {
+        variable.references = variable.references.filter((ref) => !isOrphanedRef(ref));
+      }
+    }
+  }
+
+  if (result.services?.program) {
+    syncMtsGtsSourceFiles(result.services.program);
+  }
+
+  return { ...result, visitorKeys };
+}
+
+/**
  * @type {import('eslint').ParserModule}
  */
 export const meta = {
@@ -137,14 +250,38 @@ export const meta = {
 };
 
 export function parseForESLint(code, options) {
-  const allowGjsWasSet = options.allowGjs !== undefined;
-  const allowGjs = allowGjsWasSet ? options.allowGjs : getAllowJs(options);
-  let actualAllowGjs;
+  const allowGjs = options.allowGjs !== undefined ? options.allowGjs : getAllowJs(options);
   // Only patch TypeScript if we actually need it.
   if (options.programs || options.projectService || options.project) {
-    ({ allowGjs: actualAllowGjs } = patchTs({ allowGjs }));
+    patchTs({ allowGjs });
   }
   registerParsedFile(options.filePath);
+
+  // Type-aware .gts linting requires Glint. @glint/ember-tsc must be installed and
+  // tsconfig must have an explicit "glint" key. Without Glint, the legacy
+  // transformForLint path cannot produce correct type information for templates.
+  const isGts = options.filePath.endsWith('.gts');
+  const isTypeAware = Boolean(options.project || options.projectService || options.programs);
+  if (isGts && isTypeAware) {
+    if (!isGlintAvailable()) {
+      throw new Error(
+        '[ember-eslint-parser] @glint/ember-tsc is required for type-aware linting of .gts files. ' +
+          'Install it as a dependency of your project.'
+      );
+    }
+    const glintConfig = getGlintConfig(options.filePath);
+    if (!glintConfig) {
+      throw new Error(
+        '[ember-eslint-parser] No Glint environment found for this .gts file. ' +
+          'Ensure @glint/ember-tsc is configured in your tsconfig.'
+      );
+    }
+    const glintTransform = glintRewriteModule(code, options.filePath, ts, glintConfig);
+    if (glintTransform) {
+      return parseWithGlint(code, options, glintTransform);
+    }
+    // glintTransform === null means no templates — fall through to normal TS parse
+  }
 
   const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');
   let useTypescript = true;
@@ -202,19 +339,6 @@ export function parseForESLint(code, options) {
     if (!result.scopeManager) result.scopeManager = scopeManager;
 
     if (result.services?.program) {
-      const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
-      if (
-        !allowGjsWasSet &&
-        programAllowJs !== undefined &&
-        actualAllowGjs !== undefined &&
-        actualAllowGjs !== programAllowJs
-      ) {
-        // eslint-disable-next-line no-console
-        console.warn(
-          '[ember-eslint-parser] allowJs does not match the actual program. Consider setting allowGjs explicitly.\n' +
-            `    Current: ${allowGjs}, Program: ${programAllowJs}`
-        );
-      }
       syncMtsGtsSourceFiles(result.services.program);
     }
 

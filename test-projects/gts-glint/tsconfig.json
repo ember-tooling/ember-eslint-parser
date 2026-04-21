@@ -11,5 +11,9 @@
   "glint": {
     "environment": "ember-template-imports"
   },
-  "include": ["**/*.ts", "**/*.gts", "index.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.gts",
+    "index.d.ts"
+  ]
 }
