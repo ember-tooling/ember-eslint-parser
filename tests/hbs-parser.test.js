@@ -83,12 +83,6 @@ describe('hbs-parser', () => {
   it('all nodes have tokens', () => {
     const source = new SourceCode({ ...result, text });
     traverse(result.visitorKeys, result.ast, (path) => {
-      const type = path.node?.type;
-      // ember-estree 0.4.3 keeps Glimmer comment nodes in the template body,
-      // but comments are surfaced via ast.comments rather than as tokens.
-      if (type === 'GlimmerCommentStatement' || type === 'GlimmerMustacheCommentStatement') {
-        return;
-      }
       expect(source.getTokens(path.node)).not.toHaveLength(0);
     });
   });

@@ -46,6 +46,32 @@ export function parseForESLint(code, options) {
 
   const { ast: templateNode, comments } = result;
 
+  // ember-estree 0.4.3+ keeps Glimmer comment nodes in the template body with
+  // semantic Glimmer types. For ESLint consumers we restore the pre-0.4.3
+  // contract: expose Block-typed entries in Program.comments (so inline-config
+  // directives fire and rules that filter on `type === 'Block'` keep working)
+  // and remove the originals from the body (so rules like core `indent`, which
+  // call getLastToken on body children, don't crash on tokenless comments).
+  const eslintComments = [];
+  const toRemove = [];
+  for (const c of comments) {
+    if (c.type === 'GlimmerCommentStatement' || c.type === 'GlimmerMustacheCommentStatement') {
+      eslintComments.push({
+        type: 'Block',
+        value: c.value,
+        range: c.range,
+        start: c.start,
+        end: c.end,
+        loc: c.loc,
+      });
+      toRemove.push(c);
+    } else {
+      eslintComments.push(c);
+    }
+  }
+  removeFromParent(toRemove);
+  eslintComments.sort((a, b) => a.range[0] - b.range[0]);
+
   // Use the Template node's loc.end for the Program's end position
   // (avoids creating a duplicate DocumentLines just for this)
   const endLoc = templateNode.loc?.end || { line: 1, column: code.length };
@@ -55,7 +81,7 @@ export function parseForESLint(code, options) {
     type: 'Program',
     body: [templateNode],
     tokens: templateNode.tokens,
-    comments,
+    comments: eslintComments,
     range: [0, code.length],
     start: 0,
     end: code.length,
@@ -88,6 +114,17 @@ export function parseForESLint(code, options) {
     visitorKeys: hbsVisitorKeys,
     services: {},
   };
+}
+
+function removeFromParent(nodes) {
+  for (const node of nodes) {
+    const parent = node.parent;
+    if (!parent) continue;
+    const children = parent.children || parent.body || parent.parts;
+    if (!children) continue;
+    const idx = children.indexOf(node);
+    if (idx >= 0) children.splice(idx, 1);
+  }
 }
 
 export default { meta, parseForESLint };

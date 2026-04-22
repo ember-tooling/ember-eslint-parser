@@ -250,10 +250,27 @@ export function parseForESLint(code, options) {
 }
 
 /**
- * Walk each spliced Glimmer template subtree and append its comment nodes
- * (GlimmerCommentStatement for `<!-- -->`, GlimmerMustacheCommentStatement for
- * `{{! }}` / `{{!-- --}}`) to `result.ast.comments`, so ESLint's inline-config
- * scanner can see disable/enable directives placed inside templates.
+ * Expose template comments to ESLint. ember-estree 0.4.3+
+ * (NullVoxPopuli/ember-estree#31) keeps `GlimmerCommentStatement` /
+ * `GlimmerMustacheCommentStatement` nodes in the template body and
+ * does not touch `Program.comments`. That breaks two things ESLint
+ * consumers rely on:
+ *
+ *  1. ESLint's inline-config scanner reads `Program.comments`, so
+ *     `{{! eslint-disable-* }}` directives inside <template> are
+ *     silently ignored.
+ *  2. Rules that iterate `sourceCode.getAllComments()` expecting
+ *     pre-0.4.3's ESTree `"Block"` type (e.g. template-no-html-comments)
+ *     no longer match. And core rules like `indent` call
+ *     `getLastToken(commentNode)` which returns null for in-body
+ *     comments (they own no tokens), then crash dereferencing `.loc`.
+ *
+ * Restore the pre-0.4.3 ESLint-facing contract: push Block-typed
+ * comment entries into `ast.comments` (sorted by range so
+ * `sortedMerge` stays well-ordered) and remove the original nodes
+ * from their parents so rule visitors and core `indent` don't trip
+ * over tokenless body children. ember-estree keeps its new internal
+ * shape; this adaptation lives at the parser boundary.
  *
  * @param {{ ast: { comments?: unknown[] }, templateInfos?: Array<{ ast: unknown }> }} result
  */
@@ -262,25 +279,48 @@ function promoteTemplateCommentsToProgram(result) {
   if (!templateInfos || templateInfos.length === 0) return;
   if (!result.ast.comments) result.ast.comments = [];
   const comments = result.ast.comments;
+  const toRemove = [];
   for (const { ast } of templateInfos) {
-    collectGlimmerComments(ast, comments);
+    collectGlimmerComments(ast, comments, toRemove);
   }
+  if (toRemove.length === 0) return;
+  removeFromParent(toRemove);
+  comments.sort((a, b) => a.range[0] - b.range[0]);
 }
 
-function collectGlimmerComments(node, out) {
+function collectGlimmerComments(node, out, toRemove) {
   if (!node || typeof node !== 'object' || typeof node.type !== 'string') return;
   if (node.type === 'GlimmerCommentStatement' || node.type === 'GlimmerMustacheCommentStatement') {
-    out.push(node);
+    out.push({
+      type: 'Block',
+      value: node.value,
+      range: node.range,
+      start: node.start,
+      end: node.end,
+      loc: node.loc,
+    });
+    toRemove.push(node);
     return;
   }
   for (const key of Object.keys(node)) {
     if (key === 'parent' || key === 'loc' || key === 'range' || key === 'tokens') continue;
     const value = node[key];
     if (Array.isArray(value)) {
-      for (const child of value) collectGlimmerComments(child, out);
+      for (const child of value) collectGlimmerComments(child, out, toRemove);
     } else {
-      collectGlimmerComments(value, out);
+      collectGlimmerComments(value, out, toRemove);
     }
+  }
+}
+
+function removeFromParent(nodes) {
+  for (const node of nodes) {
+    const parent = node.parent;
+    if (!parent) continue;
+    const children = parent.children || parent.body || parent.parts;
+    if (!children) continue;
+    const idx = children.indexOf(node);
+    if (idx >= 0) children.splice(idx, 1);
   }
 }
 
