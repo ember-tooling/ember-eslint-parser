@@ -201,6 +201,13 @@ export function parseForESLint(code, options) {
 
     if (!result.scopeManager) result.scopeManager = scopeManager;
 
+    // ember-estree 0.4.3 (NullVoxPopuli/ember-estree#31) keeps Glimmer comment
+    // nodes inside the template body instead of mirroring them into
+    // Program.comments. ESLint's inline-config scanner only reads
+    // Program.comments, so `{{! eslint-disable-* }}` directives inside
+    // <template> would be silently dropped. Promote them here.
+    promoteTemplateCommentsToProgram(result);
+
     if (result.services?.program) {
       const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
       if (
@@ -239,6 +246,41 @@ export function parseForESLint(code, options) {
       throw err;
     }
     throw e;
+  }
+}
+
+/**
+ * Walk each spliced Glimmer template subtree and append its comment nodes
+ * (GlimmerCommentStatement for `<!-- -->`, GlimmerMustacheCommentStatement for
+ * `{{! }}` / `{{!-- --}}`) to `result.ast.comments`, so ESLint's inline-config
+ * scanner can see disable/enable directives placed inside templates.
+ *
+ * @param {{ ast: { comments?: unknown[] }, templateInfos?: Array<{ ast: unknown }> }} result
+ */
+function promoteTemplateCommentsToProgram(result) {
+  const templateInfos = result.templateInfos;
+  if (!templateInfos || templateInfos.length === 0) return;
+  if (!result.ast.comments) result.ast.comments = [];
+  const comments = result.ast.comments;
+  for (const { ast } of templateInfos) {
+    collectGlimmerComments(ast, comments);
+  }
+}
+
+function collectGlimmerComments(node, out) {
+  if (!node || typeof node !== 'object' || typeof node.type !== 'string') return;
+  if (node.type === 'GlimmerCommentStatement' || node.type === 'GlimmerMustacheCommentStatement') {
+    out.push(node);
+    return;
+  }
+  for (const key of Object.keys(node)) {
+    if (key === 'parent' || key === 'loc' || key === 'range' || key === 'tokens') continue;
+    const value = node[key];
+    if (Array.isArray(value)) {
+      for (const child of value) collectGlimmerComments(child, out);
+    } else {
+      collectGlimmerComments(value, out);
+    }
   }
 }
 

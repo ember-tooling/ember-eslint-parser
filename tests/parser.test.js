@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
 import { replaceExtensions } from '../src/parser/ts-patch.js';
 import { traverse } from '../src/parser/transforms.js';
-import { SourceCode } from 'eslint';
+import { Linter, SourceCode } from 'eslint';
 import { visitorKeys as tsVisitors } from '@typescript-eslint/visitor-keys';
 import { visitorKeys as glimmerVisitorKeys } from '@glimmer/syntax';
 
@@ -2438,6 +2438,98 @@ export const NotFound = <template>
     );
 
     expect(result.scopeManager.scopes[0].through.length).toBe(0);
+  });
+});
+
+describe('template comment nodes exposed as Program.comments', () => {
+  // Regression: ember-estree 0.4.3 (NullVoxPopuli/ember-estree#31) keeps Glimmer
+  // comment nodes inside the template body and stops mirroring them into
+  // Program.comments. ESLint's inline-config scanner only reads Program.comments,
+  // so `{{! eslint-disable-* }}` directives inside <template> get silently
+  // ignored. The parser is expected to promote template comment nodes back into
+  // Program.comments so directive handling keeps working.
+  it('promotes {{! … }} from inside <template> into Program.comments', () => {
+    const source = `const X = <template>
+  <li
+    {{! eslint-disable-next-line ember/template-no-unnecessary-concat }}
+    aria-current="{{foo}}"
+  ></li>
+</template>;`;
+    const result = parseForESLint(source, {
+      filePath: 'example.gts',
+      range: true,
+      loc: true,
+      comment: true,
+      tokens: true,
+    });
+    const directives = (result.ast.comments || []).filter(
+      (c) => c.value && /^\s*eslint-disable-next-line\s/.test(c.value)
+    );
+    expect(directives).toHaveLength(1);
+    expect(directives[0].value.trim()).toBe(
+      'eslint-disable-next-line ember/template-no-unnecessary-concat'
+    );
+  });
+
+  it('promotes {{!-- … --}} (long-form) from inside <template> into Program.comments', () => {
+    const source = `const X = <template>
+  <li
+    {{!-- eslint-disable-next-line ember/template-no-unnecessary-concat --}}
+    aria-current="{{foo}}"
+  ></li>
+</template>;`;
+    const result = parseForESLint(source, {
+      filePath: 'example.gts',
+      range: true,
+      loc: true,
+      comment: true,
+      tokens: true,
+    });
+    const directives = (result.ast.comments || []).filter(
+      (c) => c.value && /^\s*eslint-disable-next-line\s/.test(c.value)
+    );
+    expect(directives).toHaveLength(1);
+  });
+
+  it('ESLint honors {{! eslint-disable-next-line }} inside <template> (end-to-end)', () => {
+    const linter = new Linter();
+    linter.defineParser('ember-eslint-parser', { parseForESLint });
+    linter.defineRule('no-aria-current-concat', {
+      create(context) {
+        return {
+          GlimmerConcatStatement(node) {
+            context.report({ node, message: 'no concat' });
+          },
+        };
+      },
+    });
+
+    const withoutDirective = linter.verify(
+      `const X = <template><li aria-current="{{foo}}"></li></template>;`,
+      {
+        parser: 'ember-eslint-parser',
+        parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+        rules: { 'no-aria-current-concat': 'error' },
+      },
+      { filename: 'example.gts' }
+    );
+    expect(withoutDirective.map((m) => m.ruleId)).toEqual(['no-aria-current-concat']);
+
+    const withDirective = linter.verify(
+      `const X = <template>
+  <li
+    {{! eslint-disable-next-line no-aria-current-concat }}
+    aria-current="{{foo}}"
+  ></li>
+</template>;`,
+      {
+        parser: 'ember-eslint-parser',
+        parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+        rules: { 'no-aria-current-concat': 'error' },
+      },
+      { filename: 'example.gts' }
+    );
+    expect(withDirective.map((m) => m.ruleId)).toEqual([]);
   });
 });
 
