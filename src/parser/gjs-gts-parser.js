@@ -128,34 +128,6 @@ function getAllowJs(options) {
   return false;
 }
 
-// Placeholder node types produced by toPlaceholderJS (backtick / static-block).
-const PLACEHOLDER_TYPES = new Set([
-  'TemplateLiteral',
-  'StaticBlock',
-  'ExpressionStatement',
-  'ExportDefaultDeclaration',
-]);
-
-function snapshotPlaceholders(root, outMap) {
-  const seen = new WeakSet();
-  (function walk(node) {
-    if (!node || typeof node !== 'object' || seen.has(node)) return;
-    if (Array.isArray(node)) {
-      node.forEach(walk);
-      return;
-    }
-    if (typeof node.type !== 'string') return;
-    seen.add(node);
-    if (PLACEHOLDER_TYPES.has(node.type) && node.range) {
-      outMap.set(node.range[0], node);
-    }
-    for (const k of Object.keys(node)) {
-      if (k === 'parent' || k === 'tokens' || k === 'comments') continue;
-      walk(node[k]);
-    }
-  })(root);
-}
-
 /**
  * @type {import('eslint').ParserModule}
  */
@@ -192,11 +164,6 @@ export function parseForESLint(code, options) {
   // available when toTree invokes the visitor factory — no second pass.
   let scopeManager = null;
   const glimmerComments = [];
-  // Placeholder AST nodes keyed by range start, captured before the splice
-  // so we can forward each placeholder's tsNode to the GlimmerTemplate that
-  // replaces it. Typed rules call `getTypeAtLocation(glimmerTemplate)`;
-  // without this forwarding they'd hit the TS error intrinsic.
-  const placeholderByStart = new Map();
 
   try {
     const result = toTree(code, {
@@ -233,12 +200,9 @@ export function parseForESLint(code, options) {
           },
       // Factory form: scopeManager is set by the parser callback before this
       // runs. Returns null when unavailable so ember-estree skips the walk.
-      // Before the splice happens we also snapshot the placeholder nodes so
-      // we can forward their tsNode to the GlimmerTemplate that replaces them.
-      visitors: (outerAst) => {
+      visitors: () => {
         const v = buildGlimmerVisitors(scopeManager, useTS);
         if (!v) return null;
-        if (outerAst) snapshotPlaceholders(outerAst, placeholderByStart);
         return {
           ...v,
           GlimmerMustacheCommentStatement(node) {
@@ -260,10 +224,8 @@ export function parseForESLint(code, options) {
     const esMap = result.services?.esTreeNodeToTSNodeMap;
     if (esMap && result.templateInfos) {
       for (const ti of result.templateInfos) {
-        const start = ti.utf16Range?.[0] ?? ti.ast?.range?.[0];
-        const placeholder = placeholderByStart.get(start);
-        const placeholderTS = placeholder && esMap.get(placeholder);
-        if (placeholderTS && !esMap.has(ti.ast)) esMap.set(ti.ast, placeholderTS);
+        const ts = esMap.get(ti.placeholder);
+        if (ts && !esMap.has(ti.ast)) esMap.set(ti.ast, ts);
       }
     }
 
