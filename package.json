@@ -77,7 +77,8 @@
   },
   "pnpm": {
     "overrides": {
-      "ember-eslint-parser": "workspace:*"
+      "ember-eslint-parser": "workspace:*",
+      "ember-estree": "link:../claude-make-estree-good/ember-estree"
     }
   }
 }
