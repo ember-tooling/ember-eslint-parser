@@ -253,13 +253,15 @@ export function parseForESLint(code, options) {
     if (!result.scopeManager) result.scopeManager = scopeManager;
 
     // zimmerframe replaces parent nodes (ClassDeclaration, ExportNamedDeclaration,
-    // Program) with new objects when a child is mutated. The TS scope manager
-    // holds references to the ORIGINAL nodes, which are orphaned — ESLint only
-    // sets .parent on the new objects it traverses, so original nodes remain
-    // parentless and rules like no-unused-vars crash on node.parent.type.
-    // Fix by building a range+type → parent map from the new AST and patching
-    // any scope definition node whose .parent is still missing.
+    // VariableDeclaration, Program) with new objects when a child is mutated.
+    // The scope manager's WeakMap holds references to the ORIGINAL nodes, so
+    // ESLint's context.getScope() fails on the new nodes and falls through to
+    // the global scope — crashing rules (e.g. no-setter-return) that access
+    // `scope.upper.type` on the global scope's null upper.
+    // Fix by building a range+type → node map of the new AST and re-registering
+    // every scope's block on the new node + patching orphan def.node.parent.
     const parentByKey = new Map();
+    const nodeByKey = new Map();
     if (result.scopeManager) {
       const astRoot = result.ast?.program ?? result.ast;
       if (astRoot) {
@@ -283,12 +285,38 @@ export function parseForESLint(code, options) {
             return;
           }
           seen.add(node);
-          parentByKey.set(`${node.type},${node.range[0]},${node.range[1]}`, parent);
-          for (const key of Object.keys(node)) {
-            if (key === 'parent' || key === 'tokens' || key === 'comments') continue;
-            collectParents(node[key], node);
+          const key = `${node.type},${node.range[0]},${node.range[1]}`;
+          parentByKey.set(key, parent);
+          nodeByKey.set(key, node);
+          for (const k of Object.keys(node)) {
+            if (k === 'parent' || k === 'tokens' || k === 'comments') continue;
+            collectParents(node[k], node);
           }
         })(astRoot, null);
+
+        // Re-point scope.block to the new AST node and re-register the
+        // WeakMap entries (both eslint-scope's `__nodeToScope` and
+        // typescript-eslint's `nodeToScope`). Without this, ESLint can't
+        // find a scope for a function/arrow/class replaced by zimmerframe
+        // and falls back to the global scope.
+        const sm = result.scopeManager;
+        const nodeToScope = sm.__nodeToScope ?? sm.nodeToScope;
+        const declaredVars = sm.__declaredVariables ?? sm.declaredVariables;
+        for (const scope of sm.scopes || []) {
+          const oldBlock = scope.block;
+          if (!oldBlock || !oldBlock.range) continue;
+          const key = `${oldBlock.type},${oldBlock.range[0]},${oldBlock.range[1]}`;
+          const newBlock = nodeByKey.get(key);
+          if (!newBlock || newBlock === oldBlock) continue;
+          if (nodeToScope) {
+            const entry = nodeToScope.get(oldBlock);
+            if (entry) nodeToScope.set(newBlock, entry);
+          }
+          if (declaredVars?.has?.(oldBlock)) {
+            declaredVars.set(newBlock, declaredVars.get(oldBlock));
+          }
+          scope.block = newBlock;
+        }
 
         (function fixScope(scope) {
           for (const variable of scope.variables) {
