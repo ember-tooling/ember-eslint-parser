@@ -2375,7 +2375,12 @@ export const NotFound = <template>
       expect(e.lineNumber).toBe(1);
       expect(e.column).toBe(19);
       expect(e.fileName).toBe('example.gts');
-      expect(e.message).toMatchInlineSnapshot(`"× Unexpected eof"`);
+      expect(e.message).toMatchInlineSnapshot(`
+        "× Unexpected eof
+           ╭────
+         1 │ console.log('test)
+           ╰────"
+      `);
     }
   });
 

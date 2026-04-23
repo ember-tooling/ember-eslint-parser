@@ -414,20 +414,13 @@ export function parseForESLint(code, options) {
         .split(':')
         .slice(-2)
         .map((x) => parseInt(x));
-      // e.source_code is a multi-line diagnostic block — extract just the
-      // first non-empty line so ESLint's single-line message format is preserved.
-      // Strip ANSI escape codes defensively (e.source_code may be coloured in
-      // TTY environments, which breaks grep-based test:check assertions).
+      // e.source_code is the full diagnostic block. Strip ANSI escape codes
+      // (content-tag colours output in TTY environments, which breaks
+      // grep-based test:check assertions) and trim leading/trailing blank
+      // lines so consumers see a clean message.
       // eslint-disable-next-line no-control-regex
       const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, '');
-      const errorText = e.source_code
-        ? stripAnsi(
-            e.source_code
-              .split('\n')
-              .map((l) => l.trim())
-              .find((l) => l.length > 0) ?? e.message
-          )
-        : e.message;
+      const errorText = e.source_code ? stripAnsi(e.source_code).trim() : e.message;
       const err = new Error(errorText);
       err.lineNumber = line;
       err.column = column;
