@@ -161,12 +161,21 @@ export function parseForESLint(code, options) {
   const useTS = isTypescript || useTypescript;
 
   // Both paths create scopeManager inside the parser callback so it's
-  // available when toTree invokes visitors during splice — no second pass.
+  // available when toTree invokes the visitor factory — no second pass.
   let scopeManager = null;
+  const glimmerComments = [];
+  // Snapshot of range+type → TS-node mappings captured before zimmerframe's
+  // walk. zimmerframe's apply_mutations creates new ESTree node objects for any
+  // parent whose child was mutated (ClassDeclaration, ExportNamedDeclaration,
+  // Program). Those new objects are absent from the TS parser's WeakMap-based
+  // esTreeNodeToTSNodeMap, so TypeScript-aware rules crash. We restore the
+  // mapping for every new node by keying on range+type after the walk.
+  const prewalkTSMappings = new Map(); // "type,start,end" → tsNode
 
   try {
     const result = toTree(code, {
       filePath,
+      tokens: true,
       parser: useTS
         ? (placeholderJS) => {
             let parseCode = placeholderJS;
@@ -180,6 +189,33 @@ export function parseForESLint(code, options) {
               filePath,
             });
             scopeManager = tsResult.scopeManager;
+            // Snapshot the ESTree→TSNode mapping for every node in the
+            // original AST before zimmerframe's walk replaces some of them.
+            const esMap = tsResult.services?.esTreeNodeToTSNodeMap;
+            if (esMap) {
+              const snapSeen = new WeakSet();
+              (function snap(node) {
+                if (!node || typeof node !== 'object' || snapSeen.has(node)) return;
+                if (Array.isArray(node)) {
+                  node.forEach(snap);
+                  return;
+                }
+                if (
+                  typeof node.type !== 'string' ||
+                  !Array.isArray(node.range) ||
+                  typeof node.range[0] !== 'number'
+                )
+                  return;
+                snapSeen.add(node);
+                const tsNode = esMap.get(node);
+                if (tsNode)
+                  prewalkTSMappings.set(`${node.type},${node.range[0]},${node.range[1]}`, tsNode);
+                for (const key of Object.keys(node)) {
+                  if (key === 'parent' || key === 'tokens' || key === 'comments') continue;
+                  snap(node[key]);
+                }
+              })(tsResult.ast);
+            }
             return tsResult;
           }
         : (placeholderJS) => {
@@ -196,10 +232,174 @@ export function parseForESLint(code, options) {
             });
             return { ast: program, scopeManager };
           },
-      visitors: buildGlimmerVisitors(() => scopeManager, useTS),
+      // Factory form: scopeManager is set by the parser callback before this runs.
+      // Returns null when unavailable so ember-estree skips the zimmerframe walk.
+      // Also collect Glimmer comment nodes for surfacing in program.comments.
+      visitors: (_outerAst) => {
+        const v = buildGlimmerVisitors(scopeManager, useTS);
+        if (!v) return null;
+        return {
+          ...v,
+          GlimmerMustacheCommentStatement(node) {
+            glimmerComments.push(node);
+          },
+          GlimmerCommentStatement(node) {
+            glimmerComments.push(node);
+          },
+        };
+      },
     });
 
     if (!result.scopeManager) result.scopeManager = scopeManager;
+
+    // zimmerframe replaces parent nodes (ClassDeclaration, ExportNamedDeclaration,
+    // Program) with new objects when a child is mutated. The TS scope manager
+    // holds references to the ORIGINAL nodes, which are orphaned — ESLint only
+    // sets .parent on the new objects it traverses, so original nodes remain
+    // parentless and rules like no-unused-vars crash on node.parent.type.
+    // Fix by building a range+type → parent map from the new AST and patching
+    // any scope definition node whose .parent is still missing.
+    const parentByKey = new Map();
+    if (result.scopeManager) {
+      const astRoot = result.ast?.program ?? result.ast;
+      if (astRoot) {
+        // Only traverse nodes that look like ESTree (have a string type and an
+        // array range). Skipping TypeScript-internal properties (heritageClauses,
+        // implements, etc.) avoids traversing into TS-internal structures that
+        // can form cycles or have unexpected shapes.
+        const seen = new WeakSet();
+        (function collectParents(node, parent) {
+          if (!node || typeof node !== 'object' || seen.has(node)) return;
+          if (Array.isArray(node)) {
+            node.forEach((c) => collectParents(c, parent));
+            return;
+          }
+          // Only process ESTree-shaped nodes (string type + [start,end] range)
+          if (
+            typeof node.type !== 'string' ||
+            !Array.isArray(node.range) ||
+            typeof node.range[0] !== 'number'
+          ) {
+            return;
+          }
+          seen.add(node);
+          parentByKey.set(`${node.type},${node.range[0]},${node.range[1]}`, parent);
+          for (const key of Object.keys(node)) {
+            if (key === 'parent' || key === 'tokens' || key === 'comments') continue;
+            collectParents(node[key], node);
+          }
+        })(astRoot, null);
+
+        (function fixScope(scope) {
+          for (const variable of scope.variables) {
+            for (const def of variable.defs) {
+              if (def.node && !def.node.parent && def.node.range) {
+                const key = `${def.node.type},${def.node.range[0]},${def.node.range[1]}`;
+                const newParent = parentByKey.get(key);
+                if (newParent) def.node.parent = newParent;
+              }
+            }
+          }
+          for (const child of scope.childScopes) fixScope(child);
+        })(result.scopeManager.globalScope ?? result.scopeManager.scopes?.[0]);
+      }
+    }
+
+    // Restore TS service map entries for nodes replaced by zimmerframe.
+    // zimmerframe's apply_mutations creates new ESTree node objects for any
+    // parent whose child was mutated. The TS parser's WeakMap-based
+    // esTreeNodeToTSNodeMap only knows the ORIGINAL nodes — TypeScript-aware
+    // rules crash when esMap.get(newNode) → undefined.
+    //
+    // Strategy: restore mappings for (a) scope def nodes and their parents, and
+    // (b) GlimmerTemplate nodes (mapped to the placeholder tsNode so
+    // getTypeAtLocation returns `string` rather than the error intrinsic).
+    // We avoid walking the full new AST with Object.keys, which traverses
+    // TypeScript-internal properties and causes crashes in unrelated rules.
+    if (prewalkTSMappings.size > 0 && result.services?.esTreeNodeToTSNodeMap) {
+      const esMap = result.services.esTreeNodeToTSNodeMap;
+      const PLACEHOLDER_TYPES = [
+        'TemplateLiteral',
+        'StaticBlock',
+        'ExpressionStatement',
+        'ExportDefaultDeclaration',
+      ];
+      function restoreNode(n) {
+        if (!n || esMap.has(n) || !n.range) return;
+        const tsNode = prewalkTSMappings.get(`${n.type},${n.range[0]},${n.range[1]}`);
+        if (tsNode) esMap.set(n, tsNode);
+      }
+      function restoreGlimmerTemplate(n) {
+        if (!n || n.type !== 'GlimmerTemplate' || esMap.has(n) || !n.range) return;
+        for (const pt of PLACEHOLDER_TYPES) {
+          const tsNode = prewalkTSMappings.get(`${pt},${n.range[0]},${n.range[1]}`);
+          if (tsNode) {
+            esMap.set(n, tsNode);
+            break;
+          }
+        }
+      }
+      (function restoreScopeDefs(scope) {
+        for (const variable of scope.variables) {
+          for (const def of variable.defs) {
+            restoreNode(def.node);
+            if (!def.node?.range) continue;
+            const defKey = `${def.node.type},${def.node.range[0]},${def.node.range[1]}`;
+            const parentNode = parentByKey.get(defKey);
+            // Restore the parent node (e.g. VariableDeclaration for
+            // VariableDeclarator, ExportNamedDeclaration for ClassDeclaration)
+            // since TypeScript rules visit those types too.
+            restoreNode(parentNode);
+            // Find the NEW version of def.node in the new AST (def.node is the
+            // ORIGINAL from the scope manager, already in esMap, so restoreNode
+            // skipped it). The new node has the same range but different identity.
+            // Restore it so rules that visit the new AST node can look up tsNode.
+            // Find the NEW version of def.node (same range+type, new identity)
+            // inside the parent. Covers both array containers (.declarations,
+            // .body.body) and singular containers (.declaration for export nodes).
+            let newDefNode = null;
+            if (parentNode) {
+              const key = def.node.range[0];
+              const type = def.node.type;
+              if (
+                parentNode.declaration?.type === type &&
+                parentNode.declaration?.range?.[0] === key
+              ) {
+                newDefNode = parentNode.declaration;
+              } else {
+                const arr = parentNode.declarations ?? parentNode.body?.body ?? [];
+                if (Array.isArray(arr)) {
+                  newDefNode = arr.find((n) => n?.range?.[0] === key && n.type === type) ?? null;
+                }
+              }
+            }
+            restoreNode(newDefNode);
+            // Restore GlimmerTemplate children so getTypeAtLocation returns the
+            // placeholder type (string) not the error intrinsic.
+            restoreGlimmerTemplate(newDefNode?.init);
+            restoreGlimmerTemplate(newDefNode?.body);
+          }
+        }
+        for (const child of scope.childScopes) restoreScopeDefs(child);
+      })(result.scopeManager?.globalScope ?? result.scopeManager?.scopes?.[0]);
+    }
+
+    // Surface Glimmer template comments in program.comments as type:'Block'
+    // so ESLint's inline-config scanner and plugin rules recognise them.
+    if (glimmerComments.length > 0) {
+      const programNode = result.ast?.program ?? result.ast;
+      if (programNode) {
+        programNode.comments = [
+          ...(programNode.comments || []),
+          ...glimmerComments.map((c) => ({
+            type: 'Block',
+            value: c.value,
+            range: c.range,
+            loc: c.loc,
+          })),
+        ];
+      }
+    }
 
     if (result.services?.program) {
       const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
@@ -231,7 +431,21 @@ export function parseForESLint(code, options) {
         .split(':')
         .slice(-2)
         .map((x) => parseInt(x));
-      const err = new Error(e.source_code || e.message);
+      // e.source_code is a multi-line diagnostic block — extract just the
+      // first non-empty line so ESLint's single-line message format is preserved.
+      // Strip ANSI escape codes defensively (e.source_code may be coloured in
+      // TTY environments, which breaks grep-based test:check assertions).
+      // eslint-disable-next-line no-control-regex
+      const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, '');
+      const errorText = e.source_code
+        ? stripAnsi(
+            e.source_code
+              .split('\n')
+              .map((l) => l.trim())
+              .find((l) => l.length > 0) ?? e.message
+          )
+        : e.message;
+      const err = new Error(errorText);
       err.lineNumber = line;
       err.column = column;
       err.fileName = filePath;

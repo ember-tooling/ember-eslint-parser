@@ -28,13 +28,10 @@ try {
 // ── Scope helpers ─────────────────────────────────────────────────────
 
 function findParentScope(scopeManager, nodePath) {
-  let scope = null;
   let path = nodePath;
   while (path) {
-    scope = scopeManager.acquire(path.node, true);
-    if (scope) {
-      return scope;
-    }
+    const scope = scopeManager.acquire(path.node, true);
+    if (scope) return scope;
     path = path.parentPath;
   }
   return null;
@@ -122,7 +119,12 @@ function registerPathExpression(node, path, scopeManager) {
   if (glimmerIsKeyword(name)) return;
   const { scope, variable } = findVarInParentScopes(scopeManager, path, name) || {};
   if (scope) {
-    node.head.parent = node;
+    Object.defineProperty(node.head, 'parent', {
+      value: node,
+      configurable: true,
+      enumerable: false,
+      writable: true,
+    });
     registerNodeInScope(node.head, scope, variable);
   }
 }
@@ -151,24 +153,22 @@ function registerElementNode(node, path, scopeManager) {
 
 /**
  * Build Glimmer visitors for toTree that register scopes during traversal.
- * Uses a getter for scopeManager so it's available after the parser callback runs.
- * @param {function} getScopeManager - returns the scopeManager (may be null initially)
+ * Returns null when scopeManager is unavailable so the caller can skip the walk.
+ * @param {object|null} scopeManager
  * @param {boolean} isTypescript
- * @returns {object} visitors for toTree
+ * @returns {object|null} visitors for toTree, or null to skip
  */
-export function buildGlimmerVisitors(getScopeManager, isTypescript) {
+export function buildGlimmerVisitors(scopeManager, isTypescript) {
+  if (!scopeManager) return null;
   return {
     GlimmerPathExpression(node, path) {
-      const sm = getScopeManager();
-      if (sm) registerPathExpression(node, path, sm);
+      registerPathExpression(node, path, scopeManager);
     },
     GlimmerElementNode(node, path) {
-      const sm = getScopeManager();
-      if (sm) registerElementNode(node, path, sm);
+      registerElementNode(node, path, scopeManager);
     },
     GlimmerBlockParams(node, path) {
-      const sm = getScopeManager();
-      if (sm) registerBlockParams(node, path, sm, isTypescript);
+      registerBlockParams(node, path, scopeManager, isTypescript);
     },
   };
 }

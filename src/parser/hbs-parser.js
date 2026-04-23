@@ -27,7 +27,7 @@ export function parseForESLint(code, options) {
 
   let result;
   try {
-    result = toTree(code, { templateOnly: true });
+    result = toTree(code, { templateOnly: true, tokens: true });
   } catch (e) {
     // Transform glimmer parse error to ESLint-compatible error
     const loc = e.location || (e.hash && e.hash.loc);
@@ -55,7 +55,14 @@ export function parseForESLint(code, options) {
     type: 'Program',
     body: [templateNode],
     tokens: templateNode.tokens,
-    comments,
+    // Normalize Glimmer comment nodes to type:'Block' so ESLint's inline-config
+    // scanner and plugin rules that filter on type recognise them as comments.
+    comments: (comments || []).map((c) => ({
+      type: 'Block',
+      value: c.value,
+      range: c.range,
+      loc: c.loc,
+    })),
     range: [0, code.length],
     start: 0,
     end: code.length,
