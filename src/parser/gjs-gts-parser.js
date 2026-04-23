@@ -339,11 +339,9 @@ export function parseForESLint(code, options) {
     // esTreeNodeToTSNodeMap only knows the ORIGINAL nodes — TypeScript-aware
     // rules crash when esMap.get(newNode) → undefined.
     //
-    // Strategy: restore mappings for (a) scope def nodes and their parents, and
-    // (b) GlimmerTemplate nodes (mapped to the placeholder tsNode so
-    // getTypeAtLocation returns `string` rather than the error intrinsic).
-    // We avoid walking the full new AST with Object.keys, which traverses
-    // TypeScript-internal properties and causes crashes in unrelated rules.
+    // For every new ESTree node, if a pre-walk mapping exists with the same
+    // type+range, copy it forward. Also map GlimmerTemplate → placeholder
+    // tsNode so getTypeAtLocation returns `string` (not the error intrinsic).
     if (prewalkTSMappings.size > 0 && result.services?.esTreeNodeToTSNodeMap) {
       const esMap = result.services.esTreeNodeToTSNodeMap;
       const PLACEHOLDER_TYPES = [
@@ -352,64 +350,21 @@ export function parseForESLint(code, options) {
         'ExpressionStatement',
         'ExportDefaultDeclaration',
       ];
-      function restoreNode(n) {
-        if (!n || esMap.has(n) || !n.range) return;
-        const tsNode = prewalkTSMappings.get(`${n.type},${n.range[0]},${n.range[1]}`);
-        if (tsNode) esMap.set(n, tsNode);
-      }
-      function restoreGlimmerTemplate(n) {
-        if (!n || n.type !== 'GlimmerTemplate' || esMap.has(n) || !n.range) return;
-        for (const pt of PLACEHOLDER_TYPES) {
-          const tsNode = prewalkTSMappings.get(`${pt},${n.range[0]},${n.range[1]}`);
-          if (tsNode) {
-            esMap.set(n, tsNode);
-            break;
-          }
-        }
-      }
-      (function restoreScopeDefs(scope) {
-        for (const variable of scope.variables) {
-          for (const def of variable.defs) {
-            restoreNode(def.node);
-            if (!def.node?.range) continue;
-            const defKey = `${def.node.type},${def.node.range[0]},${def.node.range[1]}`;
-            const parentNode = parentByKey.get(defKey);
-            // Restore the parent node (e.g. VariableDeclaration for
-            // VariableDeclarator, ExportNamedDeclaration for ClassDeclaration)
-            // since TypeScript rules visit those types too.
-            restoreNode(parentNode);
-            // Find the NEW version of def.node in the new AST (def.node is the
-            // ORIGINAL from the scope manager, already in esMap, so restoreNode
-            // skipped it). The new node has the same range but different identity.
-            // Restore it so rules that visit the new AST node can look up tsNode.
-            // Find the NEW version of def.node (same range+type, new identity)
-            // inside the parent. Covers both array containers (.declarations,
-            // .body.body) and singular containers (.declaration for export nodes).
-            let newDefNode = null;
-            if (parentNode) {
-              const key = def.node.range[0];
-              const type = def.node.type;
-              if (
-                parentNode.declaration?.type === type &&
-                parentNode.declaration?.range?.[0] === key
-              ) {
-                newDefNode = parentNode.declaration;
-              } else {
-                const arr = parentNode.declarations ?? parentNode.body?.body ?? [];
-                if (Array.isArray(arr)) {
-                  newDefNode = arr.find((n) => n?.range?.[0] === key && n.type === type) ?? null;
-                }
-              }
+      for (const [key, node] of nodeByKey) {
+        if (esMap.has(node)) continue;
+        if (node.type === 'GlimmerTemplate') {
+          for (const pt of PLACEHOLDER_TYPES) {
+            const tsNode = prewalkTSMappings.get(`${pt},${node.range[0]},${node.range[1]}`);
+            if (tsNode) {
+              esMap.set(node, tsNode);
+              break;
             }
-            restoreNode(newDefNode);
-            // Restore GlimmerTemplate children so getTypeAtLocation returns the
-            // placeholder type (string) not the error intrinsic.
-            restoreGlimmerTemplate(newDefNode?.init);
-            restoreGlimmerTemplate(newDefNode?.body);
           }
+          continue;
         }
-        for (const child of scope.childScopes) restoreScopeDefs(child);
-      })(result.scopeManager?.globalScope ?? result.scopeManager?.scopes?.[0]);
+        const tsNode = prewalkTSMappings.get(key);
+        if (tsNode) esMap.set(node, tsNode);
+      }
     }
 
     // Surface Glimmer template comments in program.comments as type:'Block'
