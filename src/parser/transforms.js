@@ -119,12 +119,7 @@ function registerPathExpression(node, path, scopeManager) {
   if (glimmerIsKeyword(name)) return;
   const { scope, variable } = findVarInParentScopes(scopeManager, path, name) || {};
   if (scope) {
-    Object.defineProperty(node.head, 'parent', {
-      value: node,
-      configurable: true,
-      enumerable: false,
-      writable: true,
-    });
+    node.head.parent = node;
     registerNodeInScope(node.head, scope, variable);
   }
 }
@@ -154,13 +149,16 @@ function registerElementNode(node, path, scopeManager) {
 /**
  * Build Glimmer visitors for toTree that register scopes during traversal.
  * Returns null when scopeManager is unavailable so the caller can skip the walk.
+ * When `collectComments` is provided, appends Glimmer comment nodes to it so
+ * callers can forward them into program.comments after the walk.
  * @param {object|null} scopeManager
  * @param {boolean} isTypescript
+ * @param {Array|null} [collectComments] - optional array to collect Glimmer comment nodes into
  * @returns {object|null} visitors for toTree, or null to skip
  */
-export function buildGlimmerVisitors(scopeManager, isTypescript) {
+export function buildGlimmerVisitors(scopeManager, isTypescript, collectComments) {
   if (!scopeManager) return null;
-  return {
+  const visitors = {
     GlimmerPathExpression(node, path) {
       registerPathExpression(node, path, scopeManager);
     },
@@ -171,6 +169,12 @@ export function buildGlimmerVisitors(scopeManager, isTypescript) {
       registerBlockParams(node, path, scopeManager, isTypescript);
     },
   };
+  if (collectComments) {
+    const push = (node) => collectComments.push(node);
+    visitors.GlimmerMustacheCommentStatement = push;
+    visitors.GlimmerCommentStatement = push;
+  }
+  return visitors;
 }
 
 // ── registerGlimmerScopes (fallback for JS/oxc path) ──────────────────

@@ -200,19 +200,9 @@ export function parseForESLint(code, options) {
           },
       // Factory form: scopeManager is set by the parser callback before this
       // runs. Returns null when unavailable so ember-estree skips the walk.
-      visitors: () => {
-        const v = buildGlimmerVisitors(scopeManager, useTS);
-        if (!v) return null;
-        return {
-          ...v,
-          GlimmerMustacheCommentStatement(node) {
-            glimmerComments.push(node);
-          },
-          GlimmerCommentStatement(node) {
-            glimmerComments.push(node);
-          },
-        };
-      },
+      // The comments array is passed through so comment handlers share a
+      // single closure over it.
+      visitors: () => buildGlimmerVisitors(scopeManager, useTS, glimmerComments),
     });
 
     if (!result.scopeManager) result.scopeManager = scopeManager;
