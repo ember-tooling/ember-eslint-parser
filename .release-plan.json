@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "minor",
-      "oldVersion": "0.9.0",
-      "newVersion": "0.10.0",
+      "oldVersion": "0.10.0",
+      "newVersion": "0.11.0",
       "tagName": "latest",
       "constraints": [
         {
@@ -18,5 +18,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-04-19)\n\n* ember-eslint-parser 0.10.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#189](https://github.com/ember-tooling/ember-eslint-parser/pull/189) hbs-parser: register block-param scope for `as |x|` ([@johanrd](https://github.com/johanrd))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#191](https://github.com/ember-tooling/ember-eslint-parser/pull/191) pnpm dlx create-release-plan-setup@latest --update ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#190](https://github.com/ember-tooling/ember-eslint-parser/pull/190) Revert \"Prepare Release v0.10.0\" ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n  * [#188](https://github.com/ember-tooling/ember-eslint-parser/pull/188) Prepare Release v0.10.0 ([@github-actions[bot]](https://github.com/apps/github-actions))\n  * [#187](https://github.com/ember-tooling/ember-eslint-parser/pull/187) Increase benchmark sampling 5x for CI stability ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### Committers: 4\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n- GitHub Actions [Bot] ([@github-actions](https://github.com/apps/github-actions))\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n- [@johanrd](https://github.com/johanrd)\n"
+  "description": "## Release (2026-04-24)\n\n* ember-eslint-parser 0.11.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#196](https://github.com/ember-tooling/ember-eslint-parser/pull/196) Upgrade ember-estree to 0.6.0 ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#198](https://github.com/ember-tooling/ember-eslint-parser/pull/198) fix: add test for failing regression and fix program.comments not sorted by range ([@johanrd](https://github.com/johanrd))\n  * [#194](https://github.com/ember-tooling/ember-eslint-parser/pull/194) test: regression coverage for {{! eslint-disable-* }} directives in templates ([@johanrd](https://github.com/johanrd))\n\n#### Committers: 2\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n- [@johanrd](https://github.com/johanrd)\n"
 }

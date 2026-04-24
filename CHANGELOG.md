@@ -1,5 +1,22 @@
 # Changelog
 
+## Release (2026-04-24)
+
+* ember-eslint-parser 0.11.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#196](https://github.com/ember-tooling/ember-eslint-parser/pull/196) Upgrade ember-estree to 0.6.0 ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#198](https://github.com/ember-tooling/ember-eslint-parser/pull/198) fix: add test for failing regression and fix program.comments not sorted by range ([@johanrd](https://github.com/johanrd))
+  * [#194](https://github.com/ember-tooling/ember-eslint-parser/pull/194) test: regression coverage for {{! eslint-disable-* }} directives in templates ([@johanrd](https://github.com/johanrd))
+
+#### Committers: 2
+- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+- [@johanrd](https://github.com/johanrd)
+
 ## Release (2026-04-19)
 
 * ember-eslint-parser 0.10.0 (minor)
