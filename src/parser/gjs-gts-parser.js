@@ -232,7 +232,7 @@ export function parseForESLint(code, options) {
             range: c.range,
             loc: c.loc,
           })),
-        ];
+        ].sort((a, b) => a.range[0] - b.range[0]);
       }
     }
 
