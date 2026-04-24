@@ -21,8 +21,8 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       ember-estree:
-        specifier: ^0.6.1
-        version: 0.6.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+        specifier: ^0.6.2
+        version: 0.6.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
       eslint-scope:
         specifier: ^9.1.2
         version: 9.1.2
@@ -2853,8 +2853,8 @@ packages:
     resolution: {integrity: sha512-BtkjulweiXo9c3yVWrtexw2dTmBrvavD/xixNC6TKOBdrixUwU+6nuOO9dufDWsMxoid7MvtmDpzc9+mE8PdaA==}
     engines: {node: 10.* || >= 12.*}
 
-  ember-estree@0.6.1:
-    resolution: {integrity: sha512-lBntk6X39ubNXLga0PtxVaeRiRk9lUCRmbBgd8gF6uAYYA3tdNowGw2DLvnBmR4O1WlNj9s8omXbjSGO2kZJKw==}
+  ember-estree@0.6.2:
+    resolution: {integrity: sha512-CeKa6FZ95jp6de+vjhmv2XmOGBB2V95iiH7RqI2av1nU0m1XhFZEG8npoEciklQqPEzFO5OXS41b0mGvXBsJCA==}
 
   ember-rfc176-data@0.3.18:
     resolution: {integrity: sha512-JtuLoYGSjay1W3MQAxt3eINWXNYYQliK90tLwtb8aeCuQK8zKGCRbBodVIrkcTqshULMnRuTOS6t1P7oQk3g6Q==}
@@ -5585,9 +5585,6 @@ packages:
   yoctocolors@2.1.1:
     resolution: {integrity: sha512-GQHQqAopRhwU8Kt1DDM8NjibDXHC8eoh1erhGAJPEyveY9qqVeXvVikNKrDz69sHowPMorbPUrH/mx8c50eiBQ==}
     engines: {node: '>=18'}
-
-  zimmerframe@1.1.4:
-    resolution: {integrity: sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ==}
 
 snapshots:
 
@@ -8986,13 +8983,12 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-estree@0.6.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0):
+  ember-estree@0.6.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0):
     dependencies:
       '@glimmer/env': 0.1.7
       '@glimmer/syntax': 0.95.0
       content-tag: 4.1.1
       oxc-parser: 0.119.0(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
-      zimmerframe: 1.1.4
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
@@ -12560,5 +12556,3 @@ snapshots:
   yocto-queue@1.1.1: {}
 
   yoctocolors@2.1.1: {}
-
-  zimmerframe@1.1.4: {}
