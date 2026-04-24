@@ -2376,12 +2376,10 @@ export const NotFound = <template>
       expect(e.column).toBe(19);
       expect(e.fileName).toBe('example.gts');
       expect(e.message).toMatchInlineSnapshot(`
-        "
-          × Unexpected eof
+        "× Unexpected eof
            ╭────
          1 │ console.log('test)
-           ╰────
-        "
+           ╰────"
       `);
     }
   });

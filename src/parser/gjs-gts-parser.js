@@ -161,12 +161,14 @@ export function parseForESLint(code, options) {
   const useTS = isTypescript || useTypescript;
 
   // Both paths create scopeManager inside the parser callback so it's
-  // available when toTree invokes visitors during splice — no second pass.
+  // available when toTree invokes the visitor factory — no second pass.
   let scopeManager = null;
+  const glimmerComments = [];
 
   try {
     const result = toTree(code, {
       filePath,
+      tokens: true,
       parser: useTS
         ? (placeholderJS) => {
             let parseCode = placeholderJS;
@@ -196,10 +198,43 @@ export function parseForESLint(code, options) {
             });
             return { ast: program, scopeManager };
           },
-      visitors: buildGlimmerVisitors(() => scopeManager, useTS),
+      // Factory form: scopeManager is set by the parser callback before this
+      // runs. Returns null when unavailable so ember-estree skips the walk.
+      // The comments array is passed through so comment handlers share a
+      // single closure over it.
+      visitors: () => buildGlimmerVisitors(scopeManager, useTS, glimmerComments),
     });
 
     if (!result.scopeManager) result.scopeManager = scopeManager;
+
+    // Forward each placeholder's tsNode onto its GlimmerTemplate replacement,
+    // so typed rules calling `getTypeAtLocation(glimmerTemplate)` see the
+    // placeholder's type (string for expression templates, void for class-
+    // member static blocks) instead of the TS error intrinsic.
+    const esMap = result.services?.esTreeNodeToTSNodeMap;
+    if (esMap && result.templateInfos) {
+      for (const ti of result.templateInfos) {
+        const ts = esMap.get(ti.placeholder);
+        if (ts && !esMap.has(ti.ast)) esMap.set(ti.ast, ts);
+      }
+    }
+
+    // Surface Glimmer template comments in program.comments as type:'Block'
+    // so ESLint's inline-config scanner and plugin rules recognise them.
+    if (glimmerComments.length > 0) {
+      const programNode = result.ast?.program ?? result.ast;
+      if (programNode) {
+        programNode.comments = [
+          ...(programNode.comments || []),
+          ...glimmerComments.map((c) => ({
+            type: 'Block',
+            value: c.value,
+            range: c.range,
+            loc: c.loc,
+          })),
+        ];
+      }
+    }
 
     if (result.services?.program) {
       const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
@@ -231,7 +266,14 @@ export function parseForESLint(code, options) {
         .split(':')
         .slice(-2)
         .map((x) => parseInt(x));
-      const err = new Error(e.source_code || e.message);
+      // e.source_code is the full diagnostic block. Strip ANSI escape codes
+      // (content-tag colours output in TTY environments, which breaks
+      // grep-based test:check assertions) and trim leading/trailing blank
+      // lines so consumers see a clean message.
+      // eslint-disable-next-line no-control-regex
+      const stripAnsi = (s) => s.replace(/\x1b\[[0-9;]*m/g, '');
+      const errorText = e.source_code ? stripAnsi(e.source_code).trim() : e.message;
+      const err = new Error(errorText);
       err.lineNumber = line;
       err.column = column;
       err.fileName = filePath;

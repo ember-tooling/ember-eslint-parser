@@ -28,13 +28,10 @@ try {
 // ── Scope helpers ─────────────────────────────────────────────────────
 
 function findParentScope(scopeManager, nodePath) {
-  let scope = null;
   let path = nodePath;
   while (path) {
-    scope = scopeManager.acquire(path.node, true);
-    if (scope) {
-      return scope;
-    }
+    const scope = scopeManager.acquire(path.node, true);
+    if (scope) return scope;
     path = path.parentPath;
   }
   return null;
@@ -151,26 +148,33 @@ function registerElementNode(node, path, scopeManager) {
 
 /**
  * Build Glimmer visitors for toTree that register scopes during traversal.
- * Uses a getter for scopeManager so it's available after the parser callback runs.
- * @param {function} getScopeManager - returns the scopeManager (may be null initially)
+ * Returns null when scopeManager is unavailable so the caller can skip the walk.
+ * When `collectComments` is provided, appends Glimmer comment nodes to it so
+ * callers can forward them into program.comments after the walk.
+ * @param {object|null} scopeManager
  * @param {boolean} isTypescript
- * @returns {object} visitors for toTree
+ * @param {Array|null} [collectComments] - optional array to collect Glimmer comment nodes into
+ * @returns {object|null} visitors for toTree, or null to skip
  */
-export function buildGlimmerVisitors(getScopeManager, isTypescript) {
-  return {
+export function buildGlimmerVisitors(scopeManager, isTypescript, collectComments) {
+  if (!scopeManager) return null;
+  const visitors = {
     GlimmerPathExpression(node, path) {
-      const sm = getScopeManager();
-      if (sm) registerPathExpression(node, path, sm);
+      registerPathExpression(node, path, scopeManager);
     },
     GlimmerElementNode(node, path) {
-      const sm = getScopeManager();
-      if (sm) registerElementNode(node, path, sm);
+      registerElementNode(node, path, scopeManager);
     },
     GlimmerBlockParams(node, path) {
-      const sm = getScopeManager();
-      if (sm) registerBlockParams(node, path, sm, isTypescript);
+      registerBlockParams(node, path, scopeManager, isTypescript);
     },
   };
+  if (collectComments) {
+    const push = (node) => collectComments.push(node);
+    visitors.GlimmerMustacheCommentStatement = push;
+    visitors.GlimmerCommentStatement = push;
+  }
+  return visitors;
 }
 
 // ── registerGlimmerScopes (fallback for JS/oxc path) ──────────────────
