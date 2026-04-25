@@ -188,8 +188,14 @@ export function parseForESLint(code, options) {
         : (placeholderJS) => {
             // JS path: parse with espree so the AST already carries loc/range,
             // tokens, and comments — what ESLint validates and rules consume.
-            // (oxc-parser doesn't emit loc or tokens, so its output fails
-            // ESLint's SourceCode validation on the program node.)
+            //
+            // We'd prefer oxc-parser here (faster, already used elsewhere in
+            // the pipeline), but its JS API exposes only `start`/`end` byte
+            // offsets and an opt-in `range` array — no `loc`, no token
+            // stream — so its output fails ESLint's SourceCode validation
+            // on the Program node and breaks any rule that walks tokens.
+            // Switch back once oxc lands native loc support:
+            //   https://github.com/oxc-project/oxc/issues/10307
             const program = espree.parse(placeholderJS, {
               ecmaVersion: 'latest',
               sourceType: 'module',
