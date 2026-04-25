@@ -1,22 +1,18 @@
 {
   "solution": {
     "ember-eslint-parser": {
-      "impact": "minor",
-      "oldVersion": "0.10.0",
-      "newVersion": "0.11.0",
+      "impact": "patch",
+      "oldVersion": "0.11.0",
+      "newVersion": "0.11.1",
       "tagName": "latest",
       "constraints": [
         {
-          "impact": "minor",
-          "reason": "Appears in changelog section :rocket: Enhancement"
-        },
-        {
           "impact": "patch",
-          "reason": "Appears in changelog section :house: Internal"
+          "reason": "Appears in changelog section :bug: Bug Fix"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-04-24)\n\n* ember-eslint-parser 0.11.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#196](https://github.com/ember-tooling/ember-eslint-parser/pull/196) Upgrade ember-estree to 0.6.0 ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#198](https://github.com/ember-tooling/ember-eslint-parser/pull/198) fix: add test for failing regression and fix program.comments not sorted by range ([@johanrd](https://github.com/johanrd))\n  * [#194](https://github.com/ember-tooling/ember-eslint-parser/pull/194) test: regression coverage for {{! eslint-disable-* }} directives in templates ([@johanrd](https://github.com/johanrd))\n\n#### Committers: 2\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n- [@johanrd](https://github.com/johanrd)\n"
+  "description": "## Release (2026-04-25)\n\n* ember-eslint-parser 0.11.1 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#199](https://github.com/ember-tooling/ember-eslint-parser/pull/199) fix: JS path uses espree so ESLint sees loc, range, tokens ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### Committers: 1\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n"
 }
