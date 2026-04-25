@@ -36,6 +36,7 @@
     "content-tag": "^4.1.1",
     "ember-estree": "^0.6.2",
     "eslint-scope": "^9.1.2",
+    "espree": "^10.4.0",
     "html-tags": "^5.1.0",
     "mathml-tag-names": "^4.0.0",
     "svg-tags": "^1.0.0"

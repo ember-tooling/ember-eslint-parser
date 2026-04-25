@@ -5,6 +5,7 @@ import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } f
 import { buildGlimmerVisitors } from './transforms.js';
 import { toTree } from 'ember-estree';
 import * as eslintScope from 'eslint-scope';
+import * as espree from 'espree';
 
 const require = createRequire(import.meta.url);
 
@@ -185,12 +186,18 @@ export function parseForESLint(code, options) {
             return tsResult;
           }
         : (placeholderJS) => {
-            // JS path: parse with oxc, create scope manager from placeholder AST
-            const { parseSync } = require('oxc-parser');
-            const oxcResult = parseSync(filePath || 'input.js', placeholderJS);
-            const program = oxcResult.program;
-            program.tokens = oxcResult.tokens || [];
-            program.comments = oxcResult.comments || [];
+            // JS path: parse with espree so the AST already carries loc/range,
+            // tokens, and comments — what ESLint validates and rules consume.
+            // (oxc-parser doesn't emit loc or tokens, so its output fails
+            // ESLint's SourceCode validation on the program node.)
+            const program = espree.parse(placeholderJS, {
+              ecmaVersion: 'latest',
+              sourceType: 'module',
+              loc: true,
+              range: true,
+              tokens: true,
+              comment: true,
+            });
             scopeManager = eslintScope.analyze(program, {
               ecmaVersion: 2022,
               sourceType: 'module',
