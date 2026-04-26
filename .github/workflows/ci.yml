@@ -17,7 +17,7 @@ jobs:
     name: "Setup"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: wyvox/action-setup-pnpm@v3
 
   # test:
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: wyvox/action-setup-pnpm@v3
       - run: pnpm test
       - run: pnpm --filter '*' test
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: wyvox/action-setup-pnpm@v3
         with:
           node-version: 20
@@ -74,7 +74,7 @@ jobs:
           - rc
           - next
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: wyvox/action-setup-pnpm@v3
       - name: "TS: ${{ matrix.tsVersion }}, eslint-plugin-ts: ${{ matrix.eslintTsVersion }}"
         run: |-
@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [setup]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: wyvox/action-setup-pnpm@v3
       - run: node ./scripts/eslint-plugin-ember-test.mjs
 
@@ -111,7 +111,7 @@ jobs:
     needs: [setup]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: wyvox/action-setup-pnpm@v3
       - name: Lint
         run: pnpm lint
