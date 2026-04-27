@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-04-27)
+
+* ember-eslint-parser 0.11.2 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#205](https://github.com/ember-tooling/ember-eslint-parser/pull/205) fix: route JS path through @babel/eslint-parser so decorators parse ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
+#### Committers: 1
+- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
 ## Release (2026-04-25)
 
 * ember-eslint-parser 0.11.1 (patch)
