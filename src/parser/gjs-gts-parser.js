@@ -4,10 +4,25 @@ import { registerParsedFile } from '../preprocessor/noop.js';
 import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
 import { buildGlimmerVisitors } from './transforms.js';
 import { toTree } from 'ember-estree';
-import * as eslintScope from 'eslint-scope';
-import * as espree from 'espree';
 
 const require = createRequire(import.meta.url);
+
+// Resolved once at module load via createRequire — top-level `await import()`
+// would mark the module as async, and the bench harness loads parsers
+// synchronously through `createRequire`. `@babel/eslint-parser` is an optional
+// peer (TS-only setups don't need it), so a missing dep yields null and the JS
+// path below emits a targeted error.
+//
+// The experimental-worker entry point runs babel in a worker and matches the
+// parser ember-cli wires up for plain `.js` files in JS-only apps, so config
+// discovery (decorators & friends) lines up with how the rest of the project
+// is being parsed.
+let babelParser = null;
+try {
+  babelParser = require('@babel/eslint-parser/experimental-worker');
+} catch {
+  // optional peer; left null
+}
 
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers
@@ -186,30 +201,25 @@ export function parseForESLint(code, options) {
             return tsResult;
           }
         : (placeholderJS) => {
-            // JS path: parse with espree so the AST already carries loc/range,
-            // tokens, and comments — what ESLint validates and rules consume.
-            //
-            // We'd prefer oxc-parser here (faster, already used elsewhere in
-            // the pipeline), but its JS API exposes only `start`/`end` byte
-            // offsets and an opt-in `range` array — no `loc`, no token
-            // stream — so its output fails ESLint's SourceCode validation
-            // on the Program node and breaks any rule that walks tokens.
-            // Switch back once oxc lands native loc support:
-            //   https://github.com/oxc-project/oxc/issues/10307
-            const program = espree.parse(placeholderJS, {
-              ecmaVersion: 'latest',
-              sourceType: 'module',
-              loc: true,
-              range: true,
-              tokens: true,
-              comment: true,
+            // JS path: defer to @babel/eslint-parser, which discovers the
+            // consuming app's babel config and applies its plugins (notably
+            // decorators) when parsing. That keeps gjs aligned with how the
+            // app's plain `.js` files are parsed, so syntax accepted there
+            // is accepted here without a second parser config.
+            if (!babelParser) {
+              throw new Error(
+                'ember-eslint-parser: linting `.gjs`/`.gts` files in a JS-only ' +
+                  'project requires `@babel/eslint-parser`. Install it as a ' +
+                  'dev dependency, or install `@typescript-eslint/parser` to ' +
+                  'opt into the TypeScript-based path.'
+              );
+            }
+            const babelResult = babelParser.parseForESLint(placeholderJS, {
+              ...options,
+              filePath,
             });
-            scopeManager = eslintScope.analyze(program, {
-              ecmaVersion: 2022,
-              sourceType: 'module',
-              range: true,
-            });
-            return { ast: program, scopeManager };
+            scopeManager = babelResult.scopeManager;
+            return babelResult;
           },
       // Factory form: scopeManager is set by the parser callback before this
       // runs. Returns null when unavailable so ember-estree skips the walk.
