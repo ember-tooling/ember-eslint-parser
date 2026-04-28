@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.11.1",
-      "newVersion": "0.11.2",
+      "oldVersion": "0.11.2",
+      "newVersion": "0.11.3",
       "tagName": "latest",
       "constraints": [
         {
@@ -14,5 +14,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-04-27)\n\n* ember-eslint-parser 0.11.2 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#205](https://github.com/ember-tooling/ember-eslint-parser/pull/205) fix: route JS path through @babel/eslint-parser so decorators parse ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### Committers: 1\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n"
+  "description": "## Release (2026-04-28)\n\n* ember-eslint-parser 0.11.3 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#206](https://github.com/ember-tooling/ember-eslint-parser/pull/206) Update ember-estree ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 1\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
 }
