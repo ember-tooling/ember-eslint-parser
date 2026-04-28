@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-04-28)
+
+* ember-eslint-parser 0.11.3 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#206](https://github.com/ember-tooling/ember-eslint-parser/pull/206) Update ember-estree ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### Committers: 1
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2026-04-27)
 
 * ember-eslint-parser 0.11.2 (patch)
