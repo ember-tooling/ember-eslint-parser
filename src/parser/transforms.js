@@ -2,6 +2,7 @@ import { createRequire } from 'node:module';
 import { Preprocessor } from 'content-tag';
 import { isKeyword as glimmerIsKeyword } from '@glimmer/syntax';
 import { glimmerVisitorKeys } from 'ember-estree';
+import { isEmber71BuiltInKeyword } from './ember71-built-in-keywords.js';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
 import htmlTags from 'html-tags';
 import svgTags from 'svg-tags';
@@ -118,6 +119,16 @@ function registerPathExpression(node, path, scopeManager) {
   const name = node.head.name;
   if (glimmerIsKeyword(name)) return;
   const { scope, variable } = findVarInParentScopes(scopeManager, path, name) || {};
+  // `@glimmer/syntax`'s `isKeyword` table predates the Ember 7.1 built-in
+  // keywords (RFCs 389/470/560/561/562/997-1000). When the consumer is on
+  // ember-source >= 7.1, treat them as built-ins too so `no-undef` doesn't
+  // flag bare references like `{{eq}}` or `{{on "click" handler}}`.
+  //
+  // Only when there is NO local binding — a user-authored
+  // `import { eq } from 'ember-truth-helpers'` (or a `const eq = …`) must
+  // shadow the built-in so the scope reference is registered and the
+  // import is marked as used by `no-unused-vars`.
+  if (!variable && isEmber71BuiltInKeyword(name)) return;
   if (scope) {
     node.head.parent = node;
     registerNodeInScope(node.head, scope, variable);
