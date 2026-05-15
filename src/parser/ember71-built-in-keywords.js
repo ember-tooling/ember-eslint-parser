@@ -92,3 +92,14 @@ export function _resetEmberSourceVersionCache() {
   cachedVersion = undefined;
   cachedVersionResolved = false;
 }
+
+/**
+ * Test-only: force the resolved `ember-source` version. Pass `undefined`
+ * to clear and fall back to real probing on the next call.
+ *
+ * @param {string | undefined} version
+ */
+export function _setEmberSourceVersionForTesting(version) {
+  cachedVersion = version;
+  cachedVersionResolved = true;
+}
