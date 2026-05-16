@@ -1,18 +1,18 @@
 {
   "solution": {
     "ember-eslint-parser": {
-      "impact": "patch",
-      "oldVersion": "0.11.2",
-      "newVersion": "0.11.3",
+      "impact": "minor",
+      "oldVersion": "0.11.3",
+      "newVersion": "0.12.0",
       "tagName": "latest",
       "constraints": [
         {
-          "impact": "patch",
-          "reason": "Appears in changelog section :bug: Bug Fix"
+          "impact": "minor",
+          "reason": "Appears in changelog section :rocket: Enhancement"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-04-28)\n\n* ember-eslint-parser 0.11.3 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#206](https://github.com/ember-tooling/ember-eslint-parser/pull/206) Update ember-estree ([@NullVoxPopuli](https://github.com/NullVoxPopuli))\n\n#### Committers: 1\n- [@NullVoxPopuli](https://github.com/NullVoxPopuli)\n"
+  "description": "## Release (2026-05-15)\n\n* ember-eslint-parser 0.12.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#211](https://github.com/ember-tooling/ember-eslint-parser/pull/211) feat: skip Ember 7.1 built-in template keywords in scope registration ([@aklkv](https://github.com/aklkv))\n\n#### Committers: 1\n- Alexey Kulakov ([@aklkv](https://github.com/aklkv))\n"
 }

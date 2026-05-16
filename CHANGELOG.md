@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-05-15)
+
+* ember-eslint-parser 0.12.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#211](https://github.com/ember-tooling/ember-eslint-parser/pull/211) feat: skip Ember 7.1 built-in template keywords in scope registration ([@aklkv](https://github.com/aklkv))
+
+#### Committers: 1
+- Alexey Kulakov ([@aklkv](https://github.com/aklkv))
+
 ## Release (2026-04-28)
 
 * ember-eslint-parser 0.11.3 (patch)
