@@ -1,0 +1,24 @@
+{
+  "name": "@test-project/gjs-babel-v8",
+  "private": true,
+  "scripts": {
+    "test:check": "pnpm run /test:check:.*/",
+    "test:check:correct-handle-syntax-error": "eslint . | grep -q '26:15  error  Parsing error: × Unexpected eof'",
+    "test:check:only-one-error": "eslint --format compact .  | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1",
+    "test:fix": "eslint --fix --format compact . | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1"
+  },
+  "devDependencies": {
+    "@babel/core": "^8.0.1",
+    "@babel/eslint-parser": "^8.0.1",
+    "@babel/plugin-transform-runtime": "^8.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.4",
+    "@typescript-eslint/parser": "^8.46.4",
+    "babel-plugin-ember-template-compilation": "^3.0.1",
+    "decorator-transforms": "^2.3.0",
+    "ember-eslint-parser": "workspace:*",
+    "eslint": "^10.0.0",
+    "eslint-formatter-compact": "^9.0.1",
+    "eslint-plugin-ember": "^13.3.0",
+    "typescript": "^5.3.3"
+  }
+}
