@@ -35,9 +35,6 @@ module.exports = {
     {
       files: ['**/*.{js,ts,gts,gjs}'],
       parser: 'ember-eslint-parser',
-      parserOptions: {
-        allowGjs: process.env.ALLOW_GJS !== undefined ? process.env.ALLOW_GJS === 'true' : undefined
-      }
     },
     {
       files: ['**/*.{js,ts}'],

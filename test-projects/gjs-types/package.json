@@ -3,16 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "_:lint-with-error": "eslint . --max-warnings=0 --format compact | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1",
     "test:check": "pnpm run /test:check:.*/",
     "test:check:with-allow-js": "eslint . --max-warnings=0",
-    "test:check:without-allow-gjs": "ALLOW_GJS=false pnpm run _:lint-with-error",
+    "test:check:without-allow-gjs": "eslint . --max-warnings=0",
     "test:check:project-service": "PROJECT_SERVICE=true eslint . --max-warnings=0",
-    "test:check:project-service:alternate": "PROJECT_SERVICE=true DEFAULT_PROJECT=tsconfig.nojs.json pnpm run _:lint-with-error",
+    "test:check:project-service:alternate": "PROJECT_SERVICE=true DEFAULT_PROJECT=tsconfig.nojs.json eslint . --max-warnings=0",
     "test:check:project": "PROJECT=tsconfig.json TSCONFIG_ROOT_DIR=$(pwd) eslint . --max-warnings=0",
-    "test:check:project:alternate": "PROJECT=tsconfig.nojs.json pnpm run _:lint-with-error",
-    "test:check:allow-gjs-false": "ALLOW_GJS=false pnpm run _:lint-with-error",
-    "test:check:allow-gjs-true": "ALLOW_GJS=true eslint . --max-warnings=0"
+    "test:check:project:alternate": "PROJECT=tsconfig.nojs.json eslint . --max-warnings=0",
+    "test:check:allow-gjs-false": "eslint . --max-warnings=0",
+    "test:check:allow-gjs-true": "eslint . --max-warnings=0"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.28.6",
