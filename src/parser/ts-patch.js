@@ -4,7 +4,7 @@ import { transformForLint, replaceRange } from './transforms.js';
 
 const require = createRequire(import.meta.url);
 
-let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched, allowGjs;
+let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched;
 
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
@@ -12,10 +12,9 @@ try {
   const tsPath = require.resolve('typescript', { paths: [parserPath] });
   const ts = require(tsPath);
   typescriptParser = require('@typescript-eslint/parser');
-  patchTs = function patchTs(options = {}) {
-    if (isPatched) return { allowGjs };
+  patchTs = function patchTs() {
+    if (isPatched) return;
     isPatched = true;
-    allowGjs = options.allowGjs !== undefined ? options.allowGjs : true;
     const sys = { ...ts.sys };
     const newSys = {
       ...ts.sys,
@@ -24,14 +23,14 @@ try {
         const gtsVirtuals = results
           .filter((x) => x.endsWith('.gts'))
           .map((f) => f.replace(/\.gts$/, '.mts'));
-        const gjsVirtuals = allowGjs
-          ? results.filter((x) => x.endsWith('.gjs')).map((f) => f.replace(/\.gjs$/, '.mjs'))
-          : [];
+        const gjsVirtuals = results
+          .filter((x) => x.endsWith('.gjs'))
+          .map((f) => f.replace(/\.gjs$/, '.mjs'));
         return results.concat(gtsVirtuals, gjsVirtuals);
       },
       fileExists(fileName) {
         const gtsExists = fs.existsSync(fileName.replace(/\.m?ts$/, '.gts'));
-        const gjsExists = allowGjs ? fs.existsSync(fileName.replace(/\.m?js$/, '.gjs')) : false;
+        const gjsExists = fs.existsSync(fileName.replace(/\.m?js$/, '.gjs'));
         return gtsExists || gjsExists || fs.existsSync(fileName);
       },
       readFile(fname) {
@@ -46,12 +45,12 @@ try {
         } catch {
           if (fileName.match(/\.m?ts$/)) {
             fileName = fileName.replace(/\.m?ts$/, '.gts');
-          } else if (allowGjs && fileName.match(/\.m?js$/)) {
+          } else if (fileName.match(/\.m?js$/)) {
             fileName = fileName.replace(/\.m?js$/, '.gjs');
           }
           content = fs.readFileSync(fileName).toString();
         }
-        if (fileName.endsWith('.gts') || (allowGjs && fileName.endsWith('.gjs'))) {
+        if (fileName.endsWith('.gts') || fileName.endsWith('.gjs')) {
           try {
             content = transformForLint(content).output;
           } catch (e) {
@@ -62,7 +61,7 @@ try {
         if (
           (!fileName.endsWith('.d.ts') && fileName.endsWith('.ts')) ||
           fileName.endsWith('.gts') ||
-          (allowGjs && fileName.endsWith('.gjs'))
+          fileName.endsWith('.gjs')
         ) {
           try {
             content = replaceExtensions(content);
@@ -75,7 +74,6 @@ try {
       },
     };
     ts.setSys(newSys);
-    return { allowGjs };
   };
 
   replaceExtensions = function replaceExtensions(code) {

@@ -43,12 +43,9 @@ export const meta = {
 };
 
 export function parseForESLint(code, options) {
-  const allowGjsWasSet = options.allowGjs !== undefined;
-  const allowGjs = allowGjsWasSet ? options.allowGjs : true;
-  let actualAllowGjs;
   // Only patch TypeScript if we actually need it.
   if (options.programs || options.projectService || options.project) {
-    ({ allowGjs: actualAllowGjs } = patchTs({ allowGjs }));
+    patchTs();
   }
   registerParsedFile(options.filePath);
 
@@ -150,19 +147,6 @@ export function parseForESLint(code, options) {
     }
 
     if (result.services?.program) {
-      const programAllowJs = result.services.program.getCompilerOptions?.()?.allowJs;
-      if (
-        !allowGjsWasSet &&
-        programAllowJs !== undefined &&
-        actualAllowGjs !== undefined &&
-        actualAllowGjs !== programAllowJs
-      ) {
-        // eslint-disable-next-line no-console
-        console.warn(
-          '[ember-eslint-parser] allowJs does not match the actual program. Consider setting allowGjs explicitly.\n' +
-            `    Current: ${allowGjs}, Program: ${programAllowJs}`
-        );
-      }
       syncMtsGtsSourceFiles(result.services.program);
     }
 
