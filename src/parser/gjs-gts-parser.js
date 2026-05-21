@@ -154,7 +154,7 @@ export const meta = {
 
 export function parseForESLint(code, options) {
   const allowGjsWasSet = options.allowGjs !== undefined;
-  const allowGjs = allowGjsWasSet ? options.allowGjs : getAllowJs(options);
+  const allowGjs = allowGjsWasSet ? options.allowGjs : true;
   let actualAllowGjs;
   // Only patch TypeScript if we actually need it.
   if (options.programs || options.projectService || options.project) {
