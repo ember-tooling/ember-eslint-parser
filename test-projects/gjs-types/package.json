@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test:check": "pnpm run /test:check:.*/",
+    "test:check:lint-errors": "CHECK_LINT_ERRORS=true eslint . --max-warnings=0 --format compact | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1",
     "test:check:with-allow-js": "eslint . --max-warnings=0",
     "test:check:project-service": "PROJECT_SERVICE=true eslint . --max-warnings=0",
     "test:check:project-service:alternate": "PROJECT_SERVICE=true DEFAULT_PROJECT=tsconfig.nojs.json eslint . --max-warnings=0",
