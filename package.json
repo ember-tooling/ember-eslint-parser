@@ -28,8 +28,7 @@
     "lint:js": "eslint . --max-warnings=0",
     "lint:js:fix": "eslint . --fix --max-warnings=0",
     "lint:package": "publint",
-    "test": "vitest run",
-    "test:check": "pnpm --filter \"*\" test:check"
+    "test": "vitest run"
   },
   "dependencies": {
     "@glimmer/syntax": "^0.95.0",
@@ -84,11 +83,7 @@
   },
   "pnpm": {
     "overrides": {
-      "ember-eslint-parser": "workspace:*",
-      "@typescript-eslint/parser": "^6",
-      "@typescript-eslint/scope-manager": "^6",
-      "@typescript-eslint/visitor-keys": "^6",
-      "typescript": "5.3"
+      "ember-eslint-parser": "workspace:*"
     }
   }
 }
