@@ -84,7 +84,10 @@ try {
     const length = jsCode.length;
     function visit(node) {
       if (
-        node.kind === ts.SyntaxKind.ImportDeclaration &&
+        (node.kind === ts.SyntaxKind.ImportDeclaration ||
+          node.kind === ts.SyntaxKind.ExportDeclaration) &&
+        node.moduleSpecifier &&
+        node.moduleSpecifier.text &&
         node.moduleSpecifier.text.endsWith('.gts')
       ) {
         const value = node.moduleSpecifier.text.replace(/\.gts$/, '.mts');

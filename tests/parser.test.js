@@ -2492,4 +2492,28 @@ describe('replaceExtensions', () => {
       `// description — with em-dash\nimport type { Foo } from './other-component.mts';`
     );
   });
+
+  it('replaces .gts extension in re-exports', () => {
+    const code = `export { one } from './one.gts';`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(`export { one } from './one.mts';`);
+  });
+
+  it('replaces .gts extension in `export *` re-exports', () => {
+    const code = `export * from './one.gts';`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(`export * from './one.mts';`);
+  });
+
+  it('replaces .gts extension in `export type` re-exports', () => {
+    const code = `export type { Foo } from './one.gts';`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(`export type { Foo } from './one.mts';`);
+  });
+
+  it('does not touch local `export {}` declarations without a module specifier', () => {
+    const code = `const one = 1;\nexport { one };`;
+    const result = replaceExtensions(code);
+    expect(result).toBe(code);
+  });
 });
