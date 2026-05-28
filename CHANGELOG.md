@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-05-28)
+
+* ember-eslint-parser 0.12.1 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#218](https://github.com/ember-tooling/ember-eslint-parser/pull/218) Fix .gts extension rewrite in re-exports (export ... from './foo.gts') ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
+#### Committers: 1
+- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
 ## Release (2026-05-15)
 
 * ember-eslint-parser 0.12.0 (minor)
