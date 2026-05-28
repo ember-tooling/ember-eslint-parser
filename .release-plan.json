@@ -1,18 +1,18 @@
 {
   "solution": {
     "ember-eslint-parser": {
-      "impact": "minor",
-      "oldVersion": "0.11.3",
-      "newVersion": "0.12.0",
+      "impact": "patch",
+      "oldVersion": "0.12.0",
+      "newVersion": "0.12.1",
       "tagName": "latest",
       "constraints": [
         {
-          "impact": "minor",
-          "reason": "Appears in changelog section :rocket: Enhancement"
+          "impact": "patch",
+          "reason": "Appears in changelog section :bug: Bug Fix"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-05-15)\n\n* ember-eslint-parser 0.12.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#211](https://github.com/ember-tooling/ember-eslint-parser/pull/211) feat: skip Ember 7.1 built-in template keywords in scope registration ([@aklkv](https://github.com/aklkv))\n\n#### Committers: 1\n- Alexey Kulakov ([@aklkv](https://github.com/aklkv))\n"
+  "description": "## Release (2026-05-28)\n\n* ember-eslint-parser 0.12.1 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#218](https://github.com/ember-tooling/ember-eslint-parser/pull/218) Fix .gts extension rewrite in re-exports (export ... from './foo.gts') ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### Committers: 1\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n"
 }
