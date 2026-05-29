@@ -3,12 +3,11 @@
 const path = require('path');
 
 const parserOptions = {};
-// if (process.env.PROJECT_SERVICE) {
-  parserOptions.projectService = {
-    defaultProject: process.env.DEFAULT_PROJECT || process.env.PROJECT || 'tsconfig.json',
-    allowDefaultProject: process.env.ALLOW_DEFAULT_PROJECT === 'true' ? ['**/*.js'] : []
-  };
-// }
+
+parserOptions.projectService = {
+  defaultProject: process.env.DEFAULT_PROJECT || process.env.PROJECT || 'tsconfig.json',
+  allowDefaultProject: process.env.ALLOW_DEFAULT_PROJECT === 'true' ? ['**/*.js'] : []
+};
 
 parserOptions.tsconfigRootDir = process.env.TSCONFIG_ROOT_DIR || __dirname;
 parserOptions.project = process.env.PROJECT === undefined ? true : process.env.PROJECT;
@@ -21,10 +20,17 @@ if (isV8) {
   delete parserOptions.project;
 }
 
+const ignorePatterns =
+  process.env.CHECK_LINT_ERRORS === 'true'
+    ? []
+    : ['src/example-with-lint-errors.gjs'];
+
 module.exports = {
   root: true,
   parserOptions,
+  ignorePatterns,
   rules: {
+    'no-constant-condition': ['error'],
     'no-use-before-define': ['error'],
     'no-unused-vars': ['error'],
     '@typescript-eslint/no-unsafe-assignment': 'error',
@@ -35,9 +41,6 @@ module.exports = {
     {
       files: ['**/*.{js,ts,gts,gjs}'],
       parser: 'ember-eslint-parser',
-      parserOptions: {
-        allowGjs: process.env.ALLOW_GJS !== undefined ? process.env.ALLOW_GJS === 'true' : undefined
-      }
     },
     {
       files: ['**/*.{js,ts}'],
