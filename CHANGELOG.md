@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-05-29)
+
+* ember-eslint-parser 0.13.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#216](https://github.com/ember-tooling/ember-eslint-parser/pull/216) Fixed performance issue ([@ijlee2](https://github.com/ijlee2))
+
+#### Committers: 1
+- Isaac Lee ([@ijlee2](https://github.com/ijlee2))
+
 ## Release (2026-05-28)
 
 * ember-eslint-parser 0.12.1 (patch)
