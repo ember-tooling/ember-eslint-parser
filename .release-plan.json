@@ -1,18 +1,18 @@
 {
   "solution": {
     "ember-eslint-parser": {
-      "impact": "patch",
-      "oldVersion": "0.12.0",
-      "newVersion": "0.12.1",
+      "impact": "minor",
+      "oldVersion": "0.12.1",
+      "newVersion": "0.13.0",
       "tagName": "latest",
       "constraints": [
         {
-          "impact": "patch",
-          "reason": "Appears in changelog section :bug: Bug Fix"
+          "impact": "minor",
+          "reason": "Appears in changelog section :rocket: Enhancement"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-05-28)\n\n* ember-eslint-parser 0.12.1 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#218](https://github.com/ember-tooling/ember-eslint-parser/pull/218) Fix .gts extension rewrite in re-exports (export ... from './foo.gts') ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### Committers: 1\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n"
+  "description": "## Release (2026-05-29)\n\n* ember-eslint-parser 0.13.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#216](https://github.com/ember-tooling/ember-eslint-parser/pull/216) Fixed performance issue ([@ijlee2](https://github.com/ijlee2))\n\n#### Committers: 1\n- Isaac Lee ([@ijlee2](https://github.com/ijlee2))\n"
 }
