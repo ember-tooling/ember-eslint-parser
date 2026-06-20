@@ -15,12 +15,18 @@ const require = createRequire(import.meta.url);
 // The experimental-worker entry point runs babel in a worker and matches the
 // parser ember-cli wires up for plain `.js` files in JS-only apps, so config
 // discovery (decorators & friends) lines up with how the rest of the project
-// is being parsed.
+// is being parsed. It only exists in `@babel/eslint-parser@7`; v8 dropped the
+// subpath, so we fall back to the package's main entry, which exposes the same
+// synchronous `parseForESLint`.
 let babelParser = null;
 try {
   babelParser = require('@babel/eslint-parser/experimental-worker');
 } catch {
-  // optional peer; left null
+  try {
+    babelParser = require('@babel/eslint-parser');
+  } catch {
+    // optional peer; left null
+  }
 }
 
 /**
