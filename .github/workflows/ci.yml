@@ -96,6 +96,37 @@ jobs:
       - run: pnpm --filter '*' test:check
       - run: pnpm --filter '*' test:fix
 
+  babel_support:
+    name: "Babel: ${{ matrix.babelVersion }}"
+    runs-on: ubuntu-latest
+    needs: [tests]
+    timeout-minutes: 2
+    strategy:
+      fail-fast: false
+      matrix:
+        babelVersion:
+          - ^7
+          - ^8
+    steps:
+      - uses: actions/checkout@v6
+      - uses: wyvox/action-setup-pnpm@v3
+      - name: "Pin @babel/eslint-parser to ${{ matrix.babelVersion }}"
+        run: |-
+          function sponge() {
+            local line;
+            tmp=$(mktemp)
+            while IFS= read -r line
+            do
+              echo $line >> $tmp;
+            done
+            mv "$tmp" $1
+          }
+          jq '.pnpm.overrides."@babel/eslint-parser" = "${{ matrix.babelVersion }}"' package.json | sponge package.json
+          jq '.pnpm.overrides."@babel/core" = "${{ matrix.babelVersion }}"' package.json | sponge package.json
+          jq '.pnpm.overrides."@babel/plugin-proposal-decorators" = "${{ matrix.babelVersion }}"' package.json | sponge package.json
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm test
+
   test_eslint-plugin-ember:
     name: "eslint-plugin-ember"
     runs-on: ubuntu-latest
