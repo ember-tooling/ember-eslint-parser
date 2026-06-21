@@ -18,16 +18,23 @@ const require = createRequire(import.meta.url);
 // is being parsed. It only exists in `@babel/eslint-parser@7`; v8 dropped the
 // subpath, so we fall back to the package's main entry, which exposes the same
 // synchronous `parseForESLint`.
-let babelParser = null;
-try {
-  babelParser = require('@babel/eslint-parser/experimental-worker');
-} catch {
+//
+// Exported so the resolution order (worker → main → null) can be unit tested
+// without installing two major versions of `@babel/eslint-parser` side by side.
+export function resolveBabelParser(req = require) {
   try {
-    babelParser = require('@babel/eslint-parser');
+    return req('@babel/eslint-parser/experimental-worker');
   } catch {
-    // optional peer; left null
+    try {
+      return req('@babel/eslint-parser');
+    } catch {
+      // optional peer; not installed
+      return null;
+    }
   }
 }
+
+const babelParser = resolveBabelParser();
 
 /**
  * implements https://eslint.org/docs/latest/extend/custom-parsers
