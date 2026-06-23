@@ -1,5 +1,21 @@
 # Changelog
 
+## Release (2026-06-23)
+
+* ember-eslint-parser 0.14.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#215](https://github.com/ember-tooling/ember-eslint-parser/pull/215) feat: support `@babel/eslint-parser` v8 ([@davidtaylorhq](https://github.com/davidtaylorhq))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#222](https://github.com/ember-tooling/ember-eslint-parser/pull/222) fix package lint ([@aklkv](https://github.com/aklkv))
+
+#### Committers: 2
+- Alexey Kulakov ([@aklkv](https://github.com/aklkv))
+- David Taylor ([@davidtaylorhq](https://github.com/davidtaylorhq))
+
 ## Release (2026-05-29)
 
 * ember-eslint-parser 0.13.0 (minor)
