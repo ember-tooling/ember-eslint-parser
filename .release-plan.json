@@ -2,17 +2,21 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "minor",
-      "oldVersion": "0.12.1",
-      "newVersion": "0.13.0",
+      "oldVersion": "0.13.0",
+      "newVersion": "0.14.0",
       "tagName": "latest",
       "constraints": [
         {
           "impact": "minor",
           "reason": "Appears in changelog section :rocket: Enhancement"
+        },
+        {
+          "impact": "patch",
+          "reason": "Appears in changelog section :house: Internal"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-05-29)\n\n* ember-eslint-parser 0.13.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#216](https://github.com/ember-tooling/ember-eslint-parser/pull/216) Fixed performance issue ([@ijlee2](https://github.com/ijlee2))\n\n#### Committers: 1\n- Isaac Lee ([@ijlee2](https://github.com/ijlee2))\n"
+  "description": "## Release (2026-06-23)\n\n* ember-eslint-parser 0.14.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#215](https://github.com/ember-tooling/ember-eslint-parser/pull/215) feat: support `@babel/eslint-parser` v8 ([@davidtaylorhq](https://github.com/davidtaylorhq))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#222](https://github.com/ember-tooling/ember-eslint-parser/pull/222) fix package lint ([@aklkv](https://github.com/aklkv))\n\n#### Committers: 2\n- Alexey Kulakov ([@aklkv](https://github.com/aklkv))\n- David Taylor ([@davidtaylorhq](https://github.com/davidtaylorhq))\n"
 }
