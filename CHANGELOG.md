@@ -1,5 +1,10 @@
 # Changelog
 
+
+
+
+
+
 ## Release (2026-06-23)
 
 * ember-eslint-parser 0.14.0 (minor)
