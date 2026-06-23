@@ -12,15 +12,20 @@ const require = createRequire(import.meta.url);
 // peer (TS-only setups don't need it), so a missing dep yields null and the JS
 // path below emits a targeted error.
 //
-// The experimental-worker entry point runs babel in a worker and matches the
-// parser ember-cli wires up for plain `.js` files in JS-only apps, so config
-// discovery (decorators & friends) lines up with how the rest of the project
-// is being parsed.
+// Matches the parser ember-cli wires up for plain `.js` files in JS-only
+// apps, so config discovery (decorators & friends) lines up with how the
+// rest of the project is being parsed.
 let babelParser = null;
 try {
+  // @babel/eslint-parser < 8
   babelParser = require('@babel/eslint-parser/experimental-worker');
 } catch {
-  // optional peer; left null
+  try {
+    // @babel/eslint-parser >= 8
+    babelParser = require('@babel/eslint-parser');
+  } catch {
+    // optional peer; left null
+  }
 }
 
 /**
