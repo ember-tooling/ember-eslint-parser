@@ -278,6 +278,11 @@ export const replaceRange = function replaceRange(s, start, end, substitute) {
   return s.slice(0, start) + substitute + s.slice(end);
 };
 
+function maskTemplateContentForLint(content) {
+  // Preserve line endings and UTF-16 length, but remove template syntax from the JS placeholder.
+  return content.replace(/[^\r\n]/g, ' ');
+}
+
 const processor = new Preprocessor();
 
 class EmberParserError extends Error {
@@ -332,7 +337,7 @@ export function transformForLint(code, fileName) {
   // Build placeholder JS inline (same format as ember-estree's toPlaceholderJS)
   let jsCode = code;
   for (const tplInfo of [...result].reverse()) {
-    const content = tplInfo.contents.replace(/[^\r\n]/g, ' ');
+    const content = maskTemplateContentForLint(tplInfo.contents);
     const start = tplInfo.range.startUtf16Codepoint;
     const end = tplInfo.range.endUtf16Codepoint;
     const tplLength = end - start;
