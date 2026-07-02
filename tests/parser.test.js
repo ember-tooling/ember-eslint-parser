@@ -2396,7 +2396,9 @@ export const NotFound = <template>
       '}',
     ].join('\n');
 
-    expect(() => transformForLint(code, 'example.gts')).not.toThrow();
+    const { output } = transformForLint(code, 'example.gts');
+
+    expect(output).toHaveLength(code.length);
   });
 
   it('svg elements are not added to global scope', () => {

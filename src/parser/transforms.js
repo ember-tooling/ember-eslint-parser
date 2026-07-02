@@ -332,7 +332,7 @@ export function transformForLint(code, fileName) {
   // Build placeholder JS inline (same format as ember-estree's toPlaceholderJS)
   let jsCode = code;
   for (const tplInfo of [...result].reverse()) {
-    const content = tplInfo.contents.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    const content = tplInfo.contents.replace(/[^\r\n]/g, ' ');
     const start = tplInfo.range.startUtf16Codepoint;
     const end = tplInfo.range.endUtf16Codepoint;
     const tplLength = end - start;
