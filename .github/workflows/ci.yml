@@ -71,8 +71,9 @@ jobs:
           - 5.5
           - 5.6
           - 5.7
-          - rc
-          - next
+          - 5.8
+          - 5.9
+          - "6"
     steps:
       - uses: actions/checkout@v6
       - uses: wyvox/action-setup-pnpm@v4
