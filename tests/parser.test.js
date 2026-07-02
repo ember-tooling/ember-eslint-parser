@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
 import { replaceExtensions } from '../src/parser/ts-patch.js';
-import { traverse } from '../src/parser/transforms.js';
+import { transformForLint, traverse } from '../src/parser/transforms.js';
 import { SourceCode } from 'eslint';
 import { visitorKeys as tsVisitors } from '@typescript-eslint/visitor-keys';
 import { visitorKeys as glimmerVisitorKeys } from '@glimmer/syntax';
@@ -2382,6 +2382,21 @@ export const NotFound = <template>
            ╰────"
       `);
     }
+  });
+
+  it('transforms class templates with backtick-only comments for linting', () => {
+    const code = [
+      "import Component from '@glimmer/component';",
+      '',
+      'export default class MyComponent extends Component {',
+      '  <template>',
+      '    {{!  `asd` `qwe` `zxc` `undefined` `asd` }}',
+      '    {{! `@foo` }}',
+      '  </template>',
+      '}',
+    ].join('\n');
+
+    expect(() => transformForLint(code, 'example.gts')).not.toThrow();
   });
 
   it('svg elements are not added to global scope', () => {
