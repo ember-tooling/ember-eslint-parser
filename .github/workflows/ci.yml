@@ -71,6 +71,9 @@ jobs:
           - 5.5
           - 5.6
           - 5.7
+          - 5.8
+          - 5.9
+          - "6"
           - rc
           - next
     steps:
@@ -93,8 +96,16 @@ jobs:
           jq '.pnpm.overrides.typescript = "${{ matrix.tsVersion }}"' package.json | sponge package.json
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm test
-      - run: pnpm --filter '*' test:check
-      - run: pnpm --filter '*' test:fix
+      # TS 7 ships as the `typescript-go` native port and exposes no JS
+      # compiler API, so `@typescript-eslint/*` (which requires
+      # `typescript` at runtime) cannot be loaded against it. The
+      # workspace lint-check projects transitively depend on ts-eslint
+      # plugins, so skip them on rc/next until the upstream ecosystem
+      # catches up.
+      - if: matrix.tsVersion != 'rc' && matrix.tsVersion != 'next'
+        run: pnpm --filter '*' test:check
+      - if: matrix.tsVersion != 'rc' && matrix.tsVersion != 'next'
+        run: pnpm --filter '*' test:fix
 
   test_eslint-plugin-ember:
     name: "eslint-plugin-ember"

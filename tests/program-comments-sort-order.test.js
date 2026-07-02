@@ -20,8 +20,14 @@
 import { describe, expect, it } from 'vitest';
 import { Linter } from 'eslint';
 import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
+import { typescriptParser } from '../src/parser/ts-patch.js';
 
-describe('program.comments sort order (ESLint tokensAndComments invariant)', () => {
+// The whole suite exercises `.gts` parsing, which requires
+// `@typescript-eslint/parser` to be loadable. Skip when it can't be
+// (e.g. TS 7 native `typescript-go`), rather than failing the job.
+const describeTs = typescriptParser ? describe : describe.skip;
+
+describeTs('program.comments sort order (ESLint tokensAndComments invariant)', () => {
   const mixedSource = [
     'const X = <template>',
     '  {{! glimmer comment at 22 }}',
