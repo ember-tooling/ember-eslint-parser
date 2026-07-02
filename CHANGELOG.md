@@ -1,5 +1,20 @@
 # Changelog
 
+## Release (2026-07-02)
+
+* ember-eslint-parser 0.14.1 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#227](https://github.com/ember-tooling/ember-eslint-parser/pull/227) Fix issue with GTS transform with backtick comments ([@Copilot](https://github.com/apps/copilot-swe-agent))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#228](https://github.com/ember-tooling/ember-eslint-parser/pull/228) Drop testing for TypeScript RC (7, ts-go) and expand TS matrix to 5.8 / 5.9 / 6 ([@Copilot](https://github.com/apps/copilot-swe-agent))
+
+#### Committers: 1
+- Copilot [Bot] ([@copilot-swe-agent](https://github.com/apps/copilot-swe-agent))
+
 ## Release (2026-06-23)
 
 * ember-eslint-parser 0.14.0 (minor)
