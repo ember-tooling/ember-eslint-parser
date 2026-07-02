@@ -83,7 +83,11 @@
   },
   "pnpm": {
     "overrides": {
-      "ember-eslint-parser": "workspace:*"
+      "ember-eslint-parser": "workspace:*",
+      "@typescript-eslint/parser": "canary",
+      "@typescript-eslint/scope-manager": "canary",
+      "@typescript-eslint/visitor-keys": "canary",
+      "typescript": "rc"
     }
   }
 }
