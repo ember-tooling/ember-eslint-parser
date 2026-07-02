@@ -20,12 +20,6 @@ import { describe, expect, it } from 'vitest';
 import { Linter } from 'eslint';
 import { parseForESLint as gjsParseForESLint } from '../src/parser/gjs-gts-parser.js';
 import { parseForESLint as hbsParseForESLint } from '../src/parser/hbs-parser.js';
-import { typescriptParser } from '../src/parser/ts-patch.js';
-
-// `.gts` suites require `@typescript-eslint/parser`, which can't be
-// loaded against TS 7 (native `typescript-go`) — skip in that case so
-// the .hbs suite and everything else in the file keeps running.
-const describeGts = typescriptParser ? describe : describe.skip;
 
 function makeLinter({ parser, parserName }) {
   const linter = new Linter();
@@ -60,7 +54,7 @@ function flagged(messages) {
   return messages.filter((m) => m.ruleId === 'regression/concat-flag');
 }
 
-describeGts('{{! eslint-disable-* }} directives inside <template> — .gts', () => {
+describe('{{! eslint-disable-* }} directives inside <template> — .gts', () => {
   const linter = makeLinter({ parser: gjsParseForESLint, parserName: 'ember-eslint-parser' });
   const run = (code) =>
     verify(linter, code, { parserName: 'ember-eslint-parser', filename: 'test.gts' });
@@ -153,33 +147,30 @@ describe('Program.comments shape expected by ESLint consumers', () => {
   // boundary so a future ember-estree shape change that silently loses
   // either trips a specific test rather than vague downstream fallout.
 
-  (typescriptParser ? it : it.skip)(
-    '.gts: directive-shaped template comments surface in Program.comments',
-    () => {
-      const source = [
-        'const X = <template>',
-        '  <li',
-        '    {{! eslint-disable-next-line regression/concat-flag }}',
-        '    aria-current="{{foo}}"',
-        '  ></li>',
-        '</template>;',
-      ].join('\n');
-      const { ast } = gjsParseForESLint(source, {
-        filePath: 'test.gts',
-        range: true,
-        loc: true,
-        comment: true,
-        tokens: true,
-      });
-      const directives = (ast.comments || []).filter(
-        (c) => typeof c.value === 'string' && /^\s*eslint-disable-next-line\s/.test(c.value)
-      );
-      expect(directives).toHaveLength(1);
-      expect(directives[0].value.trim()).toBe('eslint-disable-next-line regression/concat-flag');
-      // Most plugin rules iterate `getAllComments()` and filter on `Block`.
-      expect(directives[0].type).toBe('Block');
-    }
-  );
+  it('.gts: directive-shaped template comments surface in Program.comments', () => {
+    const source = [
+      'const X = <template>',
+      '  <li',
+      '    {{! eslint-disable-next-line regression/concat-flag }}',
+      '    aria-current="{{foo}}"',
+      '  ></li>',
+      '</template>;',
+    ].join('\n');
+    const { ast } = gjsParseForESLint(source, {
+      filePath: 'test.gts',
+      range: true,
+      loc: true,
+      comment: true,
+      tokens: true,
+    });
+    const directives = (ast.comments || []).filter(
+      (c) => typeof c.value === 'string' && /^\s*eslint-disable-next-line\s/.test(c.value)
+    );
+    expect(directives).toHaveLength(1);
+    expect(directives[0].value.trim()).toBe('eslint-disable-next-line regression/concat-flag');
+    // Most plugin rules iterate `getAllComments()` and filter on `Block`.
+    expect(directives[0].type).toBe('Block');
+  });
 
   it('.hbs: directive-shaped template comments surface in Program.comments', () => {
     const source = [

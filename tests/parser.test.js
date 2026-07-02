@@ -1,20 +1,12 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
-import { replaceExtensions, typescriptParser } from '../src/parser/ts-patch.js';
+import { replaceExtensions } from '../src/parser/ts-patch.js';
 import { traverse } from '../src/parser/transforms.js';
 import { SourceCode } from 'eslint';
 import { visitorKeys as tsVisitors } from '@typescript-eslint/visitor-keys';
 import { visitorKeys as glimmerVisitorKeys } from '@glimmer/syntax';
 
-// `.gts` parsing depends on `@typescript-eslint/parser` being loadable,
-// which in turn requires a `typescript` install that exposes a JS
-// compiler API. TS 7 ships as `typescript-go` (native-only), so
-// ts-eslint currently can't be required at all against it — skip the
-// TS-only suites when that's the case so the rest of the matrix still
-// signals real regressions.
-const describeTs = typescriptParser ? describe : describe.skip;
-
-describeTs('transform', () => {
+describe('transform', () => {
   let text, result;
   beforeAll(() => {
     text = `
