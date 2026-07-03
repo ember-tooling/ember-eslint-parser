@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
 import { replaceExtensions } from '../src/parser/ts-patch.js';
 import { transformForLint, traverse } from '../src/parser/transforms.js';
-import { SourceCode } from 'eslint';
+import { Linter, SourceCode } from 'eslint';
 import { visitorKeys as tsVisitors } from '@typescript-eslint/visitor-keys';
 import { visitorKeys as glimmerVisitorKeys } from '@glimmer/syntax';
 
@@ -2376,7 +2376,7 @@ export const NotFound = <template>
       expect(e.column).toBe(19);
       expect(e.fileName).toBe('example.gts');
       expect(e.message).toMatchInlineSnapshot(`
-        "× Unexpected eof
+        "× Expected ',', got '<eof>'
            ╭────
          1 │ console.log('test)
            ╰────"
@@ -2399,6 +2399,38 @@ export const NotFound = <template>
     const { output } = transformForLint(code, 'example.gts');
 
     expect(output).toHaveLength(code.length);
+  });
+
+  // ember-tooling/ember-eslint-parser#230: ember-estree < 0.6.10 escaped
+  // backticks/dollars in its placeholder JS, so templates with 12+ of them
+  // outgrew the placeholder padding, leaked the raw static block into the
+  // AST, and tripped no-unused-expressions on the whole <template>.
+  it('does not report no-unused-expressions for backtick-heavy template comments', () => {
+    const code = [
+      "import Component from '@glimmer/component';",
+      '',
+      'export default class MyComponent extends Component {',
+      '  <template>',
+      '    {{!  `asd` `qwe` `zxc` `undefined` `asd` }}',
+      '    {{! `@foo` }}',
+      '    123',
+      '  </template>',
+      '}',
+    ].join('\n');
+
+    const linter = new Linter();
+    linter.defineParser('ember-eslint-parser', { parseForESLint });
+    const messages = linter.verify(
+      code,
+      {
+        parser: 'ember-eslint-parser',
+        parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+        rules: { 'no-unused-expressions': 'error' },
+      },
+      { filename: 'example.gts' }
+    );
+
+    expect(messages).toEqual([]);
   });
 
   it('svg elements are not added to global scope', () => {
