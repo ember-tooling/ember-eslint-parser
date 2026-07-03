@@ -279,8 +279,11 @@ export const replaceRange = function replaceRange(s, start, end, substitute) {
 };
 
 function maskTemplateContentForLint(content) {
-  // Preserve line endings and UTF-16 length, but remove template syntax from the JS placeholder.
-  return content.replace(/[^\r\n]/g, ' ');
+  // Must produce byte-identical output to ember-estree's toPlaceholderJS
+  // masking, or typescript-eslint sees two different contents for the same
+  // .gts file (disk read vs lint parse) and invalidates + rebuilds the
+  // program on every file.
+  return content.replace(/[`$]/g, ' ');
 }
 
 const processor = new Preprocessor();
