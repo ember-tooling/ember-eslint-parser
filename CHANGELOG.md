@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-07-03)
+
+* ember-eslint-parser 0.14.2 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#231](https://github.com/ember-tooling/ember-eslint-parser/pull/231) Upgrade ember-estree to ^0.6.10 ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
+#### Committers: 1
+- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
 ## Release (2026-07-02)
 
 * ember-eslint-parser 0.14.1 (patch)
