@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.14.1",
-      "newVersion": "0.14.2",
+      "oldVersion": "0.14.2",
+      "newVersion": "0.14.3",
       "tagName": "latest",
       "constraints": [
         {
@@ -14,5 +14,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-07-03)\n\n* ember-eslint-parser 0.14.2 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#231](https://github.com/ember-tooling/ember-eslint-parser/pull/231) Upgrade ember-estree to ^0.6.10 ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### Committers: 1\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n"
+  "description": "## Release (2026-07-03)\n\n* ember-eslint-parser 0.14.3 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#233](https://github.com/ember-tooling/ember-eslint-parser/pull/233) Match transformForLint masking to ember-estree's toPlaceholderJS (fixes per-file program rebuilds) ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### Committers: 1\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n"
 }

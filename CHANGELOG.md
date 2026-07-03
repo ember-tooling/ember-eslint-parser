@@ -2,6 +2,17 @@
 
 ## Release (2026-07-03)
 
+* ember-eslint-parser 0.14.3 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#233](https://github.com/ember-tooling/ember-eslint-parser/pull/233) Match transformForLint masking to ember-estree's toPlaceholderJS (fixes per-file program rebuilds) ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
+#### Committers: 1
+- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
+## Release (2026-07-03)
+
 * ember-eslint-parser 0.14.2 (patch)
 
 #### :bug: Bug Fix
