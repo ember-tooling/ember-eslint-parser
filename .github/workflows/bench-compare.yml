@@ -28,20 +28,30 @@ jobs:
 
       - uses: wyvox/action-setup-pnpm@v4
 
-      - name: Run benchmark comparison
+      - name: Run benchmark comparison (parse)
         env:
           BENCH_JSON_OUTPUT: ${{ runner.temp }}/bench-results.json
         run: |
           set -o pipefail
           pnpm bench:compare | sed 's/\x1b\[[0-9;]*m//g' > "$RUNNER_TEMP/bench-output.txt"
 
+      - name: Run benchmark comparison (project mode)
+        if: always() && steps.checkout.outcome == 'success'
+        env:
+          BENCH_JSON_OUTPUT: ${{ runner.temp }}/project-bench-results.json
+        run: |
+          set -o pipefail
+          pnpm bench:project:compare | sed 's/\x1b\[[0-9;]*m//g' > "$RUNNER_TEMP/project-bench-output.txt"
+
       - name: Format PR comment
         if: always() && steps.checkout.outcome == 'success'
         env:
-          BENCH_OUTPUT_FILE: ${{ runner.temp }}/bench-output.txt
-          BENCH_JSON_OUTPUT: ${{ runner.temp }}/bench-results.json
           BENCH_JOB_SUCCESS: ${{ job.status == 'success' }}
-        run: node scripts/format-bench-comment.mjs > "$RUNNER_TEMP/bench-comment.md"
+        run: |
+          node scripts/format-bench-comment.mjs \
+            --section "Parse" "$RUNNER_TEMP/bench-output.txt" "$RUNNER_TEMP/bench-results.json" \
+            --section "Project mode (type-aware)" "$RUNNER_TEMP/project-bench-output.txt" "$RUNNER_TEMP/project-bench-results.json" \
+            > "$RUNNER_TEMP/bench-comment.md"
 
       - name: Write job summary
         if: always() && steps.checkout.outcome == 'success'
