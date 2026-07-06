@@ -259,8 +259,11 @@ globalThis.gc?.();
 // Register benchmarks
 // ---------------------------------------------------------------------------
 
-const PARSES_PER_ITER = 20;
-const TYPED_PER_ITER = 8;
+// Enough work per iteration to stay well above the system-noise floor
+// (aim for hundreds of ms, not tens): short iterations let scheduler jitter
+// and individual GC pauses dominate the measurement.
+const PARSES_PER_ITER = 150;
+const TYPED_PER_ITER = 150;
 
 function makeRoundRobin(step) {
   let cursor = 0;
