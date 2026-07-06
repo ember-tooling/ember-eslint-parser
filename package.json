@@ -22,6 +22,8 @@
   "scripts": {
     "bench": "./scripts/run-bench.sh tests/parser.bench.mjs",
     "bench:compare": "node scripts/bench-compare.mjs",
+    "bench:project": "./scripts/run-bench.sh tests/project.bench.mjs",
+    "bench:project:compare": "node scripts/bench-compare.mjs --bench tests/project.bench.mjs",
     "bench:summary": "./scripts/local-bench-summary.sh",
     "lint": "concurrently \"npm:lint:*(!fix)\" --names \"lint:\"",
     "lint:fix": "concurrently \"npm:lint:*:fix\" --names \"fix:\"",

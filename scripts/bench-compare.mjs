@@ -9,10 +9,11 @@
  * summary tables and boxplots.
  *
  * Usage:
- *   node scripts/bench-compare.mjs [--base <branch>]
+ *   node scripts/bench-compare.mjs [--base <branch>] [--bench <script>]
  *
  * Options:
  *   --base <branch>   Branch to compare against (default: main)
+ *   --bench <script>  Bench script to run (default: tests/parser.bench.mjs)
  */
 
 import { execSync, spawnSync } from 'node:child_process';
@@ -27,6 +28,8 @@ import { join } from 'node:path';
 const args = process.argv.slice(2);
 const baseIdx = args.indexOf('--base');
 const BASE_BRANCH = baseIdx !== -1 ? args[baseIdx + 1] : 'main';
+const benchIdx = args.indexOf('--bench');
+const BENCH_SCRIPT = benchIdx !== -1 ? args[benchIdx + 1] : 'tests/parser.bench.mjs';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -96,7 +99,7 @@ try {
   // ── 3. Run mitata bench with --control-dir ───────────────────────────────
   console.error(`\n🏎️  Running benchmarks (experiment vs control)…\n`);
 
-  const benchScript = join(ROOT, 'tests/parser.bench.mjs');
+  const benchScript = join(ROOT, BENCH_SCRIPT);
   const benchArgs = [
     '--expose-gc',
     '--max-old-space-size=4096',
