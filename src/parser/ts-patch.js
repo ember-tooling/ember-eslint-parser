@@ -116,10 +116,31 @@ try {
   };
 
   /**
+   * Graft each real `.gts`/`.gjs` SourceFile onto its virtual twins so every
+   * import path yields the same AST nodes, and therefore the same type
+   * identity. A program can hold up to three copies of one templated file:
+   * the `.gts` root itself, the `.mts` twin injected via readDirectory (the
+   * target of explicit `import './x.gts'` specifiers, which
+   * replaceExtensions rewrites to `.mts`), and a `.ts` virtual created when
+   * another file resolves an extensionless `import './x'` through the
+   * patched fileExists. Distinct copies mean distinct class symbols — a
+   * class with a private member is then not assignable to itself across
+   * paths, unions of the "same" type don't dedupe, and typed rules
+   * (`no-unnecessary-type-assertion`, `no-redundant-type-constituents`)
+   * report order-dependent false positives (#229).
+   *
+   * Runs once per program: the graft mutates SourceFiles, so repeating it
+   * after every parse rewrites binder state (symbol/locals) under a live
+   * type checker — stale symbols stay cached and results become
+   * lint-order dependent. It also walks the whole file list, which is
+   * O(program files) per linted file.
    *
    * @param program {ts.Program}
    */
+  const syncedPrograms = new WeakSet();
   syncMtsGtsSourceFiles = function syncMtsGtsSourceFiles(program) {
+    if (syncedPrograms.has(program)) return;
+    syncedPrograms.add(program);
     const sourceFiles = program.getSourceFiles();
     function syncVirtualFile(sourceFile, ext, virtualExt, virtualFlag) {
       // check for deleted files, need to remove virtual as well
@@ -132,15 +153,15 @@ try {
         }
       }
       if (sourceFile.path.endsWith(`.${ext}`)) {
-        let virtualSourceFile = program.getSourceFile(
-          sourceFile.path.replace(new RegExp(`\\.${ext}$`), `.${virtualExt}`)
-        );
-        if (!virtualSourceFile) {
-          virtualSourceFile = program.getSourceFile(
+        const virtualSourceFiles = [
+          program.getSourceFile(
+            sourceFile.path.replace(new RegExp(`\\.${ext}$`), `.${virtualExt}`)
+          ),
+          program.getSourceFile(
             sourceFile.path.replace(new RegExp(`\\.${ext}$`), virtualExt === 'mts' ? '.ts' : '.js')
-          );
-        }
-        if (virtualSourceFile) {
+          ),
+        ].filter(Boolean);
+        for (const virtualSourceFile of virtualSourceFiles) {
           const keep = {
             fileName: virtualSourceFile.fileName,
             path: virtualSourceFile.path,
