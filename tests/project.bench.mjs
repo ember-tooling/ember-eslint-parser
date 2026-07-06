@@ -301,21 +301,24 @@ for (const mode of MODES) {
 
   for (const scenario of scenarios) {
     globalThis.gc?.();
+    // gc('inner') collects before every iteration: each parse batch churns
+    // hundreds of MB of AST, and without it major-GC pauses land on random
+    // samples — an A/A comparison (identical parsers) read as ±9% otherwise.
     if (control) {
       boxplot(() => {
         summary(() => {
           bench(
             `${scenario.name} (control)`,
             scenario.makeFn(control.parseForESLint, mode.controlOptions ?? mode.options)
-          );
+          ).gc('inner');
           bench(
             `${scenario.name} (experiment)`,
             scenario.makeFn(experiment.parseForESLint, mode.options)
-          );
+          ).gc('inner');
         });
       });
     } else {
-      bench(scenario.name, scenario.makeFn(experiment.parseForESLint, mode.options));
+      bench(scenario.name, scenario.makeFn(experiment.parseForESLint, mode.options)).gc('inner');
     }
   }
 }
