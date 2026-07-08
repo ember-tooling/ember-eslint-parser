@@ -36,8 +36,18 @@ try {
       readFile(fname) {
         let fileName = fname;
         let content = '';
-        if (fileName.endsWith('tsconfig.tsbuildinfo')) {
-          return content;
+        if (fileName.endsWith('.tsbuildinfo')) {
+          // Incremental build state is optional: return it when present, but
+          // report a missing file as absent instead of throwing. The watch
+          // program reads `tsBuildInfoFile` without a fileExists probe
+          // (readBuilderProgram -> host.readFile), so a fresh/cleaned project
+          // with a custom buildinfo path (e.g. "declarations/.tsbuildinfo")
+          // would otherwise abort linting with a Parsing error: ENOENT.
+          try {
+            return fs.readFileSync(fileName).toString();
+          } catch {
+            return content;
+          }
         }
 
         try {
