@@ -36,8 +36,16 @@ try {
       readFile(fname) {
         let fileName = fname;
         let content = '';
-        if (fileName.endsWith('tsconfig.tsbuildinfo')) {
-          return content;
+        if (fileName.endsWith('.tsbuildinfo')) {
+          // Incremental build state is optional and never a .gts/.gjs file, so
+          // delegate to the real host: it returns the content when present and
+          // reports a missing file as absent (undefined) instead of throwing.
+          // The watch program reads `tsBuildInfoFile` without a fileExists
+          // probe (readBuilderProgram -> host.readFile), so a fresh/cleaned
+          // project with a custom buildinfo path (e.g.
+          // "declarations/.tsbuildinfo") would otherwise abort linting of
+          // every file with a Parsing error: ENOENT.
+          return sys.readFile(fileName);
         }
 
         try {
