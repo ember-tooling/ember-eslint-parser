@@ -20,26 +20,26 @@ const ts = require(require.resolve('typescript', { paths: [parserPath] }));
 // linting of every file in the project with
 // `Parsing error: ENOENT ... <project>/declarations/.tsbuildinfo`.
 describe('patched ts.sys.readFile — .tsbuildinfo handling', () => {
-	patchTs();
+  patchTs();
 
-	it('treats a missing custom-named .tsbuildinfo as absent instead of throwing', () => {
-		// e.g. { "tsBuildInfoFile": "declarations/.tsbuildinfo" } — only the
-		// default `tsconfig.tsbuildinfo` name was guarded before.
-		const missing = path.join(os.tmpdir(), 'ee-parser-no-such-dir', 'declarations', '.tsbuildinfo');
+  it('treats a missing custom-named .tsbuildinfo as absent instead of throwing', () => {
+    // e.g. { "tsBuildInfoFile": "declarations/.tsbuildinfo" } — only the
+    // default `tsconfig.tsbuildinfo` name was guarded before.
+    const missing = path.join(os.tmpdir(), 'ee-parser-no-such-dir', 'declarations', '.tsbuildinfo');
 
-		expect(() => ts.sys.readFile(missing)).not.toThrow();
-		expect(ts.sys.readFile(missing)).toBe('');
-	});
+    expect(() => ts.sys.readFile(missing)).not.toThrow();
+    expect(ts.sys.readFile(missing)).toBeUndefined();
+  });
 
-	it('returns the real content when the .tsbuildinfo exists', () => {
-		const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ee-parser-buildinfo-'));
-		const buildInfo = path.join(dir, 'custom.tsbuildinfo');
-		fs.writeFileSync(buildInfo, '{"version":"5.9.3"}');
+  it('returns the real content when the .tsbuildinfo exists', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ee-parser-buildinfo-'));
+    const buildInfo = path.join(dir, 'custom.tsbuildinfo');
+    fs.writeFileSync(buildInfo, '{"version":"5.9.3"}');
 
-		try {
-			expect(ts.sys.readFile(buildInfo)).toBe('{"version":"5.9.3"}');
-		} finally {
-			fs.rmSync(dir, { recursive: true, force: true });
-		}
-	});
+    try {
+      expect(ts.sys.readFile(buildInfo)).toBe('{"version":"5.9.3"}');
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
