@@ -1,5 +1,23 @@
 # Changelog
 
+## Release (2026-07-08)
+
+* ember-eslint-parser 0.14.4 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#241](https://github.com/ember-tooling/ember-eslint-parser/pull/241) Don't crash type-aware linting when the project's tsbuildinfo doesn't exist yet ([@NullVoxPopuli](https://github.com/NullVoxPopuli))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#239](https://github.com/ember-tooling/ember-eslint-parser/pull/239) Post the benchmark PR comment (both benchmarks) for fork PRs too ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+  * [#238](https://github.com/ember-tooling/ember-eslint-parser/pull/238) Upgrade default @typescript-eslint deps to v8 so CI benches projectService ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+  * [#236](https://github.com/ember-tooling/ember-eslint-parser/pull/236) Add project-mode benchmark and run it in the benchmark comparison workflow ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
+#### Committers: 2
+- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+- [@NullVoxPopuli](https://github.com/NullVoxPopuli)
+
 ## Release (2026-07-03)
 
 * ember-eslint-parser 0.14.3 (patch)
