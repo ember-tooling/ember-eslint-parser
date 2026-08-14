@@ -85,6 +85,17 @@ try {
   };
 
   replaceExtensions = function replaceExtensions(code) {
+    // Only `.gts` specifiers are rewritten, and every specifier form that
+    // reaches the rewrite below carries a literal `.gts` in the source text.
+    // Spellings that hide it behind an escape sequence or a line continuation
+    // already fail the length assertion at the end and leave the file
+    // untouched, so a substring miss means the walk cannot change anything.
+    //
+    // Worth the scan: the patched `ts.sys.readFile` runs this over every .ts
+    // file TypeScript pulls into the program, and in an app of any size
+    // almost none of them import a .gts.
+    if (!code.includes('.gts')) return code;
+
     let jsCode = code;
     const sourceFile = ts.createSourceFile('__x__.ts', code, ts.ScriptTarget.Latest);
     const length = jsCode.length;
