@@ -4,6 +4,14 @@ import { transformForLint, replaceRange } from './transforms.js';
 
 const require = createRequire(import.meta.url);
 
+// Suffix of a virtual twin, stripped to recover the .gts/.gjs it stands in for.
+const VIRTUAL_MTS_SUFFIX = /\.m?mts$/;
+const VIRTUAL_MJS_SUFFIX = /\.m?mjs$/;
+
+// Virtual .mts/.mjs source file -> the .gts/.gjs source file it currently
+// mirrors. Weak so it follows the program's own lifetime.
+const linkedVirtuals = new WeakMap();
+
 let patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser, isPatched;
 
 try {
@@ -135,46 +143,73 @@ try {
   };
 
   /**
+   * Mirror every .gts/.gjs source file onto the virtual .mts/.mjs twin that
+   * TypeScript resolved imports to, so the checker sees the transformed AST.
+   *
+   * Runs after every type-aware parse and walks the whole program, so both the
+   * per-source-file cost and the per-.gts cost show up once per linted file.
    *
    * @param program {ts.Program}
    */
   syncMtsGtsSourceFiles = function syncMtsGtsSourceFiles(program) {
     const sourceFiles = program.getSourceFiles();
-    function syncVirtualFile(sourceFile, ext, virtualExt, virtualFlag) {
-      // check for deleted files, need to remove virtual as well
-      if (sourceFile.path.match(new RegExp(`\\.m?${virtualExt}$`)) && sourceFile[virtualFlag]) {
-        const origFile = program.getSourceFile(
-          sourceFile.path.replace(new RegExp(`\\.m?${virtualExt}$`), `.${ext}`)
-        );
-        if (!origFile) {
-          sourceFile.version = null;
-        }
+
+    function linkVirtualFile(sourceFile, suffix, virtualSuffix, fallbackSuffix, virtualFlag) {
+      const base = sourceFile.path.slice(0, -suffix.length);
+      let virtualSourceFile = program.getSourceFile(base + virtualSuffix);
+      if (!virtualSourceFile) {
+        virtualSourceFile = program.getSourceFile(base + fallbackSuffix);
       }
-      if (sourceFile.path.endsWith(`.${ext}`)) {
-        let virtualSourceFile = program.getSourceFile(
-          sourceFile.path.replace(new RegExp(`\\.${ext}$`), `.${virtualExt}`)
-        );
-        if (!virtualSourceFile) {
-          virtualSourceFile = program.getSourceFile(
-            sourceFile.path.replace(new RegExp(`\\.${ext}$`), virtualExt === 'mts' ? '.ts' : '.js')
-          );
-        }
-        if (virtualSourceFile) {
-          const keep = {
-            fileName: virtualSourceFile.fileName,
-            path: virtualSourceFile.path,
-            originalFileName: virtualSourceFile.originalFileName,
-            resolvedPath: virtualSourceFile.resolvedPath,
-            impliedNodeFormat: virtualSourceFile.impliedNodeFormat,
-          };
-          Object.assign(virtualSourceFile, sourceFile, keep);
-          virtualSourceFile[virtualFlag] = true;
-        }
+      if (!virtualSourceFile) return;
+
+      // Copying ~50 properties per .gts is the bulk of this function, and
+      // nearly every call repeats a copy that is already in place: TypeScript
+      // hands back the same SourceFile object until the file's content
+      // changes, at which point it builds a new one with a new version. Same
+      // object and same version on both sides means the twin is current.
+      if (
+        linkedVirtuals.get(virtualSourceFile) === sourceFile &&
+        virtualSourceFile.version === sourceFile.version
+      ) {
+        return;
+      }
+
+      const keep = {
+        fileName: virtualSourceFile.fileName,
+        path: virtualSourceFile.path,
+        originalFileName: virtualSourceFile.originalFileName,
+        resolvedPath: virtualSourceFile.resolvedPath,
+        impliedNodeFormat: virtualSourceFile.impliedNodeFormat,
+      };
+      Object.assign(virtualSourceFile, sourceFile, keep);
+      virtualSourceFile[virtualFlag] = true;
+      linkedVirtuals.set(virtualSourceFile, sourceFile);
+    }
+
+    // A virtual outlives its original when the .gts/.gjs is deleted; clearing
+    // the version makes TypeScript drop it on the next update.
+    function invalidateOrphanedVirtual(sourceFile, virtualSuffix, suffix) {
+      if (!program.getSourceFile(sourceFile.path.replace(virtualSuffix, suffix))) {
+        sourceFile.version = null;
       }
     }
+
+    // This walks every file in the program — app sources, lib.d.ts, every
+    // .d.ts reachable from node_modules — so the uninteresting majority has
+    // to fall out after a single suffix test. The branches are mutually
+    // exclusive: no path ends in both .gts and .mts, and only files linked
+    // above ever carry a virtual flag.
     for (const sourceFile of sourceFiles) {
-      syncVirtualFile(sourceFile, 'gts', 'mts', 'isVirtualGts');
-      syncVirtualFile(sourceFile, 'gjs', 'mjs', 'isVirtualGjs');
+      const path = sourceFile.path;
+      if (path.endsWith('.gts')) {
+        linkVirtualFile(sourceFile, '.gts', '.mts', '.ts', 'isVirtualGts');
+      } else if (path.endsWith('.gjs')) {
+        linkVirtualFile(sourceFile, '.gjs', '.mjs', '.js', 'isVirtualGjs');
+      } else if (sourceFile.isVirtualGts) {
+        invalidateOrphanedVirtual(sourceFile, VIRTUAL_MTS_SUFFIX, '.gts');
+      } else if (sourceFile.isVirtualGjs) {
+        invalidateOrphanedVirtual(sourceFile, VIRTUAL_MJS_SUFFIX, '.gjs');
+      }
     }
   };
 } catch /* istanbul ignore next */ {

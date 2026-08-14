@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { patchTs, replaceExtensions } from '../src/parser/ts-patch.js';
+import { patchTs, replaceExtensions, syncMtsGtsSourceFiles } from '../src/parser/ts-patch.js';
 
 // Resolve the same typescript instance ts-patch patches (the one
 // @typescript-eslint/parser depends on), so we observe the patched ts.sys.
@@ -102,5 +102,108 @@ describe('replaceExtensions', () => {
         `const lazy = () => import('./lazy.mts');`,
       ].join('\n')
     );
+  });
+});
+
+// syncMtsGtsSourceFiles walks every file in the program on every type-aware
+// parse. Only `getSourceFiles` and `getSourceFile` are used, so a plain object
+// stands in for the program.
+describe('syncMtsGtsSourceFiles', () => {
+  function sourceFile(filePath, extra = {}) {
+    return {
+      path: filePath,
+      fileName: filePath,
+      originalFileName: filePath,
+      resolvedPath: filePath,
+      impliedNodeFormat: undefined,
+      version: '1',
+      text: `contents of ${filePath}`,
+      statements: [],
+      ...extra,
+    };
+  }
+
+  function program(files) {
+    return {
+      getSourceFiles: () => files,
+      getSourceFile: (p) => files.find((f) => f.path === p),
+    };
+  }
+
+  it('mirrors a .gts onto its .mts twin while keeping the twin identity', () => {
+    const gts = sourceFile('/app/comp.gts', { text: 'transformed gts' });
+    const mts = sourceFile('/app/comp.mts', { text: 'stale' });
+
+    syncMtsGtsSourceFiles(program([gts, mts]));
+
+    expect(mts.text).toBe('transformed gts');
+    expect(mts.statements).toBe(gts.statements);
+    expect(mts.path).toBe('/app/comp.mts');
+    expect(mts.fileName).toBe('/app/comp.mts');
+    expect(mts.isVirtualGts).toBe(true);
+  });
+
+  it('falls back to the .ts twin when no .mts is in the program', () => {
+    const gts = sourceFile('/app/comp.gts', { text: 'transformed gts' });
+    const tsTwin = sourceFile('/app/comp.ts', { text: 'stale' });
+
+    syncMtsGtsSourceFiles(program([gts, tsTwin]));
+
+    expect(tsTwin.text).toBe('transformed gts');
+    expect(tsTwin.path).toBe('/app/comp.ts');
+  });
+
+  it('mirrors a .gjs onto its .mjs twin', () => {
+    const gjs = sourceFile('/app/comp.gjs', { text: 'transformed gjs' });
+    const mjs = sourceFile('/app/comp.mjs', { text: 'stale' });
+
+    syncMtsGtsSourceFiles(program([gjs, mjs]));
+
+    expect(mjs.text).toBe('transformed gjs');
+    expect(mjs.isVirtualGjs).toBe(true);
+  });
+
+  it('picks up a new source file object for the same path', () => {
+    const mts = sourceFile('/app/comp.mts', { text: 'stale' });
+    syncMtsGtsSourceFiles(program([sourceFile('/app/comp.gts', { text: 'first' }), mts]));
+    expect(mts.text).toBe('first');
+
+    const reparsed = sourceFile('/app/comp.gts', { text: 'second', version: '2' });
+    syncMtsGtsSourceFiles(program([reparsed, mts]));
+    expect(mts.text).toBe('second');
+  });
+
+  it('picks up a new version of the same source file object', () => {
+    const gts = sourceFile('/app/comp.gts', { text: 'first' });
+    const mts = sourceFile('/app/comp.mts', { text: 'stale' });
+    syncMtsGtsSourceFiles(program([gts, mts]));
+
+    gts.text = 'second';
+    gts.version = '2';
+    syncMtsGtsSourceFiles(program([gts, mts]));
+
+    expect(mts.text).toBe('second');
+  });
+
+  it('clears the version of a virtual whose original has been deleted', () => {
+    const gts = sourceFile('/app/comp.gts');
+    const mts = sourceFile('/app/comp.mts');
+    syncMtsGtsSourceFiles(program([gts, mts]));
+    expect(mts.version).toBe('1');
+
+    syncMtsGtsSourceFiles(program([mts]));
+
+    expect(mts.version).toBeNull();
+  });
+
+  it('leaves files that are neither templates nor virtuals alone', () => {
+    const plain = sourceFile('/app/util.ts');
+    const declaration = sourceFile('/app/types.d.ts');
+    const before = [{ ...plain }, { ...declaration }];
+
+    syncMtsGtsSourceFiles(program([plain, declaration]));
+
+    expect(plain).toEqual(before[0]);
+    expect(declaration).toEqual(before[1]);
   });
 });
