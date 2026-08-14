@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { patchTs, replaceExtensions, syncMtsGtsSourceFiles } from '../src/parser/ts-patch.js';
+import { patchTs, syncMtsGtsSourceFiles } from '../src/parser/ts-patch.js';
 
 // Resolve the same typescript instance ts-patch patches (the one
 // @typescript-eslint/parser depends on), so we observe the patched ts.sys.
@@ -44,70 +44,12 @@ describe('patched ts.sys.readFile — .tsbuildinfo handling', () => {
   });
 });
 
-// replaceExtensions skips the TypeScript parse when the text contains no
-// `.gts` at all. Everything it rewrites has to keep working, and nothing that
-// lacks the substring may be rewritten — a miss here is a silent regression,
-// not a visible failure.
-describe('replaceExtensions', () => {
-  it.each([
-    ['default import', `import Foo from './foo.gts';`, `import Foo from './foo.mts';`],
-    ['double quotes', `import Foo from "./foo.gts";`, `import Foo from "./foo.mts";`],
-    ['named import', `import { a } from './foo.gts';`, `import { a } from './foo.mts';`],
-    [
-      'type-only import',
-      `import type { A } from './foo.gts';`,
-      `import type { A } from './foo.mts';`,
-    ],
-    ['side-effect import', `import './foo.gts';`, `import './foo.mts';`],
-    ['re-export', `export { a } from './foo.gts';`, `export { a } from './foo.mts';`],
-    ['export star', `export * from './foo.gts';`, `export * from './foo.mts';`],
-    ['dynamic import', `const p = import('./foo.gts');`, `const p = import('./foo.mts');`],
-    [
-      'import attributes',
-      `import Foo from './foo.gts' with { type: 'x' };`,
-      `import Foo from './foo.mts' with { type: 'x' };`,
-    ],
-  ])('rewrites a .gts specifier in a %s', (_name, input, expected) => {
-    expect(replaceExtensions(input)).toBe(expected);
-  });
-
-  it.each([
-    ['no module specifiers at all', `export const a = 1;\nexport type B = { c: string };\n`],
-    ['only extensionless specifiers', `import Foo from './foo';\nexport * from './bar';\n`],
-    ['a .ts specifier', `import Foo from './foo.ts';`],
-    ['an uppercase .GTS specifier', `import Foo from './foo.GTS';`],
-    ['.gts only inside a comment', `// see ./foo.gts\nimport Foo from './foo';`],
-    ['.gts only in a non-specifier string', `const path = './foo.gts';`],
-    ['a require() call', `const Foo = require('./foo.gts');`],
-    ['a template-literal specifier', 'const p = import(`./foo.gts`);'],
-  ])('leaves code with %s unchanged', (_name, input) => {
-    expect(replaceExtensions(input)).toBe(input);
-  });
-
-  it('rewrites every .gts specifier in a file that mixes them with other imports', () => {
-    const input = [
-      `import Foo from './foo.gts';`,
-      `import Bar from './bar';`,
-      `import Baz from './baz.ts';`,
-      `export { qux } from './qux.gts';`,
-      `const lazy = () => import('./lazy.gts');`,
-    ].join('\n');
-
-    expect(replaceExtensions(input)).toBe(
-      [
-        `import Foo from './foo.mts';`,
-        `import Bar from './bar';`,
-        `import Baz from './baz.ts';`,
-        `export { qux } from './qux.mts';`,
-        `const lazy = () => import('./lazy.mts');`,
-      ].join('\n')
-    );
-  });
-});
-
 // syncMtsGtsSourceFiles walks every file in the program on every type-aware
 // parse. Only `getSourceFiles` and `getSourceFile` are used, so a plain object
 // stands in for the program.
+//
+// The twin-to-source links are module state keyed on the source file objects,
+// so every test builds its own rather than sharing a fixture.
 describe('syncMtsGtsSourceFiles', () => {
   function sourceFile(filePath, extra = {}) {
     return {
@@ -163,6 +105,16 @@ describe('syncMtsGtsSourceFiles', () => {
     expect(mjs.isVirtualGjs).toBe(true);
   });
 
+  it('falls back to the .js twin when no .mjs is in the program', () => {
+    const gjs = sourceFile('/app/comp.gjs', { text: 'transformed gjs' });
+    const jsTwin = sourceFile('/app/comp.js', { text: 'stale' });
+
+    syncMtsGtsSourceFiles(program([gjs, jsTwin]));
+
+    expect(jsTwin.text).toBe('transformed gjs');
+    expect(jsTwin.path).toBe('/app/comp.js');
+  });
+
   it('picks up a new source file object for the same path', () => {
     const mts = sourceFile('/app/comp.mts', { text: 'stale' });
     syncMtsGtsSourceFiles(program([sourceFile('/app/comp.gts', { text: 'first' }), mts]));
@@ -185,6 +137,23 @@ describe('syncMtsGtsSourceFiles', () => {
     expect(mts.text).toBe('second');
   });
 
+  // Re-copying ~50 properties per .gts on every parse is what made this
+  // function scale with project size rather than with the file being linted.
+  // `lineMap` stands in for the lazily-derived state TypeScript writes onto a
+  // twin between parses: a re-copy overwrites it with the source's value.
+  it('does not re-copy a twin that is already current', () => {
+    const gts = sourceFile('/app/comp.gts', { text: 'shared', lineMap: undefined });
+    const mts = sourceFile('/app/comp.mts', { text: 'stale', lineMap: undefined });
+    syncMtsGtsSourceFiles(program([gts, mts]));
+
+    const computedByTypeScript = [0, 7];
+    mts.lineMap = computedByTypeScript;
+    syncMtsGtsSourceFiles(program([gts, mts]));
+
+    expect(mts.lineMap).toBe(computedByTypeScript);
+    expect(mts.text).toBe('shared');
+  });
+
   it('clears the version of a virtual whose original has been deleted', () => {
     const gts = sourceFile('/app/comp.gts');
     const mts = sourceFile('/app/comp.mts');
@@ -194,6 +163,29 @@ describe('syncMtsGtsSourceFiles', () => {
     syncMtsGtsSourceFiles(program([mts]));
 
     expect(mts.version).toBeNull();
+  });
+
+  it('clears the version of a .mjs virtual whose .gjs original has been deleted', () => {
+    const gjs = sourceFile('/app/comp.gjs');
+    const mjs = sourceFile('/app/comp.mjs');
+    syncMtsGtsSourceFiles(program([gjs, mjs]));
+
+    syncMtsGtsSourceFiles(program([mjs]));
+
+    expect(mjs.version).toBeNull();
+  });
+
+  // The virtual flag also lands on the .ts fallback twin, whose path the
+  // virtual suffix does not match. It must not be mistaken for an orphan.
+  it('keeps a flagged .ts fallback twin alive once its .gts is gone', () => {
+    const gts = sourceFile('/app/comp.gts');
+    const tsTwin = sourceFile('/app/comp.ts');
+    syncMtsGtsSourceFiles(program([gts, tsTwin]));
+    expect(tsTwin.isVirtualGts).toBe(true);
+
+    syncMtsGtsSourceFiles(program([tsTwin]));
+
+    expect(tsTwin.version).toBe('1');
   });
 
   it('leaves files that are neither templates nor virtuals alone', () => {

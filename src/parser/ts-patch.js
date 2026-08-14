@@ -93,15 +93,20 @@ try {
   };
 
   replaceExtensions = function replaceExtensions(code) {
-    // Only `.gts` specifiers are rewritten, and every specifier form that
-    // reaches the rewrite below carries a literal `.gts` in the source text.
-    // Spellings that hide it behind an escape sequence or a line continuation
-    // already fail the length assertion at the end and leave the file
-    // untouched, so a substring miss means the walk cannot change anything.
+    // Only `.gts` specifiers are rewritten, and every specifier the walk
+    // below can successfully rewrite carries a literal `.gts` in the source
+    // text. Worth the scan: the patched `ts.sys.readFile` runs this over
+    // every .ts file TypeScript pulls into the program, and in an app of any
+    // size almost none of them import a .gts.
     //
-    // Worth the scan: the patched `ts.sys.readFile` runs this over every .ts
-    // file TypeScript pulls into the program, and in an app of any size
-    // almost none of them import a .gts.
+    // A specifier that spells the extension with an escape sequence or a line
+    // continuation is the one case this skips that the walk did reach, since
+    // its raw text has no `.gts` in it. The walk never rewrote those either:
+    // it replaces the raw span with the cooked value, so the file came out
+    // shorter and tripped the length assertion below. That throw reaches
+    // ESLint as `Parsing error: bad replacement` on an otherwise valid file
+    // (gjs-gts-parser calls this outside the readFile try/catch). It is now a
+    // no-op instead, and TypeScript reports the unresolved module.
     if (!code.includes('.gts')) return code;
 
     let jsCode = code;
@@ -163,10 +168,13 @@ try {
       if (!virtualSourceFile) return;
 
       // Copying ~50 properties per .gts is the bulk of this function, and
-      // nearly every call repeats a copy that is already in place: TypeScript
-      // hands back the same SourceFile object until the file's content
-      // changes, at which point it builds a new one with a new version. Same
-      // object and same version on both sides means the twin is current.
+      // nearly every call repeats a copy that is already in place. The hosts
+      // used for type-aware linting hand back the same SourceFile object
+      // until a file's content changes and build a new one when it does, so
+      // an unchanged object on both sides means the twin is current. The
+      // version check is a second opinion where the host maintains one (it is
+      // a content hash under the watch host); user-supplied `programs` leave
+      // it undefined, and there object identity carries the guard alone.
       if (
         linkedVirtuals.get(virtualSourceFile) === sourceFile &&
         virtualSourceFile.version === sourceFile.version
@@ -188,17 +196,25 @@ try {
 
     // A virtual outlives its original when the .gts/.gjs is deleted; clearing
     // the version makes TypeScript drop it on the next update.
+    //
+    // The flag also lands on the `.ts`/`.js` fallback twin, whose path the
+    // suffix does not match. That case is self-correcting rather than
+    // special-cased: the replace is a no-op, so the lookup finds the file by
+    // its own path and nothing is invalidated.
     function invalidateOrphanedVirtual(sourceFile, virtualSuffix, suffix) {
       if (!program.getSourceFile(sourceFile.path.replace(virtualSuffix, suffix))) {
         sourceFile.version = null;
       }
     }
 
-    // This walks every file in the program — app sources, lib.d.ts, every
-    // .d.ts reachable from node_modules — so the uninteresting majority has
-    // to fall out after a single suffix test. The branches are mutually
-    // exclusive: no path ends in both .gts and .mts, and only files linked
-    // above ever carry a virtual flag.
+    // This walks every file in the program: app sources, lib.d.ts, every
+    // .d.ts reachable from node_modules. So the uninteresting majority has to
+    // fall out after a single suffix test.
+    //
+    // The branches cannot shadow each other. A .gts links `X.mts` or `X.ts`
+    // and a .gjs links `X.mjs` or `X.js`, so no file is ever flagged both
+    // virtual-gts and virtual-gjs, and neither flag can land on a path that
+    // still ends in .gts or .gjs.
     for (const sourceFile of sourceFiles) {
       const path = sourceFile.path;
       if (path.endsWith('.gts')) {

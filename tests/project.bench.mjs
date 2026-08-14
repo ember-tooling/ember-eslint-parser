@@ -338,8 +338,8 @@ for (const mode of MODES) {
 // than reused from the project above: the project's helper modules are a few
 // lines each, and this cost tracks file size.
 //
-// They import each other extensionless, which is what Ember code looks like:
-// none of them names a .gts.
+// They import each other extensionless, which is what Ember code looks like,
+// so none of them names a .gts. The variant below covers the other side.
 
 const TS_SOURCES = Array.from(
   { length: N },
@@ -383,31 +383,48 @@ export default Service${i};
 `
 );
 
-function makeReplaceExtensions(replaceExtensions) {
+// The same sources with a .gts import bolted on, so the pair brackets the
+// change rather than only measuring the case it was built to win: one where
+// the work can be skipped, one where it cannot and the check is pure overhead.
+const TS_SOURCES_IMPORTING_GTS = TS_SOURCES.map(
+  (source, i) => `import Comp${i} from './comp${i}.gts';\n${source}`
+);
+
+function makeReplaceExtensions(replaceExtensions, sources) {
   return () => {
-    for (const source of TS_SOURCES) doNotOptimize(replaceExtensions(source));
+    for (const source of sources) doNotOptimize(replaceExtensions(source));
   };
 }
 
-globalThis.gc?.();
-const replaceExtensionsName = `replaceExtensions over ${N} .ts sources`;
-if (controlTsPatch) {
-  boxplot(() => {
-    summary(() => {
-      bench(
-        `${replaceExtensionsName} (control)`,
-        makeReplaceExtensions(controlTsPatch.replaceExtensions)
-      ).gc('inner');
-      bench(
-        `${replaceExtensionsName} (experiment)`,
-        makeReplaceExtensions(experimentTsPatch.replaceExtensions)
-      ).gc('inner');
+// A control old enough to predate the export can't be compared; skip rather
+// than fail the whole bench, the way the projectService mode does.
+const controlReplaceExtensions =
+  typeof controlTsPatch?.replaceExtensions === 'function' ? controlTsPatch.replaceExtensions : null;
+if (controlTsPatch && !controlReplaceExtensions) {
+  console.error('ℹ️  control does not export replaceExtensions — skipping that comparison');
+}
+
+for (const [label, sources] of [
+  [`${N} .ts sources`, TS_SOURCES],
+  [`${N} .ts sources importing .gts`, TS_SOURCES_IMPORTING_GTS],
+]) {
+  globalThis.gc?.();
+  const name = `replaceExtensions over ${label}`;
+  if (controlReplaceExtensions) {
+    boxplot(() => {
+      summary(() => {
+        bench(`${name} (control)`, makeReplaceExtensions(controlReplaceExtensions, sources)).gc(
+          'inner'
+        );
+        bench(
+          `${name} (experiment)`,
+          makeReplaceExtensions(experimentTsPatch.replaceExtensions, sources)
+        ).gc('inner');
+      });
     });
-  });
-} else {
-  bench(replaceExtensionsName, makeReplaceExtensions(experimentTsPatch.replaceExtensions)).gc(
-    'inner'
-  );
+  } else {
+    bench(name, makeReplaceExtensions(experimentTsPatch.replaceExtensions, sources)).gc('inner');
+  }
 }
 
 // ---------------------------------------------------------------------------

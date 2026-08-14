@@ -2565,4 +2565,54 @@ describe('replaceExtensions', () => {
     const result = replaceExtensions(code);
     expect(result).toBe(code);
   });
+
+  it('replaces every .gts specifier in a file that mixes them with other imports', () => {
+    const code = [
+      `import Foo from './foo.gts';`,
+      `import Bar from './bar';`,
+      `import Baz from './baz.ts';`,
+      `export { qux } from './qux.gts';`,
+      `const lazy = () => import('./lazy.gts');`,
+    ].join('\n');
+
+    expect(replaceExtensions(code)).toBe(
+      [
+        `import Foo from './foo.mts';`,
+        `import Bar from './bar';`,
+        `import Baz from './baz.ts';`,
+        `export { qux } from './qux.mts';`,
+        `const lazy = () => import('./lazy.mts');`,
+      ].join('\n')
+    );
+  });
+
+  // A file with no `.gts` anywhere in its text skips the TypeScript parse
+  // entirely, so anything that only looks like a .gts specifier has to come
+  // back unchanged either way.
+  it.each([
+    ['no module specifiers at all', `export const a = 1;\nexport type B = { c: string };`],
+    ['only extensionless specifiers', `import Foo from './foo';\nexport * from './bar';`],
+    ['an uppercase .GTS specifier', `import Foo from './foo.GTS';`],
+    ['.gts only inside a comment', `// see ./foo.gts\nimport Foo from './foo';`],
+    ['.gts only in a non-specifier string', `const p = './foo.gts';`],
+    ['a require() call', `const Foo = require('./foo.gts');`],
+    ['a template-literal specifier', 'const p = import(`./foo.gts`);'],
+    ['an import = require() specifier', `import Foo = require('./foo.gts');`],
+  ])('leaves code with %s unchanged', (_name, code) => {
+    expect(replaceExtensions(code)).toBe(code);
+  });
+
+  // The rewrite replaces the raw source span with the cooked specifier, so a
+  // specifier spelling `.gts` behind an escape came out shorter and tripped
+  // the length assertion, surfacing as `Parsing error: bad replacement` on a
+  // valid file. Those files are now left alone for TypeScript to resolve.
+  it.each([
+    ['a unicode escape', `import Foo from './foo\\u002Egts';`],
+    ['a hex escape', `import Foo from './foo\\x2Egts';`],
+    ['an escaped extension letter', `import Foo from './foo.gt\\u0073';`],
+    ['a line continuation', `import Foo from './foo.g\\\nts';`],
+  ])('leaves a specifier written with %s alone instead of throwing', (_name, code) => {
+    expect(() => replaceExtensions(code)).not.toThrow();
+    expect(replaceExtensions(code)).toBe(code);
+  });
 });
