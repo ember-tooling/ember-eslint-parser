@@ -41,10 +41,15 @@ const CONTROL_DIR = ctrlIdx !== -1 ? resolve(args[ctrlIdx + 1]) : null;
 // ---------------------------------------------------------------------------
 
 const require_ = createRequire(import.meta.url);
+const controlRequire = CONTROL_DIR ? createRequire(resolve(CONTROL_DIR, 'index.js')) : null;
 const experiment = require_('../src/parser/gjs-gts-parser.js');
-const control = CONTROL_DIR
-  ? createRequire(resolve(CONTROL_DIR, 'index.js'))('./src/parser/gjs-gts-parser.js')
-  : null;
+const control = controlRequire ? controlRequire('./src/parser/gjs-gts-parser.js') : null;
+
+// The patched ts.sys.readFile runs replaceExtensions over every .ts source
+// TypeScript pulls into the program, which the parse benchmarks below never
+// reach — they measure warm parses, after the program is already built.
+const experimentTsPatch = require_('../src/parser/ts-patch.js');
+const controlTsPatch = controlRequire ? controlRequire('./src/parser/ts-patch.js') : null;
 
 // ---------------------------------------------------------------------------
 // Generate a synthetic project
@@ -321,6 +326,88 @@ for (const mode of MODES) {
       bench(scenario.name, scenario.makeFn(experiment.parseForESLint, mode.options)).gc('inner');
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Program construction: what the patched ts.sys.readFile costs
+// ---------------------------------------------------------------------------
+//
+// Every .ts source TypeScript loads goes through replaceExtensions, so this is
+// paid once per file when the program is built — for a whole app's worth of
+// files, not just the ones being linted. Sources are generated here rather
+// than reused from the project above: the project's helper modules are a few
+// lines each, and this cost tracks file size.
+//
+// They import each other extensionless, which is what Ember code looks like:
+// none of them names a .gts.
+
+const TS_SOURCES = Array.from(
+  { length: N },
+  (_, i) => `import { helper${(i + 1) % N} } from './util${(i + 1) % N}';
+import type { Registry } from './registry';
+
+export interface Options${i} {
+  name: string;
+  count: number;
+  nested?: { a: string; b: number[] };
+}
+
+export type Result${i} = { ok: true; data: Options${i} } | { ok: false; error: string };
+
+export function compute${i}(opts: Options${i}): Result${i} {
+  if (opts.count < 0) return { ok: false, error: 'negative' };
+  return { ok: true, data: { ...opts, count: opts.count + helper${(i + 1) % N}(opts.count) } };
+}
+
+export class Service${i} {
+  #cache = new Map<string, Result${i}>();
+
+  get size(): number {
+    return this.#cache.size;
+  }
+
+  lookup(key: string): Result${i} | undefined {
+    return this.#cache.get(key);
+  }
+
+  async load(key: keyof Registry): Promise<Result${i}> {
+    const existing = this.lookup(String(key));
+    if (existing) return existing;
+    const computed = compute${i}({ name: String(key), count: ${i} });
+    this.#cache.set(String(key), computed);
+    return computed;
+  }
+}
+
+export default Service${i};
+`
+);
+
+function makeReplaceExtensions(replaceExtensions) {
+  return () => {
+    for (const source of TS_SOURCES) doNotOptimize(replaceExtensions(source));
+  };
+}
+
+globalThis.gc?.();
+const replaceExtensionsName = `replaceExtensions over ${N} .ts sources`;
+if (controlTsPatch) {
+  boxplot(() => {
+    summary(() => {
+      bench(
+        `${replaceExtensionsName} (control)`,
+        makeReplaceExtensions(controlTsPatch.replaceExtensions)
+      ).gc('inner');
+      bench(
+        `${replaceExtensionsName} (experiment)`,
+        makeReplaceExtensions(experimentTsPatch.replaceExtensions)
+      ).gc('inner');
+    });
+  });
+} else {
+  bench(replaceExtensionsName, makeReplaceExtensions(experimentTsPatch.replaceExtensions)).gc(
+    'inner'
+  );
 }
 
 // ---------------------------------------------------------------------------
