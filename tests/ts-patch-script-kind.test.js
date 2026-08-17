@@ -18,10 +18,10 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 
 import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
+import { detectProjectService, writeTempProject } from './helpers/ts-project.mjs';
 
 const require = createRequire(import.meta.url);
 const parserPath = require.resolve('@typescript-eslint/parser');
@@ -29,51 +29,26 @@ const ts = require(require.resolve('typescript', { paths: [parserPath] }));
 
 const FILE_COUNT = 3;
 
-let parseOptions;
-
-/** Write a project of `.gts`/`.gjs` files, each with a twin TypeScript resolves to. */
-function writeProject() {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ee-parser-script-kind-'));
-  const app = path.join(dir, 'app');
-  fs.mkdirSync(app);
-  fs.writeFileSync(
-    path.join(dir, 'tsconfig.json'),
-    JSON.stringify({
-      compilerOptions: {
-        target: 'ESNext',
-        module: 'ESNext',
-        moduleResolution: 'bundler',
-        allowJs: true,
-        strict: true,
-        noEmit: true,
-        skipLibCheck: true,
-      },
-      include: ['app/**/*'],
-    })
-  );
+/** A `.gts` and a `.gjs` per index, each with a twin TypeScript resolves to. */
+function projectFiles() {
+  const files = {};
   for (let i = 0; i < FILE_COUNT; i++) {
-    fs.writeFileSync(
-      path.join(app, `comp${i}.gts`),
-      `export const value${i}: number = ${i};\n<template>{{value${i}}}</template>\n`
-    );
-    fs.writeFileSync(
-      path.join(app, `plain${i}.gjs`),
-      `export const plain${i} = ${i};\n<template>{{plain${i}}}</template>\n`
-    );
+    files[`app/comp${i}.gts`] =
+      `export const value${i}: number = ${i};\n<template>{{value${i}}}</template>\n`;
+    files[`app/plain${i}.gjs`] =
+      `export const plain${i} = ${i};\n<template>{{plain${i}}}</template>\n`;
   }
-  return { dir, app };
+  return files;
 }
 
-function parse(filePath, code) {
-  return parseForESLint(code ?? fs.readFileSync(filePath, 'utf8'), { ...parseOptions, filePath });
-}
+const { dir: projectDir, cleanup } = writeTempProject({
+  prefix: 'ee-parser-script-kind-',
+  compilerOptions: { allowJs: true },
+  files: projectFiles(),
+});
+const appDir = path.join(projectDir, 'app');
 
-function sourceFile(program, name) {
-  return program.getSourceFile(path.join(appDir, name));
-}
-
-const { dir: projectDir, app: appDir } = writeProject();
-const base = {
+const baseOptions = {
   tsconfigRootDir: projectDir,
   extraFileExtensions: ['.gts', '.gjs'],
   comment: true,
@@ -84,29 +59,27 @@ const base = {
 };
 
 // The twins only land in a DocumentRegistry under the project service, which is
-// where the release/re-acquire happens. It is spelled differently across
-// typescript-eslint majors and may be absent entirely, so feature-detect it —
-// at module scope, because `skipIf` is evaluated during collection.
-function detectProjectService() {
-  for (const options of [{ projectService: true }, { EXPERIMENTAL_useProjectService: true }]) {
-    parseOptions = { ...base, ...options };
-    try {
-      if (parse(path.join(appDir, 'comp0.gts')).services?.program) return true;
-    } catch {
-      // unsupported spelling — try the next one
-    }
-  }
-  return false;
+// where the release/re-acquire happens. Detected at module scope, because
+// `skipIf` is evaluated during collection.
+const serviceOptions = detectProjectService(
+  parseForESLint,
+  baseOptions,
+  path.join(appDir, 'comp0.gts')
+);
+const parseOptions = { ...baseOptions, ...serviceOptions };
+
+function parse(filePath, code) {
+  return parseForESLint(code ?? fs.readFileSync(filePath, 'utf8'), { ...parseOptions, filePath });
 }
 
-const hasProjectService = detectProjectService();
+function sourceFile(program, name) {
+  return program.getSourceFile(path.join(appDir, name));
+}
 
-afterAll(() => {
-  if (projectDir) fs.rmSync(projectDir, { recursive: true, force: true });
-});
+afterAll(cleanup);
 
 describe('script kind of virtual .mts/.mjs twins', () => {
-  it.skipIf(!hasProjectService)(
+  it.skipIf(!serviceOptions)(
     "follows the twin's own extension, not the .gts/.gjs Deferred kind",
     () => {
       const program = parse(path.join(appDir, 'comp0.gts')).services.program;
@@ -122,7 +95,7 @@ describe('script kind of virtual .mts/.mjs twins', () => {
     }
   );
 
-  it.skipIf(!hasProjectService)(
+  it.skipIf(!serviceOptions)(
     'lets TypeScript reuse the twins across a rebuild instead of re-parsing them',
     () => {
       // Linting an edited buffer — what an editor does as you type — rebuilds the

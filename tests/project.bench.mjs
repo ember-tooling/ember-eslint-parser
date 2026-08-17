@@ -23,10 +23,11 @@
  */
 
 import { createRequire } from 'node:module';
-import { mkdirSync, rmSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { writeFileSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { run, bench, boxplot, summary, do_not_optimize as doNotOptimize } from 'mitata';
+
+import { detectProjectService, writeTempProject } from './helpers/ts-project.mjs';
 
 // ---------------------------------------------------------------------------
 // CLI args
@@ -51,37 +52,12 @@ const control = CONTROL_DIR
 // ---------------------------------------------------------------------------
 
 const N = parseInt(process.env.BENCH_PROJECT_FILES ?? '200', 10);
-const PROJECT_DIR = join(tmpdir(), `eep-project-bench-${process.pid}`);
-const APP_DIR = join(PROJECT_DIR, 'app');
 
-function generateProject() {
-  rmSync(PROJECT_DIR, { recursive: true, force: true });
-  mkdirSync(APP_DIR, { recursive: true });
-
-  writeFileSync(
-    join(PROJECT_DIR, 'tsconfig.json'),
-    JSON.stringify(
-      {
-        compilerOptions: {
-          target: 'ESNext',
-          module: 'ESNext',
-          moduleResolution: 'bundler',
-          strict: true,
-          noEmit: true,
-          skipLibCheck: true,
-        },
-        include: ['app/**/*'],
-      },
-      null,
-      2
-    )
-  );
-
+function projectFiles() {
+  const files = {};
   for (let i = 0; i < N; i++) {
     const next = (i + 1) % N;
-    writeFileSync(
-      join(APP_DIR, `comp${i}.gts`),
-      `import Component from './base${i}';
+    files[`app/comp${i}.gts`] = `import Component from './base${i}';
 import { helper${i} } from './util${i}';
 ${i % 2 === 0 ? `import Other from './comp${next}';` : ''}
 
@@ -104,36 +80,33 @@ export default class Comp${i} extends Component<Sig${i}> {
     </div>
   </template>
 }
-`
-    );
-    writeFileSync(
-      join(APP_DIR, `util${i}.ts`),
-      `import type Comp from './comp${i}';
+`;
+    files[`app/util${i}.ts`] = `import type Comp from './comp${i}';
 export function helper${i}(n: number): number { return n + ${i}; }
 export type C${i} = typeof Comp;
-`
-    );
-    writeFileSync(
-      join(APP_DIR, `base${i}.ts`),
-      `export default class Base${i}<S = unknown> { declare args: S extends { Args: infer A } ? A : never; }\n`
-    );
+`;
+    files[`app/base${i}.ts`] =
+      `export default class Base${i}<S = unknown> { declare args: S extends { Args: infer A } ? A : never; }\n`;
   }
+  return files;
 }
 
+const { dir: PROJECT_DIR, cleanup: removeProject } = writeTempProject({
+  prefix: 'eep-project-bench-',
+  files: projectFiles(),
+});
+const APP_DIR = join(PROJECT_DIR, 'app');
+
 function cleanup() {
-  if (existsSync(PROJECT_DIR)) {
-    try {
-      rmSync(PROJECT_DIR, { recursive: true, force: true });
-    } catch {
-      // best-effort
-    }
+  try {
+    removeProject();
+  } catch {
+    // best-effort
   }
 }
 process.on('exit', cleanup);
 process.on('SIGINT', () => process.exit(130));
 process.on('SIGTERM', () => process.exit(143));
-
-generateProject();
 
 const GTS_FILES = Array.from({ length: N }, (_, i) => join(APP_DIR, `comp${i}.gts`));
 const SOURCES = new Map(GTS_FILES.map((f) => [f, readFileSync(f, 'utf8')]));
@@ -154,23 +127,12 @@ const BASE_OPTIONS = {
 
 const MODES = [{ key: 'project', options: { project: './tsconfig.json' } }];
 
-// projectService is spelled differently across typescript-eslint majors and
-// may be absent entirely; feature-detect instead of hardcoding.
-function detectProjectService(parse) {
-  for (const options of [{ projectService: true }, { EXPERIMENTAL_useProjectService: true }]) {
-    try {
-      const filePath = GTS_FILES[0];
-      const result = parse(SOURCES.get(filePath), { ...BASE_OPTIONS, ...options, filePath });
-      if (result.services?.program) return options;
-    } catch {
-      // unsupported spelling — try the next one
-    }
-  }
-  return null;
-}
-
-const serviceOptions = detectProjectService(experiment.parseForESLint);
-const controlServiceOptions = control ? detectProjectService(control.parseForESLint) : null;
+// The control parser is a different copy of the parser and may be an older
+// major, so probe each one separately.
+const serviceOptions = detectProjectService(experiment.parseForESLint, BASE_OPTIONS, GTS_FILES[0]);
+const controlServiceOptions = control
+  ? detectProjectService(control.parseForESLint, BASE_OPTIONS, GTS_FILES[0])
+  : null;
 if (serviceOptions && (!control || controlServiceOptions)) {
   MODES.push({
     key: 'projectService',
