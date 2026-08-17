@@ -155,6 +155,14 @@ try {
             originalFileName: virtualSourceFile.originalFileName,
             resolvedPath: virtualSourceFile.resolvedPath,
             impliedNodeFormat: virtualSourceFile.impliedNodeFormat,
+            // The twin is a .mts/.mjs, so its script kind has to stay the one the language
+            // service host reports for that extension. Inheriting the .gts/.gjs file's
+            // Deferred kind makes TypeScript's getOrCreateSourceFileByPath see a script-kind
+            // mismatch on the next program sync, and it responds by releasing and
+            // re-acquiring the document instead of updating it — a full re-parse of every
+            // twin, on every parse. It never settles either: the re-acquired file comes back
+            // as TS, and the next call to this function stamps it back to Deferred.
+            scriptKind: virtualSourceFile.scriptKind,
           };
           Object.assign(virtualSourceFile, sourceFile, keep);
           virtualSourceFile[virtualFlag] = true;
