@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-08-17)
+
+* ember-eslint-parser 0.14.5 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#248](https://github.com/ember-tooling/ember-eslint-parser/pull/248) Keep the virtual twin's script kind when mirroring a .gts/.gjs ([@wagenet](https://github.com/wagenet))
+
+#### Committers: 1
+- Peter Wagenet ([@wagenet](https://github.com/wagenet))
+
 ## Release (2026-07-08)
 
 * ember-eslint-parser 0.14.4 (patch)
