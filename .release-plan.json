@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.14.4",
-      "newVersion": "0.14.5",
+      "oldVersion": "0.14.5",
+      "newVersion": "0.14.6",
       "tagName": "latest",
       "constraints": [
         {
@@ -14,5 +14,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-08-17)\n\n* ember-eslint-parser 0.14.5 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#248](https://github.com/ember-tooling/ember-eslint-parser/pull/248) Keep the virtual twin's script kind when mirroring a .gts/.gjs ([@wagenet](https://github.com/wagenet))\n\n#### Committers: 1\n- Peter Wagenet ([@wagenet](https://github.com/wagenet))\n"
+  "description": "## Release (2026-08-19)\n\n* ember-eslint-parser 0.14.6 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#250](https://github.com/ember-tooling/ember-eslint-parser/pull/250) Patch ts.sys when the parser module loads ([@wagenet](https://github.com/wagenet))\n\n#### Committers: 1\n- Peter Wagenet ([@wagenet](https://github.com/wagenet))\n"
 }

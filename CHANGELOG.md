@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-08-19)
+
+* ember-eslint-parser 0.14.6 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#250](https://github.com/ember-tooling/ember-eslint-parser/pull/250) Patch ts.sys when the parser module loads ([@wagenet](https://github.com/wagenet))
+
+#### Committers: 1
+- Peter Wagenet ([@wagenet](https://github.com/wagenet))
+
 ## Release (2026-08-17)
 
 * ember-eslint-parser 0.14.5 (patch)
