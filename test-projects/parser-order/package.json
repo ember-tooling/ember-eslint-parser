@@ -1,0 +1,16 @@
+{
+  "name": "@test-project/parser-order",
+  "private": true,
+  "scripts": {
+    "test:check": "pnpm run /test:check:.*/",
+    "test:check:project": "node ./check.mjs",
+    "test:check:project-service": "PROJECT_SERVICE=true node ./check.mjs"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.46.4",
+    "@typescript-eslint/parser": "^8.46.4",
+    "ember-eslint-parser": "workspace:*",
+    "eslint": "^8.0.1",
+    "typescript": "^5.3.3"
+  }
+}

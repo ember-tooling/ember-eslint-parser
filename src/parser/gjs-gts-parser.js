@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module';
 import { registerParsedFile } from '../preprocessor/noop.js';
-import { patchTs, replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
+import { replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
 import { buildGlimmerVisitors } from './transforms.js';
 import { toTree } from 'ember-estree';
 
@@ -48,10 +48,6 @@ export const meta = {
 };
 
 export function parseForESLint(code, options) {
-  // Only patch TypeScript if we actually need it.
-  if (options.programs || options.projectService || options.project) {
-    patchTs();
-  }
   registerParsedFile(options.filePath);
 
   const isTypescript = options.filePath.endsWith('.gts') || options.filePath.endsWith('.ts');

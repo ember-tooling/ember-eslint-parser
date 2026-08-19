@@ -31,6 +31,21 @@ It's recommended to only use _overrides_ when defining your eslint config, so us
 if we detect a typescript parser, it will also be used for all files, otherwise babel parser will be used.
 If we cannot find a typescript parser when linting gts we throw an error. 
 
+If you use type-aware rules, route `.js`/`.ts` through this parser too, as
+`eslint-plugin-ember`'s configs do:
+
+```js
+    {
+      files: ['**/*.{js,ts}'],
+      parser: 'ember-eslint-parser',
+      // ...
+    },
+```
+
+`@typescript-eslint/parser` hands TypeScript the source as ESLint read it, so a
+`.ts` file importing from a `.gts` gets an `error` type for that import. This
+parser rewrites the specifier first.
+
 ## HBS (Handlebars) support
 
 For `.hbs` template files, use the `ember-eslint-parser/hbs` parser. In ESLint's flat config format (ESLint 9+):

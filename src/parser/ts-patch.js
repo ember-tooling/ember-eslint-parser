@@ -123,6 +123,12 @@ try {
     return jsCode;
   };
 
+  // typescript-eslint copies `ts.sys` by value when it builds a program or
+  // project service, on the first type-aware parse in the process — which may be
+  // a plain .ts file that never reaches this parser. Patching at module load is
+  // what puts the wrappers in that copy, and in the project's first file scan.
+  patchTs();
+
   /**
    *
    * @param program {ts.Program}
