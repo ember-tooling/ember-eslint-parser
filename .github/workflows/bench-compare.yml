@@ -68,7 +68,7 @@ jobs:
           cp "$RUNNER_TEMP/bench-comment.md" "$RUNNER_TEMP/comment-artifact/bench-comment.md"
           echo "${{ github.event.pull_request.number }}" > "$RUNNER_TEMP/comment-artifact/pr-number.txt"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always() && steps.checkout.outcome == 'success'
         with:
           name: bench-comment
