@@ -91,7 +91,12 @@ jobs:
           jq '.pnpm.overrides."@typescript-eslint/parser" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
           jq '.pnpm.overrides."@typescript-eslint/scope-manager" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
           jq '.pnpm.overrides."@typescript-eslint/visitor-keys" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
-          jq '.pnpm.overrides."@typescript-eslint/eslint-plugin" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
+          # eslint-plugin v6/v7 lack the subpath exports used by the flat-ts
+          # test project (e.g. ./use-at-your-own-risk/eslint-recommended-raw),
+          # so only override it for v8+ where the full API is present.
+          if [[ "${{ matrix.eslintTsVersion }}" == "^8" || "${{ matrix.eslintTsVersion }}" == "canary" ]]; then
+            jq '.pnpm.overrides."@typescript-eslint/eslint-plugin" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
+          fi
           jq '.pnpm.overrides.typescript = "${{ matrix.tsVersion }}"' package.json | sponge package.json
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm test
