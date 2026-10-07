@@ -2486,6 +2486,35 @@ export const NotFound = <template>
 
     expect(result.scopeManager.scopes[0].through.length).toBe(0);
   });
+
+  it('marks template references as value references', () => {
+    result = parseForESLint(
+      `const greeting = 'hi';
+      const Greeting = <template>{{greeting}}</template>;
+      export default <template><Greeting /></template>;`,
+      {
+        filePath: 'example.gts',
+        comment: true,
+        loc: true,
+        range: true,
+        tokens: true,
+      }
+    );
+
+    // typescript-eslint's rules treat a reference without isValueReference
+    // as type-only (e.g. no-unused-vars, since 8.71.1).
+    for (const name of ['greeting', 'Greeting']) {
+      const variable = result.scopeManager.scopes
+        .flatMap((scope) => scope.variables)
+        .find((v) => v.name === name);
+      const templateRefs = variable.references.filter(
+        (ref) => ref.identifier.type !== 'Identifier'
+      );
+      expect(templateRefs.length).toBe(1);
+      expect(templateRefs[0].isValueReference).toBe(true);
+      expect(templateRefs[0].isTypeReference).toBe(false);
+    }
+  });
 });
 
 describe('replaceExtensions', () => {

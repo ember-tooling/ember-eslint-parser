@@ -61,6 +61,13 @@ function findVarInParentScopes(scopeManager, nodePath, name) {
 
 function registerNodeInScope(node, scope, variable) {
   const ref = new Reference(node, scope, Reference.READ);
+  // A template reference always reads a value. typescript-eslint's scope
+  // manager flags every reference as a value or type reference, and its rules
+  // rely on that (no-unused-vars treats a reference without
+  // isValueReference as type-only since 8.71.1), but eslint-scope's
+  // Reference has neither flag.
+  ref.isValueReference = true;
+  ref.isTypeReference = false;
   if (variable) {
     variable.references.push(ref);
     ref.resolved = variable;
