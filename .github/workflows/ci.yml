@@ -91,6 +91,20 @@ jobs:
           jq '.pnpm.overrides."@typescript-eslint/parser" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
           jq '.pnpm.overrides."@typescript-eslint/scope-manager" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
           jq '.pnpm.overrides."@typescript-eslint/visitor-keys" = "${{ matrix.eslintTsVersion }}"' package.json | sponge package.json
+          # eslint-plugin v6/v7 lack the subpath exports used by the flat-ts
+          # test project (e.g. ./use-at-your-own-risk/eslint-recommended-raw),
+          # so only override it for v8+ where the full API is present.
+          # Also override the unified typescript-eslint package (used by flat-ts)
+          # so its bundled plugin copy stays in sync; use "latest" for ^8 to
+          # force an upgrade past the project's pinned 8.19.1 (which satisfies
+          # ^8 and would otherwise not be upgraded by pnpm).
+          if [[ "${{ matrix.eslintTsVersion }}" == "^8" ]]; then
+            jq '.pnpm.overrides."@typescript-eslint/eslint-plugin" = "latest"' package.json | sponge package.json
+            jq '.pnpm.overrides."typescript-eslint" = "latest"' package.json | sponge package.json
+          elif [[ "${{ matrix.eslintTsVersion }}" == "canary" ]]; then
+            jq '.pnpm.overrides."@typescript-eslint/eslint-plugin" = "canary"' package.json | sponge package.json
+            jq '.pnpm.overrides."typescript-eslint" = "canary"' package.json | sponge package.json
+          fi
           jq '.pnpm.overrides.typescript = "${{ matrix.tsVersion }}"' package.json | sponge package.json
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm test
