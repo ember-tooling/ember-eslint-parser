@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-10-07)
+
+* ember-eslint-parser 0.14.7 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#253](https://github.com/ember-tooling/ember-eslint-parser/pull/253) Mark template references as value references ([@aklkv](https://github.com/aklkv))
+
+#### Committers: 1
+- Alexey Kulakov ([@aklkv](https://github.com/aklkv))
+
 ## Release (2026-08-19)
 
 * ember-eslint-parser 0.14.6 (patch)
