@@ -2589,12 +2589,13 @@ export const NotFound = <template>
     'points a write of a template at the template ($filename, useBabel: $useBabel)',
     ({ filename, useBabel }) => {
       const code = [
+        'let count = 0;',
         'export async function load(store, Fallback = <template>Fallback</template>) {',
         '  const Greeting = <template>Hello</template>;',
         '  let Farewell;',
         '  Farewell = <template>Bye</template>;',
         '  Farewell ??= <template>Later</template>;',
-        '  await store.fetch();',
+        '  count += await store.fetch();',
         '  return [Fallback, Greeting, Farewell];',
         '}',
       ].join('\n');
@@ -2611,7 +2612,14 @@ export const NotFound = <template>
         },
         { filename }
       );
-      expect(messages).toEqual([]);
+      // The deliberate race on `count` is still reported.
+      expect(messages.map(({ line, message }) => ({ line, message }))).toEqual([
+        {
+          line: 7,
+          message:
+            'Possible race condition: `count` might be reassigned based on an outdated value of `count`.',
+        },
+      ]);
 
       const { scopeManager } = parse(code, {
         filePath: filename,
@@ -2624,10 +2632,12 @@ export const NotFound = <template>
         .flatMap((scope) => scope.references)
         .filter((ref) => ref.isWrite());
       expect(writes.map((ref) => [ref.identifier.name, ref.writeExpr.type])).toEqual([
+        ['count', 'Literal'],
         ['Fallback', 'GlimmerTemplate'],
         ['Greeting', 'GlimmerTemplate'],
         ['Farewell', 'GlimmerTemplate'],
         ['Farewell', 'GlimmerTemplate'],
+        ['count', 'AwaitExpression'],
       ]);
     }
   );
