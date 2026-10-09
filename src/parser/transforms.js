@@ -15,6 +15,7 @@ const mathMLTagsSet = new Set(mathmlTagNames);
 const require = createRequire(import.meta.url);
 
 let TypescriptScope = null;
+let TypescriptTemplateScope = null;
 try {
   const parserPath = require.resolve('@typescript-eslint/parser');
   // eslint-disable-next-line n/no-unpublished-require
@@ -22,6 +23,26 @@ try {
     paths: [parserPath],
   });
   TypescriptScope = require(scopeManagerPath);
+  TypescriptTemplateScope = class TemplateScope extends TypescriptScope.FunctionScope {
+    constructor(scopeManager, upperScope, block) {
+      // `isMethodDefinition` makes it strict without scanning the body for a
+      // "use strict" directive, which throws on a template's body.
+      super(scopeManager, upperScope, block, true);
+      // A template has no `arguments`, unlike the function FunctionScope models.
+      const args = this.set.get('arguments');
+      if (args) {
+        this.set.delete('arguments');
+        this.variables.splice(this.variables.indexOf(args), 1);
+      }
+    }
+
+    // Never called for a template scope: only closing a scope during analysis
+    // calls it, and templates get their scopes after that. The base would
+    // throw on a template's `body`, so guard it anyway.
+    isValidResolution() {
+      return true;
+    }
+  };
 } catch {
   // not available
 }
@@ -92,11 +113,15 @@ function createBlockScope(node, path, scopeManager, isTypescript) {
     : new Scope(scopeManager, 'block', upperScope, node);
 }
 
-// Give each template a scope of its own. Otherwise typescript-eslint's
-// no-use-before-define treats a reference in `const Foo = <template>` as
-// running in Foo's initializer, though a template reads its scope lazily.
+// A template compiles to a closure (`scope: () => ({ Foo })`), so give it a
+// function scope: its references run in an execution context of their own,
+// and no-use-before-define accepts `<Foo />` in `const Foo = <template>`.
 function registerTemplateScope(node, path, scopeManager, isTypescript) {
-  createBlockScope(node, path, scopeManager, isTypescript);
+  const upperScope = findParentScope(scopeManager, path);
+  if (isTypescript) return new TypescriptTemplateScope(scopeManager, upperScope, node);
+  // `isMethodDefinition` as in TemplateScope. eslint-scope's base Scope
+  // declares no `arguments`.
+  return new Scope(scopeManager, 'function', upperScope, node, true);
 }
 
 function registerBlockParams(node, path, scopeManager, isTypescript) {
