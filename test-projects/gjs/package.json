@@ -5,6 +5,7 @@
     "test:check": "pnpm run /test:check:.*/",
     "test:check:correct-handle-syntax-error": "eslint . | grep -q \"26:16  error  Parsing error: × Expected ',', got '<eof>'\"",
     "test:check:only-one-error": "eslint --format compact .  | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1",
+    "test:check:require-atomic-updates": "eslint src/require-atomic-updates.gjs --max-warnings=0",
     "test:fix": "eslint --fix --format compact . | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1"
   },
   "devDependencies": {

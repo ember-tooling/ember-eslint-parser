@@ -2577,6 +2577,60 @@ export const NotFound = <template>
       { column: 39, nodeType: 'GlimmerBlockParam' },
     ]);
   });
+
+  // ember-tooling/ember-eslint-parser#257: scope analysis runs on the
+  // placeholder JS, so a write of a template kept the placeholder, which is
+  // not in the AST, as its writeExpr.
+  it.each([
+    { filename: 'example.gjs', useBabel: false },
+    { filename: 'example.gts', useBabel: false },
+    { filename: 'example.gjs', useBabel: true },
+  ])(
+    'points a write of a template at the template ($filename, useBabel: $useBabel)',
+    ({ filename, useBabel }) => {
+      const code = [
+        'export async function load(store, Fallback = <template>Fallback</template>) {',
+        '  const Greeting = <template>Hello</template>;',
+        '  let Farewell;',
+        '  Farewell = <template>Bye</template>;',
+        '  Farewell ??= <template>Later</template>;',
+        '  await store.fetch();',
+        '  return [Fallback, Greeting, Farewell];',
+        '}',
+      ].join('\n');
+      const parse = (source, options) => parseForESLint(source, { ...options, useBabel });
+
+      const linter = new Linter();
+      linter.defineParser('ember-eslint-parser', { parseForESLint: parse });
+      const messages = linter.verify(
+        code,
+        {
+          parser: 'ember-eslint-parser',
+          parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+          rules: { 'require-atomic-updates': 'error' },
+        },
+        { filename }
+      );
+      expect(messages).toEqual([]);
+
+      const { scopeManager } = parse(code, {
+        filePath: filename,
+        comment: true,
+        loc: true,
+        range: true,
+        tokens: true,
+      });
+      const writes = scopeManager.scopes
+        .flatMap((scope) => scope.references)
+        .filter((ref) => ref.isWrite());
+      expect(writes.map((ref) => [ref.identifier.name, ref.writeExpr.type])).toEqual([
+        ['Fallback', 'GlimmerTemplate'],
+        ['Greeting', 'GlimmerTemplate'],
+        ['Farewell', 'GlimmerTemplate'],
+        ['Farewell', 'GlimmerTemplate'],
+      ]);
+    }
+  );
 });
 
 describe('replaceExtensions', () => {

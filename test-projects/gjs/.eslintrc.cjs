@@ -21,5 +21,12 @@ module.exports = {
       plugins: ['ember'],
       extends: ['eslint:recommended', 'plugin:ember/recommended', 'plugin:ember/recommended-gjs'],
     },
+    {
+      // ember-tooling/ember-eslint-parser#257
+      files: ['src/require-atomic-updates.gjs'],
+      rules: {
+        'require-atomic-updates': 'error',
+      },
+    },
   ],
 };
