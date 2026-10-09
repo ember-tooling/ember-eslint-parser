@@ -130,6 +130,20 @@ export function parseForESLint(code, options) {
       }
     }
 
+    // Scope analysis ran on the placeholder JS, so a write of a template
+    // (`const Foo = <template>`, an assignment, a default parameter) still
+    // has the placeholder as its writeExpr. The placeholder is out of the
+    // AST and never gets a `parent`, which rules read (#257).
+    if (result.scopeManager && result.templateInfos?.length) {
+      const templates = new Map(result.templateInfos.map((ti) => [ti.placeholder, ti.ast]));
+      for (const scope of result.scopeManager.scopes) {
+        for (const ref of scope.references) {
+          const template = ref.writeExpr && templates.get(ref.writeExpr);
+          if (template) ref.writeExpr = template;
+        }
+      }
+    }
+
     // Surface Glimmer template comments in program.comments as type:'Block'
     // so ESLint's inline-config scanner and plugin rules recognise them.
     if (glimmerComments.length > 0) {
