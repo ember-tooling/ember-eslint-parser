@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-10-09)
+
+* ember-eslint-parser 0.14.8 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#256](https://github.com/ember-tooling/ember-eslint-parser/pull/256) Stop typescript-eslint's no-use-before-define reporting references in a template assigned to a const ([@aklkv](https://github.com/aklkv))
+
+#### Committers: 1
+- Alexey Kulakov ([@aklkv](https://github.com/aklkv))
+
 ## Release (2026-10-07)
 
 * ember-eslint-parser 0.14.7 (patch)
