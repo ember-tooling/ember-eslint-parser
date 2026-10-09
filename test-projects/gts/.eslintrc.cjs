@@ -39,5 +39,14 @@ module.exports = {
       plugins: ['ember'],
       extends: ['eslint:recommended', 'plugin:ember/recommended', 'plugin:ember/recommended-gjs'],
     },
+    {
+      // ember-tooling/ember-eslint-parser#255. Core no-use-before-define still
+      // reports `<Tree />` inside Tree's own template, which is not fixed yet.
+      files: ['src/use-before-define.gts'],
+      rules: {
+        'no-use-before-define': 'off',
+        '@typescript-eslint/no-use-before-define': 'error',
+      },
+    },
   ],
 };

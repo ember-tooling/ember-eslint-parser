@@ -2,7 +2,9 @@
   "name": "@test-project/gts",
   "private": true,
   "scripts": {
-    "test:check": "eslint src --max-warnings=0 | grep -q '5:49  error  '",
+    "test:check": "pnpm run /test:check:.*/",
+    "test:check:type-aware-error": "eslint src --max-warnings=0 | grep -q '5:49  error  '",
+    "test:check:use-before-define": "eslint src/use-before-define.gts --max-warnings=0",
     "test:fix": "eslint ./src-fixable --fix --max-warnings=0",
     "types": "tsc --noEmit"
   },

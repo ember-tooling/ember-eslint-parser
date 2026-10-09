@@ -85,13 +85,24 @@ function isUpperCase(char) {
   return char.toUpperCase() === char;
 }
 
+function createBlockScope(node, path, scopeManager, isTypescript) {
+  const upperScope = findParentScope(scopeManager, path);
+  return isTypescript
+    ? new TypescriptScope.BlockScope(scopeManager, upperScope, node)
+    : new Scope(scopeManager, 'block', upperScope, node);
+}
+
+// Give each template a scope of its own. Otherwise typescript-eslint's
+// no-use-before-define treats a reference in `const Foo = <template>` as
+// running in Foo's initializer, though a template reads its scope lazily.
+function registerTemplateScope(node, path, scopeManager, isTypescript) {
+  createBlockScope(node, path, scopeManager, isTypescript);
+}
+
 function registerBlockParams(node, path, scopeManager, isTypescript) {
   const blockParamNodes = node.blockParamNodes || [];
   if (blockParamNodes.length === 0) return;
-  const upperScope = findParentScope(scopeManager, path);
-  const scope = isTypescript
-    ? new TypescriptScope.BlockScope(scopeManager, upperScope, node)
-    : new Scope(scopeManager, 'block', upperScope, node);
+  const scope = createBlockScope(node, path, scopeManager, isTypescript);
   const declaredVariables = scopeManager.declaredVariables || scopeManager.__declaredVariables;
   const vars = [];
   declaredVariables.set(node, vars);
@@ -104,7 +115,10 @@ function registerBlockParams(node, path, scopeManager, isTypescript) {
   };
   for (const [i, b] of blockParamNodes.entries()) {
     const v = new Variable(b.name, scope);
-    v.identifiers.push(b);
+    // The block param, parented to the virtual function, so rules that walk
+    // up from a declaration (no-use-before-define's initializer check) stop
+    // there, as they do for a function parameter.
+    v.identifiers.push({ ...b, parent: virtualJSParentNode });
     scope.variables.push(v);
     scope.set.set(b.name, v);
     vars.push(v);
@@ -177,6 +191,9 @@ function registerElementNode(node, path, scopeManager) {
 export function buildGlimmerVisitors(scopeManager, isTypescript, collectComments) {
   if (!scopeManager) return null;
   const visitors = {
+    GlimmerTemplate(node, path) {
+      registerTemplateScope(node, path, scopeManager, isTypescript);
+    },
     GlimmerPathExpression(node, path) {
       registerPathExpression(node, path, scopeManager);
     },
@@ -251,6 +268,9 @@ export function registerGlimmerScopes(result) {
   traverse(result.visitorKeys, result.ast, (path) => {
     const node = path.node;
     if (!node) return;
+    if (node.type === 'GlimmerTemplate') {
+      registerTemplateScope(node, path, result.scopeManager, result.isTypescript);
+    }
     if (node.type === 'GlimmerPathExpression') {
       registerPathExpression(node, path, result.scopeManager);
     }
