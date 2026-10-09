@@ -3,6 +3,7 @@ import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
 import { replaceExtensions } from '../src/parser/ts-patch.js';
 import { transformForLint, traverse } from '../src/parser/transforms.js';
 import { Linter, SourceCode } from 'eslint';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
 import { visitorKeys as tsVisitors } from '@typescript-eslint/visitor-keys';
 import { visitorKeys as glimmerVisitorKeys } from '@glimmer/syntax';
 
@@ -2514,6 +2515,67 @@ export const NotFound = <template>
       expect(templateRefs[0].isValueReference).toBe(true);
       expect(templateRefs[0].isTypeReference).toBe(false);
     }
+  });
+
+  // ember-tooling/ember-eslint-parser#255: typescript-eslint's
+  // no-use-before-define reports a value reference inside its variable's own
+  // initializer, and a template assigned to a const is that initializer.
+  it.each([
+    { filename: 'example.gjs', useBabel: false },
+    { filename: 'example.gts', useBabel: false },
+    { filename: 'example.gjs', useBabel: true },
+  ])(
+    'does not report no-use-before-define inside a template assigned to a const ($filename, useBabel: $useBabel)',
+    ({ filename, useBabel }) => {
+      const code = [
+        'const Foo = <template>',
+        '  {{#let "bar" as |foo|}}',
+        '    {{foo}}',
+        '  {{/let}}',
+        '  <Foo />',
+        '  {{later}}',
+        '</template>;',
+        'const later = 1;',
+        'export default Foo;',
+      ].join('\n');
+
+      const linter = new Linter();
+      linter.defineParser('ember-eslint-parser', {
+        parseForESLint: (source, options) => parseForESLint(source, { ...options, useBabel }),
+      });
+      linter.defineRule('no-use-before-define', tsPlugin.rules['no-use-before-define']);
+      const messages = linter.verify(
+        code,
+        {
+          parser: 'ember-eslint-parser',
+          parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+          rules: { 'no-use-before-define': 'error' },
+        },
+        { filename }
+      );
+
+      expect(messages.map(({ line, message }) => ({ line, message }))).toEqual([
+        { line: 6, message: "'later' was used before it was defined." },
+      ]);
+    }
+  );
+
+  it('reports an unused block param on its GlimmerBlockParam node', () => {
+    const linter = new Linter();
+    linter.defineParser('ember-eslint-parser', { parseForESLint });
+    const messages = linter.verify(
+      'export default <template>{{#let 1 as |unused|}}{{/let}}</template>;',
+      {
+        parser: 'ember-eslint-parser',
+        parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+        rules: { 'no-unused-vars': 'error' },
+      },
+      { filename: 'example.gts' }
+    );
+
+    expect(messages.map(({ column, nodeType }) => ({ column, nodeType }))).toEqual([
+      { column: 39, nodeType: 'GlimmerBlockParam' },
+    ]);
   });
 });
 
