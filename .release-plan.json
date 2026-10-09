@@ -2,8 +2,8 @@
   "solution": {
     "ember-eslint-parser": {
       "impact": "patch",
-      "oldVersion": "0.14.7",
-      "newVersion": "0.14.8",
+      "oldVersion": "0.14.8",
+      "newVersion": "0.14.9",
       "tagName": "latest",
       "constraints": [
         {
@@ -14,5 +14,5 @@
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-10-09)\n\n* ember-eslint-parser 0.14.8 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#256](https://github.com/ember-tooling/ember-eslint-parser/pull/256) Stop typescript-eslint's no-use-before-define reporting references in a template assigned to a const ([@aklkv](https://github.com/aklkv))\n\n#### Committers: 1\n- Alexey Kulakov ([@aklkv](https://github.com/aklkv))\n"
+  "description": "## Release (2026-10-09)\n\n* ember-eslint-parser 0.14.9 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#261](https://github.com/ember-tooling/ember-eslint-parser/pull/261) Give each template a function scope ([@aklkv](https://github.com/aklkv))\n  * [#258](https://github.com/ember-tooling/ember-eslint-parser/pull/258) Point a write of a template at the template, not its placeholder ([@aklkv](https://github.com/aklkv))\n\n#### Committers: 1\n- Alexey Kulakov ([@aklkv](https://github.com/aklkv))\n"
 }

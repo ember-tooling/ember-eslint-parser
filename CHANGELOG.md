@@ -2,6 +2,18 @@
 
 ## Release (2026-10-09)
 
+* ember-eslint-parser 0.14.9 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#261](https://github.com/ember-tooling/ember-eslint-parser/pull/261) Give each template a function scope ([@aklkv](https://github.com/aklkv))
+  * [#258](https://github.com/ember-tooling/ember-eslint-parser/pull/258) Point a write of a template at the template, not its placeholder ([@aklkv](https://github.com/aklkv))
+
+#### Committers: 1
+- Alexey Kulakov ([@aklkv](https://github.com/aklkv))
+
+## Release (2026-10-09)
+
 * ember-eslint-parser 0.14.8 (patch)
 
 #### :bug: Bug Fix
