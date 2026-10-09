@@ -2641,6 +2641,101 @@ export const NotFound = <template>
       ]);
     }
   );
+
+  describe('template scope', () => {
+    const parserVariants = [
+      { filename: 'example.gjs', useBabel: false },
+      { filename: 'example.gts', useBabel: false },
+      { filename: 'example.gjs', useBabel: true },
+    ];
+
+    function lint({ filename, useBabel }, code, rules) {
+      const linter = new Linter();
+      linter.defineParser('ember-eslint-parser', {
+        parseForESLint: (source, options) => parseForESLint(source, { ...options, useBabel }),
+      });
+      return linter
+        .verify(
+          code,
+          {
+            parser: 'ember-eslint-parser',
+            parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+            rules,
+          },
+          { filename }
+        )
+        .map(({ line, message }) => ({ line, message }));
+    }
+
+    // A template compiles to a closure, so ESLint's no-use-before-define
+    // treats its references as running in an execution context of their own.
+    it.each(parserVariants)(
+      'lets a template reference its own component ($filename, useBabel: $useBabel)',
+      (variant) => {
+        const code = [
+          "import Component from '@glimmer/component';",
+          'const Foo = <template><Foo /></template>;',
+          'class Bar extends Component { <template><Bar /></template> }',
+          'class Baz { static T = <template><Baz /></template>; }',
+          'export const render = () => <template>{{later}}</template>;',
+          'export default <template>{{later}}</template>;',
+          'let later = 1;',
+          'export { Foo, Bar, Baz };',
+        ].join('\n');
+        const usedBeforeDefined = { message: "'later' was used before it was defined." };
+
+        expect(lint(variant, code, { 'no-use-before-define': 'error' })).toEqual([
+          { line: 5, ...usedBeforeDefined },
+          { line: 6, ...usedBeforeDefined },
+        ]);
+        // eslint-config-standard's options
+        const standard = { functions: false, classes: false, variables: false };
+        expect(lint(variant, code, { 'no-use-before-define': ['error', standard] })).toEqual([]);
+      }
+    );
+
+    it.each(parserVariants)(
+      'does not declare `arguments` ($filename, useBabel: $useBabel)',
+      (variant) => {
+        expect(
+          lint(variant, 'export default <template>{{arguments}}</template>;', {
+            'no-undef': 'error',
+          })
+        ).toEqual([{ line: 1, message: "'arguments' is not defined." }]);
+      }
+    );
+
+    it.each(parserVariants)(
+      'is a strict function scope in modules and scripts ($filename, useBabel: $useBabel)',
+      ({ filename, useBabel }) => {
+        for (const sourceType of ['module', 'script']) {
+          const result = parseForESLint(
+            'const Foo = <template>{{#let 1 as |x|}}{{x}}{{/let}}</template>;',
+            {
+              filePath: filename,
+              useBabel,
+              sourceType,
+              comment: true,
+              loc: true,
+              range: true,
+              tokens: true,
+            }
+          );
+          const template = result.ast.body[0].declarations[0].init;
+          const scope = result.scopeManager.acquire(template, true);
+
+          expect(scope.type).toBe('function');
+          expect(scope.variableScope).toBe(scope);
+          expect(scope.isStrict).toBe(true);
+          expect(scope.variables.map((v) => v.name)).toEqual([]);
+          expect(scope.set.has('arguments')).toBe(false);
+          expect(scope.childScopes.map((s) => [s.type, s.variableScope === scope])).toEqual([
+            ['block', true],
+          ]);
+        }
+      }
+    );
+  });
 });
 
 describe('replaceExtensions', () => {
