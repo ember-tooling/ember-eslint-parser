@@ -6,6 +6,6 @@
   },
   "devDependencies": {
     "ember-eslint-parser": "workspace:*",
-    "eslint": "^9.0.0"
+    "eslint": "^10.0.0"
   }
 }
