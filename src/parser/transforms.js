@@ -371,7 +371,7 @@ function createError(code, message, fileName, start, end = start) {
 
 /**
  * Transform code for TypeScript virtual file system.
- * Replaces <template> regions with backtick/static-block placeholders.
+ * Replaces <template> regions with void-backtick/static-block placeholders.
  * Used by ts-patch.js for type-aware linting.
  */
 export function transformForLint(code, fileName) {
@@ -392,7 +392,9 @@ export function transformForLint(code, fileName) {
   // Build placeholder JS inline (same format as ember-estree's toPlaceholderJS)
   let jsCode = code;
   for (const tplInfo of [...result].reverse()) {
-    const content = maskTemplateContentForLint(tplInfo.contents);
+    const content = maskTemplateContentForLint(
+      code.slice(tplInfo.contentRange.startUtf16Codepoint, tplInfo.contentRange.endUtf16Codepoint)
+    );
     const start = tplInfo.range.startUtf16Codepoint;
     const end = tplInfo.range.endUtf16Codepoint;
     const tplLength = end - start;
@@ -401,8 +403,8 @@ export function transformForLint(code, fileName) {
       const spaces = tplLength - content.length - 10; // "static{`" + "`}" = 10
       replacement = `static{\`${content}${' '.repeat(Math.max(0, spaces))}\`}`;
     } else {
-      const spaces = tplLength - content.length - 2; // "`" + "`" = 2
-      replacement = `\`${content}${' '.repeat(Math.max(0, spaces))}\``;
+      const spaces = tplLength - content.length - 7; // "void `" + "`" = 7
+      replacement = `void \`${content}${' '.repeat(Math.max(0, spaces))}\``;
     }
     jsCode = replaceRange(jsCode, start, end, replacement);
   }
