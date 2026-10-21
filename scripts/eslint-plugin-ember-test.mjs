@@ -2,10 +2,11 @@ import { execaCommand } from 'execa';
 import fse from 'fs-extra';
 
 // Use the fork branch that has the GlimmerBlockParam nodeType fix
+// and the test expectations for ember-estree 0.9
 // until https://github.com/ember-cli/eslint-plugin-ember/pull/2577 merges,
 // then switch back to ember-cli/eslint-plugin-ember.
 const REPO = `https://github.com/NullVoxPopuli-ai-agent/eslint-plugin-ember.git`;
-const BRANCH = 'update-blockparam-nodetype';
+const BRANCH = 'ember-estree-0.9';
 const FOLDERS = {
   here: process.cwd(),
   testRoot: '/tmp/eslint-plugin-ember-test/',

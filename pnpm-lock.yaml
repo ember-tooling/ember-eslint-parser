@@ -21,8 +21,8 @@ importers:
         specifier: ^4.1.1
         version: 4.1.1
       ember-estree:
-        specifier: ^0.6.10
-        version: 0.6.10
+        specifier: ^0.9.0
+        version: 0.9.0
       eslint-scope:
         specifier: ^9.1.2
         version: 9.1.2
@@ -3063,8 +3063,8 @@ packages:
     resolution: {integrity: sha512-BtkjulweiXo9c3yVWrtexw2dTmBrvavD/xixNC6TKOBdrixUwU+6nuOO9dufDWsMxoid7MvtmDpzc9+mE8PdaA==}
     engines: {node: 10.* || >= 12.*}
 
-  ember-estree@0.6.10:
-    resolution: {integrity: sha512-5nItZGzvxHgoCdASQbn9qBzF4sdjSggUeZpXdihAanmYWm6XkObT/TlUvakYtoKret1/8gm0jNLwNPqZYwHtCw==}
+  ember-estree@0.9.0:
+    resolution: {integrity: sha512-CExL0d6FbbffZaQkD0+zA5PaIgle3fbpzapuLVQ+QZfI2KLalnhuof0e85Zvfy/fh8+q9liw7dqUhQX4gibMBA==}
 
   ember-rfc176-data@0.3.18:
     resolution: {integrity: sha512-JtuLoYGSjay1W3MQAxt3eINWXNYYQliK90tLwtb8aeCuQK8zKGCRbBodVIrkcTqshULMnRuTOS6t1P7oQk3g6Q==}
@@ -9587,7 +9587,7 @@ snapshots:
       - '@babel/core'
       - supports-color
 
-  ember-estree@0.6.10:
+  ember-estree@0.9.0:
     dependencies:
       '@glimmer/env': 0.1.7
       '@glimmer/syntax': 0.95.0
