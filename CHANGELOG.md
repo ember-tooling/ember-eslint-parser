@@ -1,5 +1,22 @@
 # Changelog
 
+## Release (2026-10-21)
+
+* ember-eslint-parser 0.15.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#266](https://github.com/ember-tooling/ember-eslint-parser/pull/266) Update ember-estree to 0.9 ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+  * [#262](https://github.com/ember-tooling/ember-eslint-parser/pull/262) Widen @glimmer/syntax range to >= 0.95.0 ([@johanrd](https://github.com/johanrd))
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#264](https://github.com/ember-tooling/ember-eslint-parser/pull/264) Make the node-range snapshot independent of the Program start ([@johanrd](https://github.com/johanrd))
+
+#### Committers: 2
+- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+- Johan Røed ([@johanrd](https://github.com/johanrd))
+
 ## Release (2026-10-09)
 
 * ember-eslint-parser 0.14.9 (patch)

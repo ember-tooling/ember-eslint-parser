@@ -1,18 +1,22 @@
 {
   "solution": {
     "ember-eslint-parser": {
-      "impact": "patch",
-      "oldVersion": "0.14.8",
-      "newVersion": "0.14.9",
+      "impact": "minor",
+      "oldVersion": "0.14.9",
+      "newVersion": "0.15.0",
       "tagName": "latest",
       "constraints": [
         {
+          "impact": "minor",
+          "reason": "Appears in changelog section :rocket: Enhancement"
+        },
+        {
           "impact": "patch",
-          "reason": "Appears in changelog section :bug: Bug Fix"
+          "reason": "Appears in changelog section :house: Internal"
         }
       ],
       "pkgJSONPath": "./package.json"
     }
   },
-  "description": "## Release (2026-10-09)\n\n* ember-eslint-parser 0.14.9 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#261](https://github.com/ember-tooling/ember-eslint-parser/pull/261) Give each template a function scope ([@aklkv](https://github.com/aklkv))\n  * [#258](https://github.com/ember-tooling/ember-eslint-parser/pull/258) Point a write of a template at the template, not its placeholder ([@aklkv](https://github.com/aklkv))\n\n#### Committers: 1\n- Alexey Kulakov ([@aklkv](https://github.com/aklkv))\n"
+  "description": "## Release (2026-10-21)\n\n* ember-eslint-parser 0.15.0 (minor)\n\n#### :rocket: Enhancement\n* `ember-eslint-parser`\n  * [#266](https://github.com/ember-tooling/ember-eslint-parser/pull/266) Update ember-estree to 0.9 ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n  * [#262](https://github.com/ember-tooling/ember-eslint-parser/pull/262) Widen @glimmer/syntax range to >= 0.95.0 ([@johanrd](https://github.com/johanrd))\n\n#### :house: Internal\n* `ember-eslint-parser`\n  * [#264](https://github.com/ember-tooling/ember-eslint-parser/pull/264) Make the node-range snapshot independent of the Program start ([@johanrd](https://github.com/johanrd))\n\n#### Committers: 2\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n- Johan Røed ([@johanrd](https://github.com/johanrd))\n"
 }
