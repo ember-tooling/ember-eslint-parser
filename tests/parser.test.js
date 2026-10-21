@@ -96,7 +96,11 @@ export const NotFound = <template>
     let i = 0;
     // create following line, duplicate  many times, then update
     // expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot();
-    expect({ type: nodes[i].type, slice: text.slice(...nodes[i++].range) }).toMatchInlineSnapshot(`
+    // typescript-eslint 8.72+ starts the Program range at 0, before the leading whitespace
+    expect({
+      type: nodes[i].type,
+      slice: text.slice(...nodes[i++].range).trimStart(),
+    }).toMatchInlineSnapshot(`
       {
         "slice": "import { ExternalLink, Link, service } from 'limber-ui';
 
