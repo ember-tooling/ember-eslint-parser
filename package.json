@@ -33,7 +33,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@glimmer/syntax": "^0.95.0",
+    "@glimmer/syntax": ">= 0.95.0",
     "@typescript-eslint/tsconfig-utils": "^8.57.1",
     "content-tag": "^4.1.1",
     "ember-estree": "^0.9.0",
