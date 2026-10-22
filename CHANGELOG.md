@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-10-22)
+
+* ember-eslint-parser 0.16.0 (minor)
+
+#### :rocket: Enhancement
+* `ember-eslint-parser`
+  * [#267](https://github.com/ember-tooling/ember-eslint-parser/pull/267) Add an `emberSourceVersion` parser option ([@davidtaylorhq](https://github.com/davidtaylorhq))
+
+#### Committers: 1
+- David Taylor ([@davidtaylorhq](https://github.com/davidtaylorhq))
+
 ## Release (2026-10-21)
 
 * ember-eslint-parser 0.15.0 (minor)
