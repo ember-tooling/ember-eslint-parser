@@ -113,7 +113,8 @@ export function parseForESLint(code, options) {
       // runs. Returns null when unavailable so ember-estree skips the walk.
       // The comments array is passed through so comment handlers share a
       // single closure over it.
-      visitors: () => buildGlimmerVisitors(scopeManager, useTS, glimmerComments),
+      visitors: () =>
+        buildGlimmerVisitors(scopeManager, useTS, glimmerComments, options.emberSourceVersion),
     });
 
     if (!result.scopeManager) result.scopeManager = scopeManager;

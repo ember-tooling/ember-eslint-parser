@@ -30,12 +30,12 @@ describe('parser — Ember 7.1 built-in template keywords (lint behavior)', () =
     linter.defineParser(PARSER_NAME, { parseForESLint });
   });
 
-  function lint(code) {
+  function lint(code, parserOptions = {}) {
     return linter.verify(
       code,
       {
         parser: PARSER_NAME,
-        parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+        parserOptions: { ecmaVersion: 2022, sourceType: 'module', ...parserOptions },
         rules: { 'no-undef': 'error', 'no-unused-vars': 'error' },
       },
       { filename: 'fixture.gjs' }
@@ -91,6 +91,27 @@ describe('parser — Ember 7.1 built-in template keywords (lint behavior)', () =
 
     it('flags a bare 7.1 keyword as no-undef', () => {
       const messages = lint(['<template>', '  {{eq 1 2}}', '</template>'].join('\n'));
+      const undefMessages = messages.filter((m) => m.ruleId === 'no-undef');
+      expect(undefMessages).toHaveLength(1);
+      expect(undefMessages[0].message).toMatch(/eq/);
+    });
+
+    it('does not flag a bare 7.1 keyword when the emberSourceVersion option is >= 7.1', () => {
+      const messages = lint(['<template>', '  {{eq 1 2}}', '</template>'].join('\n'), {
+        emberSourceVersion: '7.1.0',
+      });
+      expect(messages.filter((m) => m.ruleId === 'no-undef')).toEqual([]);
+    });
+  });
+
+  describe('with ember-source >= 7.1 resolvable and an older emberSourceVersion option', () => {
+    beforeEach(() => _setEmberSourceVersionForTesting('7.3.0'));
+    afterEach(() => _resetEmberSourceVersionCache());
+
+    it('flags a bare 7.1 keyword as no-undef', () => {
+      const messages = lint(['<template>', '  {{eq 1 2}}', '</template>'].join('\n'), {
+        emberSourceVersion: '7.0.0',
+      });
       const undefMessages = messages.filter((m) => m.ruleId === 'no-undef');
       expect(undefMessages).toHaveLength(1);
       expect(undefMessages[0].message).toMatch(/eq/);

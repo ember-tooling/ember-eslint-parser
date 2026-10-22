@@ -77,12 +77,17 @@ function resolveEmberSourceVersion() {
  * The probe is cached for the lifetime of the process so this is cheap
  * to call from per-node scope registration.
  *
+ * `emberSourceVersion` comes from the parser option of the same name. When
+ * set, it is used instead of the probe, for projects that lint without
+ * `ember-source` installed.
+ *
  * @param {string} name
+ * @param {string} [emberSourceVersion]
  * @returns {boolean}
  */
-export function isEmber71BuiltInKeyword(name) {
+export function isEmber71BuiltInKeyword(name, emberSourceVersion) {
   if (!EMBER_71_BUILT_IN_KEYWORDS.has(name)) return false;
-  return isEmber71BuiltInKeywordForVersion(name, resolveEmberSourceVersion());
+  return isEmber71BuiltInKeywordForVersion(name, emberSourceVersion ?? resolveEmberSourceVersion());
 }
 
 /**

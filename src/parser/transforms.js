@@ -160,7 +160,7 @@ function registerBlockParams(node, path, scopeManager, isTypescript) {
   }
 }
 
-function registerPathExpression(node, path, scopeManager) {
+function registerPathExpression(node, path, scopeManager, emberSourceVersion) {
   if (node.head.type !== 'VarHead') return;
   const name = node.head.name;
   if (glimmerIsKeyword(name)) return;
@@ -174,7 +174,7 @@ function registerPathExpression(node, path, scopeManager) {
   // `import { eq } from 'ember-truth-helpers'` (or a `const eq = …`) must
   // shadow the built-in so the scope reference is registered and the
   // import is marked as used by `no-unused-vars`.
-  if (!variable && isEmber71BuiltInKeyword(name)) return;
+  if (!variable && isEmber71BuiltInKeyword(name, emberSourceVersion)) return;
   if (scope) {
     node.head.parent = node;
     registerNodeInScope(node.head, scope, variable);
@@ -211,16 +211,22 @@ function registerElementNode(node, path, scopeManager) {
  * @param {object|null} scopeManager
  * @param {boolean} isTypescript
  * @param {Array|null} [collectComments] - optional array to collect Glimmer comment nodes into
+ * @param {string} [emberSourceVersion] - the `emberSourceVersion` parser option, if set
  * @returns {object|null} visitors for toTree, or null to skip
  */
-export function buildGlimmerVisitors(scopeManager, isTypescript, collectComments) {
+export function buildGlimmerVisitors(
+  scopeManager,
+  isTypescript,
+  collectComments,
+  emberSourceVersion
+) {
   if (!scopeManager) return null;
   const visitors = {
     GlimmerTemplate(node, path) {
       registerTemplateScope(node, path, scopeManager, isTypescript);
     },
     GlimmerPathExpression(node, path) {
-      registerPathExpression(node, path, scopeManager);
+      registerPathExpression(node, path, scopeManager, emberSourceVersion);
     },
     GlimmerElementNode(node, path) {
       registerElementNode(node, path, scopeManager);
