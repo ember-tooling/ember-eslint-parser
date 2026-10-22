@@ -46,6 +46,27 @@ If you use type-aware rules, route `.js`/`.ts` through this parser too, as
 `.ts` file importing from a `.gts` gets an `error` type for that import. This
 parser rewrites the specifier first.
 
+## Built-in template keywords
+
+Ember 7.1 added built-in template keywords, such as `eq`, `and` and `on`, that `.gjs`/`.gts` templates can use without an import. The parser treats them as defined when it can resolve `ember-source` 7.1 or newer, so `no-undef` doesn't flag them.
+
+If you lint without `ember-source` installed, for example in a project that runs inside a host app, set the version with the `emberSourceVersion` parser option. It takes precedence over the installed `ember-source`:
+
+```js
+// eslint.config.mjs
+import emberParser from 'ember-eslint-parser';
+
+export default [
+  {
+    files: ['**/*.{gjs,gts}'],
+    languageOptions: {
+      parser: emberParser,
+      parserOptions: { emberSourceVersion: '7.1.0' },
+    },
+  },
+];
+```
+
 ## HBS (Handlebars) support
 
 For `.hbs` template files, use the `ember-eslint-parser/hbs` parser. In ESLint's flat config format (ESLint 9+):
