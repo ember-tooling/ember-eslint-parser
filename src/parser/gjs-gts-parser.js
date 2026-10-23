@@ -2,6 +2,7 @@ import { createRequire } from 'node:module';
 import { registerParsedFile } from '../preprocessor/noop.js';
 import { replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
 import { buildGlimmerVisitors } from './transforms.js';
+import { resolveEmberSourceVersion } from './ember71-built-in-keywords.js';
 import { toTree } from 'ember-estree';
 
 const require = createRequire(import.meta.url);
@@ -62,6 +63,7 @@ export function parseForESLint(code, options) {
   }
 
   const filePath = options.filePath;
+  const emberSourceVersion = options.emberSourceVersion ?? resolveEmberSourceVersion(filePath);
   const useTS = isTypescript || useTypescript;
 
   // Both paths create scopeManager inside the parser callback so it's
@@ -114,7 +116,7 @@ export function parseForESLint(code, options) {
       // The comments array is passed through so comment handlers share a
       // single closure over it.
       visitors: () =>
-        buildGlimmerVisitors(scopeManager, useTS, glimmerComments, options.emberSourceVersion),
+        buildGlimmerVisitors(scopeManager, useTS, glimmerComments, emberSourceVersion),
     });
 
     if (!result.scopeManager) result.scopeManager = scopeManager;

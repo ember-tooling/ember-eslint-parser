@@ -1,4 +1,5 @@
 import { createRequire } from 'node:module';
+import path from 'node:path';
 
 /**
  * Built-in template keywords shipped from `ember-source` 7.1.0
@@ -48,63 +49,59 @@ export function isEmber71BuiltInKeywordForVersion(name, version) {
   return major > 7 || (major === 7 && minor >= 1);
 }
 
-const require = createRequire(import.meta.url);
-
-let cachedVersion;
-let cachedVersionResolved = false;
-
-function resolveEmberSourceVersion() {
-  if (cachedVersionResolved) return cachedVersion;
-  cachedVersionResolved = true;
-  try {
-    // ember-source is a peer of consumers, not of this parser.
-    // eslint-disable-next-line n/no-missing-require, import/no-unresolved
-    const pkg = require('ember-source/package.json');
-    cachedVersion = typeof pkg?.version === 'string' ? pkg.version : undefined;
-  } catch {
-    cachedVersion = undefined;
-  }
-  return cachedVersion;
-}
+let forcedVersion;
+let isVersionForced = false;
+const versionsByDirectory = new Map();
 
 /**
- * Decide whether `name` should be treated as a built-in template keyword
- * given the consumer's installed `ember-source`. Returns `false` when
- * `ember-source` is not resolvable or its version is older than 7.1.0, so
- * pre-7.1 projects keep their existing lint behavior and typos like
- * `{{eq}}` continue to surface as `no-undef`.
+ * Find the `ember-source` version that the linted file uses.
  *
- * The probe is cached for the lifetime of the process so this is cheap
- * to call from per-node scope registration.
+ * The lookup starts at the linted file, not at this parser, because
+ * ember-source is a dependency of the project, not of the parser.
+ * With pnpm, a lookup from the parser finds only the hoisted copy,
+ * which can be a different version in a monorepo.
  *
- * `emberSourceVersion` comes from the parser option of the same name. When
- * set, it is used instead of the probe, for projects that lint without
- * `ember-source` installed.
+ * Results are cached per directory.
  *
- * @param {string} name
- * @param {string} [emberSourceVersion]
- * @returns {boolean}
+ * @param {string} [filePath] - the linted file; the current directory if not absolute
+ * @returns {string | undefined} the version, or `undefined` if ember-source is not found
  */
-export function isEmber71BuiltInKeyword(name, emberSourceVersion) {
-  if (!EMBER_71_BUILT_IN_KEYWORDS.has(name)) return false;
-  return isEmber71BuiltInKeywordForVersion(name, emberSourceVersion ?? resolveEmberSourceVersion());
+export function resolveEmberSourceVersion(filePath) {
+  if (isVersionForced) return forcedVersion;
+
+  const directory = filePath && path.isAbsolute(filePath) ? path.dirname(filePath) : process.cwd();
+
+  if (versionsByDirectory.has(directory)) return versionsByDirectory.get(directory);
+
+  let version;
+  try {
+    const require = createRequire(path.join(directory, 'noop.js'));
+    const pkg = require('ember-source/package.json');
+    version = typeof pkg?.version === 'string' ? pkg.version : undefined;
+  } catch {
+    version = undefined;
+  }
+
+  versionsByDirectory.set(directory, version);
+  return version;
 }
 
 /**
  * Test-only: reset the cached `ember-source` version probe.
  */
 export function _resetEmberSourceVersionCache() {
-  cachedVersion = undefined;
-  cachedVersionResolved = false;
+  forcedVersion = undefined;
+  isVersionForced = false;
+  versionsByDirectory.clear();
 }
 
 /**
  * Test-only: force the resolved `ember-source` version. Pass `undefined`
- * to clear and fall back to real probing on the next call.
+ * to act as if `ember-source` is not installed.
  *
  * @param {string | undefined} version
  */
 export function _setEmberSourceVersionForTesting(version) {
-  cachedVersion = version;
-  cachedVersionResolved = true;
+  forcedVersion = version;
+  isVersionForced = true;
 }

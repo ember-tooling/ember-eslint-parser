@@ -48,7 +48,7 @@ parser rewrites the specifier first.
 
 ## Built-in template keywords
 
-Ember 7.1 added built-in template keywords, such as `eq`, `and` and `on`, that `.gjs`/`.gts` templates can use without an import. The parser treats them as defined when it can resolve `ember-source` 7.1 or newer, so `no-undef` doesn't flag them.
+Ember 7.1 added built-in template keywords, such as `eq`, `and` and `on`, that `.gjs`/`.gts` templates can use without an import. The parser treats them as defined when the linted file resolves `ember-source` 7.1 or newer, so `no-undef` doesn't flag them. In a monorepo, each package uses its own `ember-source`.
 
 If you lint without `ember-source` installed, for example in a project that runs inside a host app, set the version with the `emberSourceVersion` parser option. It takes precedence over the installed `ember-source`:
 
