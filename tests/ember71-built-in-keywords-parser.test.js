@@ -1,4 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { Linter } from 'eslint';
 import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
 import {
@@ -115,6 +118,55 @@ describe('parser — Ember 7.1 built-in template keywords (lint behavior)', () =
       const undefMessages = messages.filter((m) => m.ruleId === 'no-undef');
       expect(undefMessages).toHaveLength(1);
       expect(undefMessages[0].message).toMatch(/eq/);
+    });
+  });
+
+  /**
+   * A monorepo where each package has its own ember-source,
+   * and the hoisted copy at the root is older than 7.1.
+   */
+  describe('with a different ember-source per package', () => {
+    let root;
+
+    function addEmberSource(directory, version) {
+      const packageDirectory = path.join(directory, 'node_modules', 'ember-source');
+      fs.mkdirSync(packageDirectory, { recursive: true });
+      fs.writeFileSync(
+        path.join(packageDirectory, 'package.json'),
+        JSON.stringify({ name: 'ember-source', version })
+      );
+    }
+
+    function lintFile(filename) {
+      return linter.verify(
+        ['<template>', '  {{eq 1 2}}', '</template>'].join('\n'),
+        {
+          parser: PARSER_NAME,
+          parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+          rules: { 'no-undef': 'error' },
+        },
+        { filename }
+      );
+    }
+
+    beforeAll(() => {
+      root = fs.mkdtempSync(path.join(os.tmpdir(), 'ember-eslint-parser-'));
+      addEmberSource(root, '7.0.0');
+      addEmberSource(path.join(root, 'packages', 'new-app'), '7.3.1');
+      fs.mkdirSync(path.join(root, 'packages', 'old-app'), { recursive: true });
+    });
+
+    afterAll(() => fs.rmSync(root, { recursive: true, force: true }));
+
+    beforeEach(() => _resetEmberSourceVersionCache());
+    afterEach(() => _resetEmberSourceVersionCache());
+
+    it('uses the ember-source of the linted file', () => {
+      const newApp = lintFile(path.join(root, 'packages', 'new-app', 'app', 'a.gjs'));
+      const oldApp = lintFile(path.join(root, 'packages', 'old-app', 'app', 'a.gjs'));
+
+      expect(newApp.filter((m) => m.ruleId === 'no-undef')).toEqual([]);
+      expect(oldApp.filter((m) => m.ruleId === 'no-undef')).toHaveLength(1);
     });
   });
 });

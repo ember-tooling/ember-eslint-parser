@@ -2,7 +2,7 @@ import { createRequire } from 'node:module';
 import { Preprocessor } from 'content-tag';
 import { isKeyword as glimmerIsKeyword } from '@glimmer/syntax';
 import { glimmerVisitorKeys } from 'ember-estree';
-import { isEmber71BuiltInKeyword } from './ember71-built-in-keywords.js';
+import { isEmber71BuiltInKeywordForVersion } from './ember71-built-in-keywords.js';
 import { Reference, Scope, Variable, Definition } from 'eslint-scope';
 import htmlTags from 'html-tags';
 import svgTags from 'svg-tags';
@@ -174,7 +174,7 @@ function registerPathExpression(node, path, scopeManager, emberSourceVersion) {
   // `import { eq } from 'ember-truth-helpers'` (or a `const eq = …`) must
   // shadow the built-in so the scope reference is registered and the
   // import is marked as used by `no-unused-vars`.
-  if (!variable && isEmber71BuiltInKeyword(name, emberSourceVersion)) return;
+  if (!variable && isEmber71BuiltInKeywordForVersion(name, emberSourceVersion)) return;
   if (scope) {
     node.head.parent = node;
     registerNodeInScope(node.head, scope, variable);
@@ -211,7 +211,7 @@ function registerElementNode(node, path, scopeManager) {
  * @param {object|null} scopeManager
  * @param {boolean} isTypescript
  * @param {Array|null} [collectComments] - optional array to collect Glimmer comment nodes into
- * @param {string} [emberSourceVersion] - the `emberSourceVersion` parser option, if set
+ * @param {string} [emberSourceVersion] - the ember-source version of the linted file, if known
  * @returns {object|null} visitors for toTree, or null to skip
  */
 export function buildGlimmerVisitors(
