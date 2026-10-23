@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-10-23)
+
+* ember-eslint-parser 0.16.1 (patch)
+
+#### :bug: Bug Fix
+* `ember-eslint-parser`
+  * [#269](https://github.com/ember-tooling/ember-eslint-parser/pull/269) Resolve ember-source from the linted file ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
+#### Committers: 1
+- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
 ## Release (2026-10-22)
 
 * ember-eslint-parser 0.16.0 (minor)
