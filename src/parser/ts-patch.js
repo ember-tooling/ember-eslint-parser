@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { transformForLint, replaceRange } from './transforms.js';
+import { warnOnProjectSizeLimitDemotion } from './size-limit-warning.js';
 
 const require = createRequire(import.meta.url);
 
@@ -12,12 +13,45 @@ try {
   const tsPath = require.resolve('typescript', { paths: [parserPath] });
   const ts = require(tsPath);
   typescriptParser = require('@typescript-eslint/parser');
+
+  // Installed at import rather than from patchTs(): typescript-eslint builds
+  // its ProjectService on the first type-aware parse in the process, which is
+  // whichever file ESLint reaches first. If that is a plain .ts file, the
+  // project -- and the size decision that demotes it -- is already made before
+  // this parser is ever asked for anything. This hook only observes, so there
+  // is nothing to gate it on.
+  warnOnProjectSizeLimitDemotion(ts);
+
   patchTs = function patchTs() {
     if (isPatched) return;
     isPatched = true;
     const sys = { ...ts.sys };
     const newSys = {
       ...ts.sys,
+      // `.gts` is TypeScript with a template in it, but TypeScript has no way
+      // to be told that. Its ProjectService charges every root it does not
+      // recognise as TypeScript against `maxProgramSizeForNonTsFiles` (20MB)
+      // and, past the limit, disables the project's language service — see
+      // ./size-limit-warning.js for what that costs. `extraFileExtensions`
+      // looks like the place to declare the truth, but an extension registered
+      // as ScriptKind.TS is dropped from the supported set outright, so `.gts`
+      // has to be registered Deferred and Deferred is counted.
+      //
+      // Until that is fixed upstream, the only lever left is the size itself:
+      // report `.gts` as weightless and the project gets measured on the
+      // JavaScript it actually contains. `.gjs` IS JavaScript, so it keeps its
+      // weight — an app over the limit on .js + .gjs is still demoted, and the
+      // warning above is what tells them so.
+      //
+      // The other reader of this value is ScriptInfo#getFileTextAndSize, which
+      // skips loading the contents of non-TS files over 4MB. A `.gts` that big
+      // will now be loaded rather than blanked, which is what a linter wants.
+      ...(sys.getFileSize && {
+        getFileSize(fileName) {
+          if (fileName.endsWith('.gts')) return 0;
+          return sys.getFileSize.call(this, fileName);
+        },
+      }),
       readDirectory(...args) {
         const results = sys.readDirectory.call(this, ...args);
         const gtsVirtuals = results
