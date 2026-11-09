@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module';
 import { registerParsedFile } from '../preprocessor/noop.js';
-import { replaceExtensions, syncMtsGtsSourceFiles, typescriptParser } from './ts-patch.js';
+import { selectTypescriptBackend, typescriptParser } from './typescript.js';
 import { buildGlimmerVisitors } from './transforms.js';
 import { resolveEmberSourceVersion } from './ember71-built-in-keywords.js';
 import { toTree } from 'ember-estree';
@@ -65,6 +65,7 @@ export function parseForESLint(code, options) {
   const filePath = options.filePath;
   const emberSourceVersion = options.emberSourceVersion ?? resolveEmberSourceVersion(filePath);
   const useTS = isTypescript || useTypescript;
+  const tsBackend = useTS ? selectTypescriptBackend(options) : null;
 
   // Both paths create scopeManager inside the parser callback so it's
   // available when toTree invokes the visitor factory — no second pass.
@@ -77,14 +78,10 @@ export function parseForESLint(code, options) {
       tokens: true,
       parser: useTS
         ? (placeholderJS) => {
-            let parseCode = placeholderJS;
-            if (options.project || options.projectService) {
-              parseCode = replaceExtensions(parseCode);
-            }
-            const tsResult = typescriptParser.parseForESLint(parseCode, {
-              ...options,
+            const prepared = tsBackend.prepare(placeholderJS, options);
+            const tsResult = typescriptParser.parseForESLint(prepared.code, {
+              ...prepared.options,
               ranges: true,
-              extraFileExtensions: ['.gts', '.gjs'],
               filePath,
             });
             scopeManager = tsResult.scopeManager;
@@ -164,9 +161,7 @@ export function parseForESLint(code, options) {
       }
     }
 
-    if (result.services?.program) {
-      syncMtsGtsSourceFiles(result.services.program);
-    }
+    tsBackend?.finish(result);
 
     delete result.templateInfos;
     delete result.isTypescript;

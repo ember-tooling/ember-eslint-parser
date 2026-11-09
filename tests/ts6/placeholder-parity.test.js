@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { toTree } from 'ember-estree';
-import { transformForLint } from '../src/parser/transforms.js';
+import { transformForLint } from '../../src/parser/ts6/transform-for-lint.js';
 
 /**
  * transformForLint (used by the patched ts.sys.readFile for type-aware
