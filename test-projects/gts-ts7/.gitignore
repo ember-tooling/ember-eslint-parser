@@ -1,0 +1,2 @@
+# Installed on its own in CI, against typescript-eslint tarballs built from source.
+pnpm-lock.yaml

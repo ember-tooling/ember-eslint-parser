@@ -3,3 +3,5 @@ packages:
   - './test-projects/*'
   - './test-projects/rules/*'
   - './test-projects/configs/*'
+  # Installed on its own against unreleased typescript-eslint builds; see the ts7 CI job.
+  - '!./test-projects/gts-ts7'

@@ -1,0 +1,20 @@
+{
+  "name": "@test-project/gts-ts7",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:check": "node ./check.mjs"
+  },
+  "devDependencies": {
+    "@glimmer/component": "2.1.1",
+    "@glint/ember-tsc": "1.14.3",
+    "@glint/template": "1.11.1",
+    "@typescript/native": "npm:typescript@7.1.0-dev.20261030.1",
+    "ember-content-mapper": "0.4.1",
+    "ember-eslint-parser": "file:../..",
+    "ember-source": "7.3.1",
+    "eslint": "^9.17.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0"
+  }
+}
