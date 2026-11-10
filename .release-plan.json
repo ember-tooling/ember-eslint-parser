@@ -1,18 +1,8 @@
 {
   "solution": {
     "ember-eslint-parser": {
-      "impact": "patch",
-      "oldVersion": "0.16.0",
-      "newVersion": "0.16.1",
-      "tagName": "latest",
-      "constraints": [
-        {
-          "impact": "patch",
-          "reason": "Appears in changelog section :bug: Bug Fix"
-        }
-      ],
-      "pkgJSONPath": "./package.json"
+      "oldVersion": "0.16.1"
     }
   },
-  "description": "## Release (2026-10-23)\n\n* ember-eslint-parser 0.16.1 (patch)\n\n#### :bug: Bug Fix\n* `ember-eslint-parser`\n  * [#269](https://github.com/ember-tooling/ember-eslint-parser/pull/269) Resolve ember-source from the linted file ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n\n#### Committers: 1\n- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))\n"
+  "description": "\n\n\n\n"
 }
