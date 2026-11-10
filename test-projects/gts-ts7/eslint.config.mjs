@@ -8,7 +8,7 @@ export default ts.config(
     languageOptions: {
       parser: emberParser,
       parserOptions: {
-        projectService: { EXPERIMENTAL_backend: 'tsgo' },
+        projectService: { EXPERIMENTAL_backend: 'tsgo', EXPERIMENTAL_runExternalCode: true },
         tsconfigRootDir: import.meta.dirname,
       },
     },

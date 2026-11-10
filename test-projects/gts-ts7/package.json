@@ -2,6 +2,7 @@
   "name": "@test-project/gts-ts7",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.34.4",
   "scripts": {
     "test:check": "node ./check.mjs"
   },

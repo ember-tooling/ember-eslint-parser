@@ -31,10 +31,11 @@ function describe(results) {
 // typescript-estree loads classic TypeScript as `typescript` and TS7 as
 // `@typescript/native`. Both packages are named `typescript`, so a package
 // manager can resolve one to the other.
-const parserDir = path.dirname(require.resolve('@typescript-eslint/parser/package.json'));
-const estreeRequire = createRequire(
-  require.resolve('@typescript-eslint/typescript-estree/package.json', { paths: [parserDir] })
-);
+// ember-eslint-parser loads @typescript-eslint/parser as a peer, and pnpm does
+// not hoist it to this project, so resolve it the way ember-eslint-parser does.
+const emberParserRequire = createRequire(require.resolve('ember-eslint-parser'));
+const parserRequire = createRequire(emberParserRequire.resolve('@typescript-eslint/parser'));
+const estreeRequire = createRequire(parserRequire.resolve('@typescript-eslint/typescript-estree'));
 const classicVersion = estreeRequire('typescript/package.json').version;
 const nativeVersion = estreeRequire('@typescript/native/package.json').version;
 assert.match(classicVersion, /^6\./, `typescript-estree resolved typescript@${classicVersion}`);

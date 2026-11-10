@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Builds typescript-eslint from typescript-eslint/typescript-eslint#12803
-# (the experimental tsgo backend, unreleased) and packs each package that
-# eslint loads into the directory given as $1.
+# Builds typescript-eslint from typescript-eslint/typescript-eslint#13174
+# and packs each package that eslint loads into the directory given as $1.
+# #13174 adds projectService.EXPERIMENTAL_runExternalCode to the experimental
+# tsgo backend from #12803. Neither is released yet.
 #
 # test-projects/gts-ts7 installs these tarballs; see
 # scripts/use-typescript-eslint-tarballs.mjs.
@@ -11,7 +12,7 @@ set -euo pipefail
 
 out_dir="$1"
 repo="${TSESLINT_REPO:-https://github.com/JoshuaKGoldberg/typescript-eslint.git}"
-ref="${TSESLINT_REF:-615e56c713a697c443481284e8e0889b76f08efb}"
+ref="${TSESLINT_REF:-0c7e38343e8485326de21f2314d3d0a4e34a5c23}"
 packages=(
   types
   visitor-keys
@@ -36,12 +37,16 @@ git -C "$work" fetch -q --depth 1 origin "$ref"
 git -C "$work" checkout -q FETCH_HEAD
 
 # tsgo runs a tsconfig's contentMappers only when its API process is spawned
-# with runExternalCode, and the PR does not pass it yet.
+# with runExternalCode.
+# typescript-eslint#13174 adds projectService.EXPERIMENTAL_runExternalCode for it.
+# Refs without that option get runExternalCode turned on unconditionally.
 service="$work/packages/typescript-estree/src/native/createNativeProjectService.ts"
-sed -i.bak 's/new API({ cwd })/new API({ cwd, runExternalCode: true })/' "$service"
-if ! grep -q 'runExternalCode: true' "$service"; then
-  echo "Could not add runExternalCode to $service; the PR changed. Update this script." >&2
-  exit 1
+if ! grep -q 'runExternalCode' "$service"; then
+  sed -i.bak 's/new API({ cwd })/new API({ cwd, runExternalCode: true })/' "$service"
+  if ! grep -q 'runExternalCode: true' "$service"; then
+    echo "Could not add runExternalCode to $service. Update this script." >&2
+    exit 1
+  fi
 fi
 
 cd "$work"
