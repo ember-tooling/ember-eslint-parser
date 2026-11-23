@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import { patchTs } from '../src/parser/ts-patch.js';
+import { patchTs } from '../../src/parser/ts6/ts-patch.js';
 
 // Resolve the same typescript instance ts-patch patches (the one
 // @typescript-eslint/parser depends on), so we observe the patched ts.sys.

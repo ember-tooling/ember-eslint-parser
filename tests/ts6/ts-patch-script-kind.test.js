@@ -22,7 +22,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { syncMtsGtsSourceFiles } from '../src/parser/ts-patch.js';
+import { syncMtsGtsSourceFiles } from '../../src/parser/ts6/ts-patch.js';
 
 /** ts.ScriptKind values used below, spelled out so the intent survives reading. */
 const SCRIPT_KIND = { JS: 1, TS: 3, Deferred: 7 };

@@ -1,7 +1,8 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { parseForESLint } from '../src/parser/gjs-gts-parser.js';
-import { replaceExtensions } from '../src/parser/ts-patch.js';
-import { transformForLint, traverse } from '../src/parser/transforms.js';
+import { replaceExtensions } from '../src/parser/ts6/ts-patch.js';
+import { transformForLint } from '../src/parser/ts6/transform-for-lint.js';
+import { traverse } from '../src/parser/transforms.js';
 import { Linter, SourceCode } from 'eslint';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import { visitorKeys as tsVisitors } from '@typescript-eslint/visitor-keys';

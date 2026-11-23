@@ -8,7 +8,7 @@ import path from 'node:path';
 // first type-aware parse in the process — possibly a plain .ts file that never
 // reaches this parser. So importing the parser, with no parseForESLint call, has
 // to be enough to leave ts.sys patched.
-import '../src/parser/gjs-gts-parser.js';
+import '../../src/parser/gjs-gts-parser.js';
 
 const require = createRequire(import.meta.url);
 const parserPath = require.resolve('@typescript-eslint/parser');
