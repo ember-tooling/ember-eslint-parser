@@ -4,6 +4,10 @@
   "scripts": {
     "test:check": "pnpm run /test:check:.*/",
     "test:check:correct-handle-syntax-error": "eslint . | grep -q \"26:16  error  Parsing error: × Expected ',', got '<eof>'\"",
+    "test:check:babel-8-parser": "eslint src/babel-8-only.gjs | grep -q \"5:30  error  Parsing error: Missing semicolon. (5:30)\"",
+    "test:check:babel-8-valid-gjs": "eslint src/valid.gjs | grep -q \"3 problems (3 errors, 0 warnings)\"",
+    "test:check:babel-8-template-scope": "eslint src/valid.gjs | grep -q \"21:7   error  'notDefinedEither' is not defined\"",
+    "test:check:babel-8-decorator-js": "eslint src/helpers.js --max-warnings=0",
     "test:check:only-one-error": "eslint --format compact .  | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1",
     "test:fix": "eslint --fix --format compact . | egrep '^[0-9]+ problem[s]*' | wc -l | grep -q 1"
   },
@@ -11,14 +15,17 @@
     "@babel/core": "^8.0.1",
     "@babel/eslint-parser": "^8.0.1",
     "@babel/plugin-transform-runtime": "^8.0.1",
-    "@typescript-eslint/eslint-plugin": "^8.46.4",
-    "@typescript-eslint/parser": "^8.46.4",
     "babel-plugin-ember-template-compilation": "^3.0.1",
-    "decorator-transforms": "^2.3.0",
+    "decorator-transforms": "^2.4.0",
     "ember-eslint-parser": "workspace:*",
+    "ember-source": "^5.12.0",
     "eslint": "^10.0.0",
     "eslint-formatter-compact": "^9.0.1",
-    "eslint-plugin-ember": "^13.3.0",
-    "typescript": "^5.3.3"
+    "eslint-plugin-ember": "^13.3.0"
+  },
+  "dependenciesMeta": {
+    "ember-eslint-parser": {
+      "injected": true
+    }
   }
 }
