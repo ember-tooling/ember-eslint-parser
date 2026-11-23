@@ -1,5 +1,16 @@
 # Changelog
 
+## Release (2026-11-23)
+
+* ember-eslint-parser 0.16.2 (patch)
+
+#### :house: Internal
+* `ember-eslint-parser`
+  * [#274](https://github.com/ember-tooling/ember-eslint-parser/pull/274) Lint valid code through Babel 8 in the gjs-babel-v8 test project ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
+#### Committers: 1
+- @NullVoxPopuli's reduced-access machine account for AI usage ([@NullVoxPopuli-ai-agent](https://github.com/NullVoxPopuli-ai-agent))
+
 ## Release (2026-10-23)
 
 * ember-eslint-parser 0.16.1 (patch)
